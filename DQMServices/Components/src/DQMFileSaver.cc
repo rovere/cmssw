@@ -29,6 +29,25 @@ getAnInt(const edm::ParameterSet &ps, int &value, const std::string &name)
 }
 
 void
+DQMFileSaver::saveForOfflinePB(const std::string &workflow,
+                               int run)
+{
+
+  char suffix[64];
+  sprintf(suffix, "R%09d", run);
+
+  size_t pos = 0;
+  std::string wflow;
+  wflow.reserve(workflow.size() + 3);
+  wflow = workflow;
+  while ((pos = wflow.find('/', pos)) != std::string::npos)
+    wflow.replace(pos++, 1, "__");
+
+  std::string filename = fileBaseName_ + suffix + wflow + ".pb";
+  dbe_->savePB(filename, filterName_);
+}
+
+void
 DQMFileSaver::saveForOffline(const std::string &workflow, int run, int lumi)
 {
 
@@ -203,6 +222,7 @@ DQMFileSaver::DQMFileSaver(const edm::ParameterSet &ps)
     workflow_ (""),
     producer_ ("DQM"),
     dirName_ ("."),
+    filterName_(""),
     version_ (1),
     runIsComplete_ (false),
     saveByLumiSection_ (-1),
@@ -232,6 +252,8 @@ DQMFileSaver::DQMFileSaver(const edm::ParameterSet &ps)
     convention_ = Offline;
   else if (convention == "Online")
     convention_ = Online;
+  else if (convention == "PB")
+    convention_ = PB;
   else
     throw cms::Exception("DQMFileSaver")
       << "Invalid 'convention' parameter '" << convention << "'."
@@ -318,6 +340,7 @@ DQMFileSaver::DQMFileSaver(const edm::ParameterSet &ps)
     throw cms::Exception("DQMFileSaver")
       << "Invalid 'dirName' parameter '" << dirName_ << "'.";
 
+  filterName_ = ps.getUntrackedParameter<std::string>("filterName", filterName_);
   // Find out when and how to save files.  The following contraints apply:
   // - For online, allow files to be saved at event and time intervals.
   // - For online and offline, allow files to be saved per run, lumi and job end
@@ -482,6 +505,8 @@ DQMFileSaver::endRun(const edm::Run &, const edm::EventSetup &)
     }
     else if (convention_ == Offline)
       saveForOffline(workflow_, irun_, 0);
+    else if (convention_ == PB)
+      saveForOfflinePB(workflow_, irun_);
     else
       throw cms::Exception("DQMFileSaver")
 	<< "Internal error.  Can only save files in endRun()"
@@ -493,7 +518,7 @@ DQMFileSaver::endRun(const edm::Run &, const edm::EventSetup &)
 
 void
 DQMFileSaver::endJob(void)
-{ 
+{
   if (saveAtJobEnd_)
   {
     if (convention_ == Offline && forceRunNumber_ > 0)
@@ -503,5 +528,4 @@ DQMFileSaver::endJob(void)
 	<< "Internal error.  Can only save files at the end of the"
 	<< " job in Offline mode with run number overridden.";
   }
-    
 }

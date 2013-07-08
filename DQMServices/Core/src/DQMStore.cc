@@ -2,15 +2,20 @@
 #include "DQMServices/Core/interface/DQMStore.h"
 #include "DQMServices/Core/interface/QReport.h"
 #include "DQMServices/Core/interface/QTest.h"
+#include "DQMServices/Core/src/ROOTFilePB.pb.h"
 #include "DQMServices/Core/src/DQMError.h"
 #include "classlib/utils/RegexpMatch.h"
 #include "classlib/utils/Regexp.h"
 #include "classlib/utils/StringOps.h"
+#include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/io/gzip_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
 #include "TFile.h"
 #include "TROOT.h"
 #include "TKey.h"
 #include "TClass.h"
 #include "TSystem.h"
+#include "TBufferFile.h"
 #include <iterator>
 #include <cerrno>
 #include <boost/algorithm/string.hpp>
@@ -2111,8 +2116,76 @@ DQMStore::cdInto(const std::string &path) const
   return true;
 }
 
+void DQMStore::savePB(const std::string &filename,
+                      const std::string &path /* = "" */)
+{
+  using google::protobuf::io::FileOutputStream;
+  using google::protobuf::io::GzipOutputStream;
+  using google::protobuf::io::StringOutputStream;
+
+  std::set<std::string>::iterator di, de;
+  MEMap::iterator mi, me = data_.end();
+  dqmstorepb::ROOTFilePB dqmstore_message;
+  int nme = 0;
+
+  if (verbose_)
+    std::cout << "\n DQMStore: Opening PBFile '"
+              << filename << "'"<< std::endl;
+
+  // Loop over the directory structure.
+  for (di = dirs_.begin(), de = dirs_.end(); di != de; ++di)
+  {
+    // Check if we should process this directory.  We process the
+    // requested part of the object tree, including references.
+    if (! path.empty()
+	&& ! isSubdirectory(path, *di))
+      continue;
+
+    // Loop over monitor elements in this directory.
+    MonitorElement proto(&*di, std::string());
+    mi = data_.lower_bound(proto);
+    for ( ; mi != me && isSubdirectory(*di, *mi->data_.dirname); ++mi)
+    {
+      // Skip if it isn't a direct child.
+      if (*di != *mi->data_.dirname)
+	continue;
+      // Skip if it is not a ROOT object
+      if ((*mi).kind() < MonitorElement::DQM_KIND_TH1F)
+        continue;
+
+      if (verbose_ > 1)
+	std::cout << "DQMStore::save: saving monitor element '"
+		  << mi->data_.objname << "'\n";
+
+      nme++;
+      dqmstorepb::ROOTFilePB::Histo* me = dqmstore_message.add_histo();
+      me->set_full_pathname((*mi->data_.dirname) + '/' + mi->data_.objname);
+      TBufferFile buffer(TBufferFile::kWrite);
+      buffer.WriteObject(mi->object_);
+      me->set_size(buffer.Length());
+      me->set_streamed_histo((const void*)buffer.Buffer(),
+                             buffer.Length());
+    }
+  }
+  int filedescriptor = ::open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
+  FileOutputStream file_stream(filedescriptor);
+  GzipOutputStream::Options options;
+  options.format = GzipOutputStream::GZIP;
+  options.compression_level = 6;
+  GzipOutputStream gzip_stream(&file_stream,
+                               options);
+  dqmstore_message.SerializeToZeroCopyStream(&gzip_stream);
+
+  // Maybe make some noise.
+  if (verbose_)
+    std::cout << "DQMStore::save: successfully wrote " << nme
+              << " objects from path '" << path
+	      << "' into DQM file '" << filename << "'\n";
+}
+
+
 /// save directory with monitoring objects into root file <filename>;
-/// include quality test results with status >= minimum_status 
+/// include quality test results with status >= minimum_status
 /// (defined in Core/interface/QTestStatus.h);
 /// if directory="", save full monitoring structure
 void

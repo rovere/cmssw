@@ -22,6 +22,7 @@ protected:
   virtual void endJob(void);
 
 private:
+  void saveForOfflinePB(const std::string &workflow, int run);
   void saveForOffline(const std::string &workflow, int run, int lumi);
   void saveForOnline(const std::string &suffix, const std::string &rewrite);
   void saveJobReport(const std::string &filename);
@@ -29,13 +30,15 @@ private:
   enum Convention
   {
     Online,
-    Offline
+    Offline,
+    PB
   };
 
   Convention	convention_;
   std::string	workflow_;
   std::string	producer_;
   std::string	dirName_;
+  std::string	filterName_;
   int        	version_;
   bool		runIsComplete_;
 
