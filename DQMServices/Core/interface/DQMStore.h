@@ -328,6 +328,8 @@ public:
 
   //-------------------------------------------------------------------------
   // ---------------------- public I/O --------------------------------------
+  void				savePB(const std::string &filename,
+                                       const std::string &path = "");
   void				save(const std::string &filename,
 				     const std::string &path = "",
 				     const std::string &pattern = "",
