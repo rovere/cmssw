@@ -306,11 +306,11 @@ DQMStore::initializeFrom(const edm::ParameterSet& pset) {
   verbose_ = pset.getUntrackedParameter<int>("verbose", 0);
   if (verbose_ > 0)
     std::cout << "DQMStore: verbosity set to " << verbose_ << std::endl;
-  
+
   verboseQT_ = pset.getUntrackedParameter<int>("verboseQT", 0);
   if (verbose_ > 0)
     std::cout << "DQMStore: QTest verbosity set to " << verboseQT_ << std::endl;
-  
+
   collateHistograms_ = pset.getUntrackedParameter<bool>("collateHistograms", false);
   if (collateHistograms_)
     std::cout << "DQMStore: histogram collation is enabled\n";
@@ -320,7 +320,7 @@ DQMStore::initializeFrom(const edm::ParameterSet& pset) {
   {
     std::cout << "DQMStore: using reference file '" << ref << "'\n";
     readFile(ref, true, "", s_referenceDirName, StripRunDirs, false);
-  }  
+  }
 
   initQCriterion<Comp2RefChi2>(qalgos_);
   initQCriterion<Comp2RefKolmogorov>(qalgos_);
@@ -428,14 +428,14 @@ DQMStore::cd(const std::string &subdir)
   if (! dirExists(*cleaned))
     raiseDQMError("DQMStore", "Cannot 'cd' into non-existent directory '%s'",
 		  cleaned->c_str());
-  
+
   setCurrentFolder(*cleaned);
 }
 
-/// set the last directory in fullpath as the current directory(create if needed);
-/// to be invoked by user to specify directories for monitoring objects 
-/// before booking;
-/// commands book1D (etc) & removeElement(name) imply elements in this directory!;
+/// set the last directory in fullpath as the current directory(create
+/// if needed); to be invoked by user to specify directories for
+/// monitoring objects before booking; commands book1D (etc) &
+/// removeElement(name) imply elements in this directory!;
 void
 DQMStore::setCurrentFolder(const std::string &fullpath)
 {
@@ -458,7 +458,8 @@ DQMStore::goUp(void)
 }
 
 // -------------------------------------------------------------------
-/// get folder corresponding to inpath wrt to root (create subdirs if necessary)
+/// get folder corresponding to inpath wrt to root (create subdirs if
+/// necessary)
 void
 DQMStore::makeDirectory(const std::string &path)
 {
@@ -533,7 +534,7 @@ DQMStore::book(const std::string &dir, const std::string &name,
       return me;
     }
     else
-    {    
+    {
       if (verbose_ > 1)
         std::cout << "DQMStore: "
                   << context << ": monitor element '"
@@ -922,7 +923,7 @@ MonitorElement *
 DQMStore::book2D(const char *name, const char *title,
 		 int nchX, float *xbinsize, int nchY, float *ybinsize)
 {
-  return book2D(pwd_, name, new TH2F(name, title, 
+  return book2D(pwd_, name, new TH2F(name, title,
 				     nchX, xbinsize, nchY, ybinsize));
 }
 
@@ -931,7 +932,7 @@ MonitorElement *
 DQMStore::book2D(const std::string &name, const std::string &title,
 		 int nchX, float *xbinsize, int nchY, float *ybinsize)
 {
-  return book2D(pwd_, name, new TH2F(name.c_str(), title.c_str(), 
+  return book2D(pwd_, name, new TH2F(name.c_str(), title.c_str(),
 				     nchX, xbinsize, nchY, ybinsize));
 }
 
@@ -1285,62 +1286,62 @@ DQMStore::checkBinningMatches(MonitorElement *me, TH1 *h)
               << me->getFullname() << "'\n";
     return false;
   }
-  return true;	   
+  return true;
 }
 
 void
 DQMStore::collate1D(MonitorElement *me, TH1F *h)
-{ 
-  if (checkBinningMatches(me,h)) 
-    me->getTH1F()->Add(h); 
+{
+  if (checkBinningMatches(me,h))
+    me->getTH1F()->Add(h);
 }
 
 void
 DQMStore::collate1S(MonitorElement *me, TH1S *h)
-{  
-  if (checkBinningMatches(me,h)) 
-    me->getTH1S()->Add(h); 
+{
+  if (checkBinningMatches(me,h))
+    me->getTH1S()->Add(h);
 }
 
 void
 DQMStore::collate1DD(MonitorElement *me, TH1D *h)
-{  
-  if (checkBinningMatches(me,h)) 
-    me->getTH1D()->Add(h); 
+{
+  if (checkBinningMatches(me,h))
+    me->getTH1D()->Add(h);
 }
 
 void
 DQMStore::collate2D(MonitorElement *me, TH2F *h)
-{  
-  if (checkBinningMatches(me,h)) 
-    me->getTH2F()->Add(h); 
+{
+  if (checkBinningMatches(me,h))
+    me->getTH2F()->Add(h);
 }
 
 void
 DQMStore::collate2S(MonitorElement *me, TH2S *h)
-{  
-  if (checkBinningMatches(me,h)) 
-    me->getTH2S()->Add(h); 
+{
+  if (checkBinningMatches(me,h))
+    me->getTH2S()->Add(h);
 }
 
 void
 DQMStore::collate2DD(MonitorElement *me, TH2D *h)
-{  
-  if (checkBinningMatches(me,h)) 
-    me->getTH2D()->Add(h); 
+{
+  if (checkBinningMatches(me,h))
+    me->getTH2D()->Add(h);
 }
 
 void
 DQMStore::collate3D(MonitorElement *me, TH3F *h)
-{  
-  if (checkBinningMatches(me,h)) 
-    me->getTH3F()->Add(h); 
+{
+  if (checkBinningMatches(me,h))
+    me->getTH3F()->Add(h);
 }
 
 void
 DQMStore::collateProfile(MonitorElement *me, TProfile *h)
 {
-  if (checkBinningMatches(me,h)) 
+  if (checkBinningMatches(me,h))
   {
     TProfile *meh = me->getTProfile();
     me->addProfiles(h, meh, meh, 1, 1);
@@ -1350,7 +1351,7 @@ DQMStore::collateProfile(MonitorElement *me, TProfile *h)
 void
 DQMStore::collateProfile2D(MonitorElement *me, TProfile2D *h)
 {
-  if (checkBinningMatches(me,h)) 
+  if (checkBinningMatches(me,h))
   {
     TProfile2D *meh = me->getTProfile2D();
     me->addProfiles(h, meh, meh, 1, 1);
@@ -2155,7 +2156,7 @@ void DQMStore::savePB(const std::string &filename,
 
       if (verbose_ > 1)
 	std::cout << "DQMStore::save: saving monitor element '"
-		  << mi->data_.objname << "'\n";
+		  << *mi->data_.dirname << "/" << mi->data_.objname << "'\n";
 
       nme++;
       dqmstorepb::ROOTFilePB::Histo* me = dqmstore_message.add_histo();
@@ -2165,9 +2166,13 @@ void DQMStore::savePB(const std::string &filename,
       me->set_size(buffer.Length());
       me->set_streamed_histo((const void*)buffer.Buffer(),
                              buffer.Length());
+      delete mi->object_;
+      const_cast<MonitorElement*>(&*mi)->object_ = 0;
     }
   }
-  int filedescriptor = ::open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
+  int filedescriptor = ::open(filename.c_str(),
+			      O_WRONLY | O_CREAT | O_TRUNC,
+			      S_IREAD | S_IWRITE);
   FileOutputStream file_stream(filedescriptor);
   GzipOutputStream::Options options;
   options.format = GzipOutputStream::GZIP;
@@ -2186,8 +2191,8 @@ void DQMStore::savePB(const std::string &filename,
 
 /// save directory with monitoring objects into root file <filename>;
 /// include quality test results with status >= minimum_status
-/// (defined in Core/interface/QTestStatus.h);
-/// if directory="", save full monitoring structure
+/// (defined in Core/interface/QTestStatus.h); if directory="", save
+/// full monitoring structure
 void
 DQMStore::save(const std::string &filename,
 	       const std::string &path /* = "" */,
@@ -2202,10 +2207,11 @@ DQMStore::save(const std::string &filename,
   DQMNet::QReports::const_iterator qi, qe;
   int nme=0;
 
-  // TFile flushes to disk with fsync() on every TDirectory written to the
-  // file.  This makes DQM file saving painfully slow, and ironically makes
-  // it _more_ likely the file saving gets interrupted and corrupts the file.
-  // The utility class below simply ignores the flush synchronisation.
+  // TFile flushes to disk with fsync() on every TDirectory written to
+  // the file.  This makes DQM file saving painfully slow, and
+  // ironically makes it _more_ likely the file saving gets
+  // interrupted and corrupts the file.  The utility class below
+  // simply ignores the flush synchronisation.
   class TFileNoSync : public TFile
   {
   public:
@@ -2215,14 +2221,14 @@ DQMStore::save(const std::string &filename,
 
   // open output file, on 1st save recreate, later update
   if (verbose_)
-    std::cout << "\n DQMStore: Opening TFile '" << filename 
+    std::cout << "\n DQMStore: Opening TFile '" << filename
               << "' with option '" << fileupdate <<"'\n";
 
   TFileNoSync f(filename.c_str(), fileupdate.c_str()); // open file
   if(f.IsZombie())
     raiseDQMError("DQMStore", "Failed to create/update file '%s'", filename.c_str());
   f.cd();
-  
+
   // Construct a regular expression from the pattern string.
   std::auto_ptr<lat::Regexp> rxpat;
   if (! pattern.empty())
@@ -2247,7 +2253,7 @@ DQMStore::save(const std::string &filename,
 	&& ! isSubdirectory(path, *di)
 	&& ! isSubdirectory(refpath, *di))
       continue;
-    
+
     // Loop over monitor elements in this directory.
     MonitorElement proto(&*di, std::string());
     mi = data_.lower_bound(proto);
@@ -2345,8 +2351,8 @@ DQMStore::save(const std::string &filename,
 
   // Maybe make some noise.
   if (verbose_)
-    std::cout << "DQMStore::save: successfully wrote " << nme 
-              << " objects from path '" << path  
+    std::cout << "DQMStore::save: successfully wrote " << nme
+              << " objects from path '" << path
 	      << "' into DQM file '" << filename << "'\n";
 }
 
@@ -2380,30 +2386,30 @@ DQMStore::readDirectory(TFile *file,
 
   // See if we are going to skip this directory.
   bool skip = (! onlypath.empty() && ! isSubdirectory(onlypath, dirpart));
-  
-  if (prepend == s_collateDirName || 
-      prepend == s_referenceDirName || 
+
+  if (prepend == s_collateDirName ||
+      prepend == s_referenceDirName ||
       stripdirs == StripRunDirs )
   {
     // Remove Run # and RunSummary dirs
-    // first look for Run summary, 
+    // first look for Run summary,
     // if that is found and erased, also erase Run dir
     size_t slash = dirpart.find('/');
     size_t pos = dirpart.find("/Run summary");
-    if (slash != std::string::npos && pos !=std::string::npos) 
+    if (slash != std::string::npos && pos !=std::string::npos)
     {
       dirpart.erase(pos,12);
-    
+
       pos = dirpart.find("Run ");
       size_t length = dirpart.find('/',pos+1)-pos+1;
-      if (pos !=std::string::npos) 
+      if (pos !=std::string::npos)
 	dirpart.erase(pos,length);
     }
-  } 
+  }
 
-  // If we are prepending, add it to the directory name, 
+  // If we are prepending, add it to the directory name,
   // and suppress reading of already existing reference histograms
-  if (prepend == s_collateDirName || 
+  if (prepend == s_collateDirName ||
       prepend == s_referenceDirName)
   {
     size_t slash = dirpart.find('/');
@@ -2413,7 +2419,7 @@ DQMStore::readDirectory(TFile *file,
 	&& dirpart.compare(slash+1, s_referenceDirName.size(), s_referenceDirName) == 0)
       return 0;
 
-    slash = dirpart.find('/');    
+    slash = dirpart.find('/');
     // Skip reading of EventInfo subdirectory.
     if (slash != std::string::npos
         && slash + 10 == dirpart.size()
@@ -2511,8 +2517,8 @@ bool
 DQMStore::open(const std::string &filename,
 	       bool overwrite /* = false */,
 	       const std::string &onlypath /* ="" */,
-	       const std::string &prepend /* ="" */, 
-               OpenRunDirs stripdirs /* =KeepRunDirs */, 
+	       const std::string &prepend /* ="" */,
+               OpenRunDirs stripdirs /* =KeepRunDirs */,
 	       bool fileMustExist /* =true */)
 {
   return readFile(filename,overwrite,onlypath,prepend,stripdirs,fileMustExist);
@@ -2522,14 +2528,14 @@ DQMStore::open(const std::string &filename,
 /// overwrite identical MonitorElements (default: true);
 /// set DQMStore.collateHistograms to true to sum several files
 /// note: by default this method strips off run dir structure
-bool 
+bool
 DQMStore::load(const std::string &filename,
-               OpenRunDirs stripdirs /* =StripRunDirs */, 
+               OpenRunDirs stripdirs /* =StripRunDirs */,
 	       bool fileMustExist /* =true */)
 {
   bool overwrite = true;
   if (collateHistograms_) overwrite = false;
-  if (verbose_) 
+  if (verbose_)
   {
     std::cout << "DQMStore::load: reading from file '" << filename << "'\n";
     if (collateHistograms_)
@@ -2555,13 +2561,13 @@ DQMStore::readFile(const std::string &filename,
 		   OpenRunDirs stripdirs /* =StripRunDirs */,
 		   bool fileMustExist /* =true */)
 {
-  
+
   if (verbose_)
     std::cout << "DQMStore::readFile: reading from file '" << filename << "'\n";
 
   std::auto_ptr<TFile> f;
 
-  try 
+  try
   {
     f.reset(TFile::Open(filename.c_str()));
     if (! f.get() || f->IsZombie())
@@ -2572,7 +2578,7 @@ DQMStore::readFile(const std::string &filename,
     if (fileMustExist)
       throw;
     else
-    {  
+    {
     if (verbose_)
       std::cout << "DQMStore::readFile: file '" << filename << "' does not exist, continuing\n";
     return false;
@@ -2624,7 +2630,7 @@ DQMStore::rmdir(const std::string &path)
     dirs_.erase(di++);
 }
 
-/// remove all monitoring elements from directory; 
+/// remove all monitoring elements from directory;
 void
 DQMStore::removeContents(const std::string &dir)
 {
@@ -2645,7 +2651,7 @@ DQMStore::removeContents(void)
   removeContents(pwd_);
 }
 
-/// erase monitoring element in current directory 
+/// erase monitoring element in current directory
 /// (opposite of book1D,2D,etc. action);
 void
 DQMStore::removeElement(const std::string &name)
@@ -2653,7 +2659,7 @@ DQMStore::removeElement(const std::string &name)
   removeElement(pwd_, name);
 }
 
-/// remove monitoring element from directory; 
+/// remove monitoring element from directory;
 /// if warning = true, print message if element does not exist
 void
 DQMStore::removeElement(const std::string &dir, const std::string &name, bool warning /* = true */)
@@ -2670,7 +2676,7 @@ DQMStore::removeElement(const std::string &dir, const std::string &name, bool wa
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
-/// get QCriterion corresponding to <qtname> 
+/// get QCriterion corresponding to <qtname>
 /// (null pointer if QCriterion does not exist)
 QCriterion *
 DQMStore::getQCriterion(const std::string &qtname) const
@@ -2722,7 +2728,7 @@ DQMStore::useQTest(const std::string &dir, const std::string &qtname)
 }
 
 /// attach quality test <qc> to monitor elements matching <pattern>.
-int 
+int
 DQMStore::useQTestByMatch(const std::string &pattern, const std::string &qtname)
 {
   QCriterion *qc = getQCriterion(qtname);
@@ -2756,7 +2762,7 @@ DQMStore::useQTestByMatch(const std::string &pattern, const std::string &qtname)
   return cases;
 }
 /// run quality tests (also finds updated contents in last monitoring cycle,
-/// including newly added content) 
+/// including newly added content)
 void
 DQMStore::runQTests(void)
 {
@@ -2777,7 +2783,7 @@ DQMStore::runQTests(void)
 
 /// get "global" folder <path> status (one of:STATUS_OK, WARNING, ERROR, OTHER);
 /// returns most sever error, where ERROR > WARNING > OTHER > STATUS_OK;
-/// see Core/interface/QTestStatus.h for details on "OTHER" 
+/// see Core/interface/QTestStatus.h for details on "OTHER"
 int
 DQMStore::getStatus(const std::string &path /* = "" */) const
 {
@@ -2879,16 +2885,16 @@ DQMStore::scaleElements(void)
   if (scaleFlag_ == 0.0) return;
   if (verbose_ > 0)
     std::cout << " =========== " << " ScaleFlag " << scaleFlag_ << std::endl;
-  double factor = scaleFlag_; 
+  double factor = scaleFlag_;
   int events = 1;
   if (dirExists("Info/EventInfo")) {
     if ( scaleFlag_ == -1.0) {
       MonitorElement * scale_me = get("Info/EventInfo/ScaleFactor");
-      if (scale_me && scale_me->kind()==MonitorElement::DQM_KIND_REAL) factor = scale_me->getFloatValue(); 
+      if (scale_me && scale_me->kind()==MonitorElement::DQM_KIND_REAL) factor = scale_me->getFloatValue();
     }
     MonitorElement * event_me = get("Info/EventInfo/processedEvents");
-    if (event_me && event_me->kind()==MonitorElement::DQM_KIND_INT) events = event_me->getIntValue();      
-  }  
+    if (event_me && event_me->kind()==MonitorElement::DQM_KIND_INT) events = event_me->getIntValue();
+  }
   factor = factor/(events*1.0);
 
   MEMap::iterator mi = data_.begin();
@@ -2950,3 +2956,8 @@ DQMStore::scaleElements(void)
       }
   }
 }
+
+// Local Variables:
+// show-trailing-whitespace: t
+// truncate-lines: t
+// End:
