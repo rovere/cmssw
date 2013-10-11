@@ -19,10 +19,12 @@
 
 namespace edm { class DQMHttpSource; class ParameterSet; class ActivityRegistry;}
 namespace lat { class Regexp; }
+namespace dqmstorepb {class ROOTFilePB; class ROOTFilePB_Histo;}
 
 class MonitorElement;
 class QCriterion;
 class TFile;
+class TBufferFile;
 class TObject;
 class TH1;
 class TObjString;
@@ -372,22 +374,31 @@ private:
   bool                          isCollateME(MonitorElement *me) const;
 
   // ------------------- Private "getters" ------------------------------
-  bool				readFile(const std::string &filename,
-					 bool overwrite = false,
-					 const std::string &path ="",
-					 const std::string &prepend = "",
-					 OpenRunDirs stripdirs = StripRunDirs,
-					 bool fileMustExist = true);
-  void				makeDirectory(const std::string &path);
-  unsigned int			readDirectory(TFile *file,
-					      bool overwrite,
-					      const std::string &path,
-					      const std::string &prepend,
-					      const std::string &curdir,
-					      OpenRunDirs stripdirs);
+  bool                          readFilePB(const std::string &filename,
+                                           bool overwrite = false,
+                                           const std::string &path ="",
+                                           const std::string &prepend = "",
+                                           OpenRunDirs stripdirs = StripRunDirs,
+                                           bool fileMustExist = true);
+  bool                          readFile(const std::string &filename,
+                                         bool overwrite = false,
+                                         const std::string &path ="",
+                                         const std::string &prepend = "",
+                                         OpenRunDirs stripdirs = StripRunDirs,
+                                         bool fileMustExist = true);
+  void                          makeDirectory(const std::string &path);
+  unsigned int                  readDirectory(TFile *file,
+                                              bool overwrite,
+                                              const std::string &path,
+                                              const std::string &prepend,
+                                              const std::string &curdir,
+                                              OpenRunDirs stripdirs);
 
-  MonitorElement *		findObject(const std::string &dir, const std::string &name) const;
-
+  MonitorElement *              findObject(const std::string &dir, const std::string &name) const;
+  void                          get_info(const  dqmstorepb::ROOTFilePB_Histo &,
+                                         std::string & dirname,
+                                         std::string & objname,
+                                         TH1 ** obj);
 public:
   void                          getAllTags(std::vector<std::string> &into) const;
   std::vector<MonitorElement*>  getAllContents(const std::string &path) const;
@@ -399,7 +410,8 @@ private:
   void                          reset(void);
   void        forceReset(void);
 
-  bool				extract(TObject *obj, const std::string &dir, bool overwrite);
+  bool        extract(TObject *obj, const std::string &dir, bool overwrite);
+  TObject *   extractNextObject(TBufferFile&) const;
 
   // ---------------------- Booking ------------------------------------
   MonitorElement *              initialise(MonitorElement *me, const std::string &path);
