@@ -88,6 +88,8 @@ PATH=/afs/cern.ch/work/r/rovere/protocolbuf/bin
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/gzip_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <TROOT.h>
+#include <TFile.h>
 #include <TBufferFile.h>
 #include <TObject.h>
 #include <TH1.h>
@@ -125,15 +127,14 @@ struct MicroME {
 
 enum TaskType {
   TASK_ADD,
-  TASK_DUMP
+  TASK_DUMP,
+  TASK_CONVERT
 };
 
 enum ErrType {
   ERR_BADCFG=1,
   ERR_NOFILE
 };
-
-
 
 using google::protobuf::io::FileInputStream;
 using google::protobuf::io::FileOutputStream;
@@ -169,6 +170,64 @@ static void get_info(const dqmstorepb::ROOTFilePB::Histo &h,
   if (!*obj) {
     std::cerr << "Error reading element: " << h.full_pathname() << std::endl;
   }
+}
+
+int convertFile(const std::string &output_filename,
+                const std::vector<std::string> &filenames) {
+  assert(filenames.size() == 1);
+  TFile output(output_filename.c_str(), "RECREATE");
+  DEBUG(0, "Converting file " << filenames[0] << std::endl);
+  dqmstorepb::ROOTFilePB dqmstore_message;
+
+  int filedescriptor = open(filenames[0].c_str(), O_RDONLY);
+  FileInputStream fin(filedescriptor);
+  GzipInputStream input(&fin);
+  CodedInputStream input_coded(&input);
+  input_coded.SetTotalBytesLimit(1024*1024*1024, -1);
+  if (!dqmstore_message.ParseFromCodedStream(&input_coded)) {
+    std::cout << "Fatal Error opening file "
+              << filenames[0] << std::endl;
+    return ERR_NOFILE;
+  }
+
+  for (int i = 0; i < dqmstore_message.histo_size(); i++) {
+    const dqmstorepb::ROOTFilePB::Histo& h = dqmstore_message.histo(i);
+    DEBUG(1, h.full_pathname() << std::endl);
+    DEBUG(1, h.size() << std::endl);
+    TBufferFile buf(TBufferFile::kRead, h.size(),
+                    (void*)h.streamed_histo().data(),
+                    kFALSE);
+    buf.Reset();
+    TH1 *obj = static_cast<TH1*>(extractNextObject(buf));
+    std::string path,objname;
+    get_info(h, path, objname, &obj);
+    gDirectory->cd("/");
+    // Find the first path component.
+    size_t start = 0;
+    size_t end = path.find('/', start);
+    if (end == std::string::npos)
+    end = path.size();
+    while (true)
+    {
+      std::string part(path, start, end-start);
+      if (! gDirectory->Get(part.c_str()))
+        gDirectory->mkdir(part.c_str());
+      gDirectory->cd(part.c_str());
+      // Stop if we reached the end, ignoring any trailing '/'.
+      if (end+1 >= path.size())
+        break;
+      // Find the next path component.
+      start = end+1;
+      end = path.find('/', start);
+      if (end == std::string::npos)
+        end = path.size();
+    }
+    obj->Write();
+    DEBUG(1, obj->GetName() << std::endl);
+  }
+  output.Close();
+  google::protobuf::ShutdownProtobufLibrary();
+  return 0;
 }
 
 int dumpFiles(const std::vector<std::string> &filenames) {
@@ -397,6 +456,9 @@ int main(int argc, char * argv[]) {
     } else if (! strcmp(argv[arg], "dump")) {
       ++arg;
       task = TASK_DUMP;
+    } else if (! strcmp(argv[arg], "convert")) {
+      ++arg;
+      task = TASK_CONVERT;
     } else {
       std::cerr << "Unknown action: " << argv[arg] << std::endl;
       return ERR_BADCFG;
@@ -406,7 +468,7 @@ int main(int argc, char * argv[]) {
     return ERR_BADCFG;
   }
 
-  if (task == TASK_ADD) {
+  if (task == TASK_ADD || task == TASK_CONVERT) {
     if (arg == argc) {
       std::cerr << "add action requires a -o option to be set\n";
       return ERR_BADCFG;
@@ -429,7 +491,7 @@ int main(int argc, char * argv[]) {
     }
   }
 
-  if (task == TASK_ADD) {
+  if (task == TASK_ADD || task == TASK_CONVERT) {
     if (++arg == argc) {
       std::cerr << "Missing input file(s)\n";
       return ERR_BADCFG;
@@ -443,6 +505,8 @@ int main(int argc, char * argv[]) {
     ret = addFiles(output_file, filenames);
   else if (task == TASK_DUMP)
     ret = dumpFiles(filenames);
+  else if (task == TASK_CONVERT)
+    ret = convertFile(output_file, filenames);
 
   return ret;
 }
