@@ -32,7 +32,6 @@ void
 DQMFileSaver::saveForOfflinePB(const std::string &workflow,
                                int run)
 {
-
   char suffix[64];
   sprintf(suffix, "R%09d", run);
 
@@ -66,7 +65,7 @@ DQMFileSaver::saveForOffline(const std::string &workflow, int run, int lumi)
   wflow = workflow;
   while ((pos = wflow.find('/', pos)) != std::string::npos)
     wflow.replace(pos++, 1, "__");
-    
+
   std::string filename = fileBaseName_ + suffix + wflow + ".root";
 
   if (lumi == 0) // save for run
@@ -76,14 +75,14 @@ DQMFileSaver::saveForOffline(const std::string &workflow, int run, int lumi)
     dbe_->setCurrentFolder("Info/ProvInfo");
 
     // do this, because ProvInfo is not yet run in offline DQM
-    MonitorElement* me = dbe_->get("Info/ProvInfo/CMSSW"); 
+    MonitorElement* me = dbe_->get("Info/ProvInfo/CMSSW");
     if (!me) me = dbe_->bookString("CMSSW",edm::getReleaseVersion().c_str() );
-    
+
     me = dbe_->get("Info/ProvInfo/runIsComplete");
     if (!me) me = dbe_->bookFloat("runIsComplete");
 
     if (me)
-    { 
+    {
       if (runIsComplete_)
         me->Fill(1.);
       else
@@ -91,8 +90,8 @@ DQMFileSaver::saveForOffline(const std::string &workflow, int run, int lumi)
     }
 
     dbe_->save(filename,
-             "", 
-	     "^(Reference/)?([^/]+)", 
+             "",
+	     "^(Reference/)?([^/]+)",
 	     rewrite,
 	     (DQMStore::SaveReferenceTag) saveReference_,
 	     saveReferenceQMin_,
@@ -102,9 +101,9 @@ DQMFileSaver::saveForOffline(const std::string &workflow, int run, int lumi)
   {
     std::vector<std::string> systems = (dbe_->cd(), dbe_->getSubdirs());
 
-    std::cout << " DQMFileSaver: storing EventInfo folders for Run: " 
+    std::cout << " DQMFileSaver: storing EventInfo folders for Run: "
               << irun_ << ", Lumi Section: " << ilumi_ << ", Subsystems: " ;
-	      
+
     for (size_t i = 0, e = systems.size(); i != e; ++i) {
       if (systems[i] != "Reference") {
         dbe_->cd();
@@ -127,7 +126,6 @@ DQMFileSaver::saveForOffline(const std::string &workflow, int run, int lumi)
     saveJobReport(filename);
     pastSavedFiles_.push_back(filename);
   }
-  
 }
 
 static void
@@ -141,7 +139,7 @@ doSaveForOnline(std::list<std::string> &pastSavedFiles,
 		DQMStore::SaveReferenceTag saveref,
 		int saveRefQMin)
 {
-  store->save(filename, directory , rxpat, 
+  store->save(filename, directory , rxpat,
          rewrite, saveref, saveRefQMin);
   pastSavedFiles.push_back(filename);
   if (pastSavedFiles.size() > numKeepSavedFiles)
@@ -172,11 +170,11 @@ DQMFileSaver::saveForOnline(const std::string &suffix, const std::string &rewrit
       }
     }
   }
-  
+
   // look for EventInfo folder in an unorthodox location
   for (size_t i = 0, e = systems.size(); i != e; ++i)
     if (systems[i] != "Reference")
-    { 
+    {
       dbe_->cd();
       std::vector<MonitorElement*> pNamesVector = dbe_->getMatchingContents("^" + systems[i] + "/.*/EventInfo/processName",lat::Regexp::Perl);
       if (pNamesVector.size() > 0){
@@ -282,7 +280,7 @@ DQMFileSaver::DQMFileSaver(const edm::ParameterSet &ps)
   {
     workflow_="/Global/Online/P5";
   }
-    
+
   // Allow file producer to be set to specific values in certain conditions.
   producer_ = ps.getUntrackedParameter<std::string>("producer", producer_);
   if (convention_ == Online
@@ -310,7 +308,7 @@ DQMFileSaver::DQMFileSaver(const edm::ParameterSet &ps)
   std::string refsave = ps.getUntrackedParameter<std::string>("referenceHandling", "default");
   if (refsave == "default")
     ;
-  else if (refsave == "skip") 
+  else if (refsave == "skip")
   {
     saveReference_ = DQMStore::SaveWithoutReference;
   //  std::cout << "skip saving all references" << std::endl;
@@ -370,7 +368,7 @@ DQMFileSaver::DQMFileSaver(const edm::ParameterSet &ps)
       << "If saving at the end of the job, the run number must be"
       << " overridden to a specific value using 'forceRunNumber'.";
 
-  
+
   // Set up base file name and determine the start time.
   char version[8];
   sprintf(version, "_V%04d_", int(version_));
@@ -529,3 +527,8 @@ DQMFileSaver::endJob(void)
 	<< " job in Offline mode with run number overridden.";
   }
 }
+
+// Local Variables:
+// show-trailing-whitespace: t
+// truncate-lines: t
+// End:
