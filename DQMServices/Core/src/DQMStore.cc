@@ -58,6 +58,7 @@ static const lat::Regexp s_rxmeval ("^<(.*)>(i|f|s|e|t|qr)=(.*)</\\1>$");
 static const lat::Regexp s_rxmeqr1 ("^st:(\\d+):([-+e.\\d]+):([^:]*):(.*)$");
 static const lat::Regexp s_rxmeqr2 ("^st\\.(\\d+)\\.(.*)$");
 static const lat::Regexp s_rxtrace ("(.*)\\((.*)\\+0x.*\\).*");
+static const lat::Regexp s_rxpbfile (".*\\.pb$");
 
 //////////////////////////////////////////////////////////////////////
 /// Check whether the @a path is a subdirectory of @a ofdir.  Returns
@@ -2543,9 +2544,11 @@ DQMStore::load(const std::string &filename,
     else
       std::cout << "DQMStore::load: in overwrite mode   " << "\n";
   }
-    
-  return readFile(filename,overwrite,"","",stripdirs,fileMustExist);
-     
+
+  if (!s_rxpbfile.match(filename, 0, 0))
+    return readFile(filename, overwrite, "", "", stripdirs, fileMustExist);
+  else
+    return readFilePB(filename, false, "", "", stripdirs, fileMustExist);
 }
 
 /// private readFile <filename>, and copy MonitorElements;
@@ -2602,6 +2605,89 @@ DQMStore::readFile(const std::string &filename,
     if (! prepend.empty())
       std::cout << " into directory '" << prepend << "'";
     std::cout << std::endl;
+  }
+  return true;
+}
+
+/** Extract the next serialised ROOT object from @a buf. Returns null
+if there are no more objects in the buffer, or a null pointer was
+serialised at this location. */
+inline TObject * DQMStore::extractNextObject(TBufferFile &buf) const {
+  if (buf.Length() == buf.BufferSize())
+    return 0;
+  buf.InitMap();
+  return reinterpret_cast<TObject *>(buf.ReadObjectAny(0));
+}
+
+void DQMStore::get_info(const dqmstorepb::ROOTFilePB::Histo &h,
+                        std::string &dirname,
+                        std::string &objname,
+                        TH1 ** obj) {
+  size_t slash = h.full_pathname().rfind('/');
+  size_t dirpos = (slash == std::string::npos ? 0 : slash);
+  size_t namepos = (slash == std::string::npos ? 0 : slash+1);
+  dirname.assign(h.full_pathname(), 0, dirpos);
+  objname.assign(h.full_pathname(), namepos, std::string::npos);
+  TBufferFile buf(TBufferFile::kRead, h.size(),
+                  (void*)h.streamed_histo().data(),
+                  kFALSE);
+  buf.Reset();
+  *obj = static_cast<TH1*>(extractNextObject(buf));
+  if (!*obj) {
+    raiseDQMError("DQMStore", "Error reading element:'%s'" , h.full_pathname().c_str());
+  }
+}
+
+bool
+DQMStore::readFilePB(const std::string &filename,
+		     bool overwrite /* = false */,
+		     const std::string &onlypath /* ="" */,
+		     const std::string &prepend /* ="" */,
+		     OpenRunDirs stripdirs /* =StripRunDirs */,
+		     bool fileMustExist /* =true */)
+{
+  using google::protobuf::io::FileInputStream;
+  using google::protobuf::io::FileOutputStream;
+  using google::protobuf::io::GzipInputStream;
+  using google::protobuf::io::GzipOutputStream;
+  using google::protobuf::io::CodedInputStream;
+  using google::protobuf::io::ArrayInputStream;
+
+  if (verbose_)
+    std::cout << "DQMStore::readFile: reading from file '" << filename << "'\n";
+
+  int filedescriptor;
+  if ((filedescriptor = ::open(filename.c_str(), O_RDONLY)) == -1) {
+    if (fileMustExist)
+      raiseDQMError("DQMStore", "Failed to open file '%s'", filename.c_str());
+    else
+      if (verbose_)
+        std::cout << "DQMStore::readFile: file '" << filename << "' does not exist, continuing\n";
+    return false;
+  }
+
+  dqmstorepb::ROOTFilePB dqmstore_message;
+  FileInputStream fin(filedescriptor);
+  GzipInputStream input(&fin);
+  CodedInputStream input_coded(&input);
+  input_coded.SetTotalBytesLimit(1024*1024*1024, -1);
+  if (!dqmstore_message.ParseFromCodedStream(&input_coded)) {
+    raiseDQMError("DQMStore", "Fatal parsing file '%s'", filename.c_str());
+    return false;
+  }
+
+  for (int i = 0; i < dqmstore_message.histo_size(); i++) {
+    std::string path;
+    std::string objname;
+    TH1 *obj = NULL;
+    const dqmstorepb::ROOTFilePB::Histo &h = dqmstore_message.histo(i);
+    get_info(h, path, objname, &obj);
+    setCurrentFolder(path);
+    if (obj)
+    {
+      extract(static_cast<TObject *>(obj), path, overwrite);
+      delete obj;
+    }
   }
   return true;
 }
