@@ -431,6 +431,18 @@ int addFiles(const std::string &output_filename,
   return 0;
 }
 
+static int
+showusage(void)
+{
+  static const std::string app_name("fasthadd");
+
+  std::cerr << "Usage: " << app_name
+            << " [--[no-]debug] TASK OPTIONS\n\n  "
+            << app_name << " [OPTIONS] add -o OUTPUT_FILE [DAT FILE...]\n  "
+            << app_name << " [OPTIONS] convert -o OUTPUT_FILE DAT_FILE\n  "
+            << app_name << " [OPTIONS] dump [DAT FILE...]\n  ";
+  return ERR_BADCFG;
+}
 
 int main(int argc, char * argv[]) {
   int arg;
@@ -463,30 +475,30 @@ int main(int argc, char * argv[]) {
       task = TASK_CONVERT;
     } else {
       std::cerr << "Unknown action: " << argv[arg] << std::endl;
-      return ERR_BADCFG;
+      return showusage();
     }
   } else {
     std::cerr << "Not enough arguments\n";
-    return ERR_BADCFG;
+    return showusage();
   }
 
   if (task == TASK_ADD || task == TASK_CONVERT) {
     if (arg == argc) {
-      std::cerr << "add action requires a -o option to be set\n";
-      return ERR_BADCFG;
+      std::cerr << "add|convert actions requires a -o option to be set\n";
+      return showusage();
     }
     if (! strcmp(argv[arg], "-o")) {
       if (arg < argc-1) {
         output_file = argv[++arg];
       } else {
         std::cerr << " -o option requires a value\n";
-        return ERR_BADCFG;
+        return showusage();
       }
     }
   } else if (task == TASK_DUMP) {
     if (arg == argc) {
       std::cerr << "Missing input file(s)\n";
-      return ERR_BADCFG;
+      return showusage();
     }
     for (; arg < argc; ++arg) {
       filenames.push_back(argv[arg]);
@@ -496,7 +508,7 @@ int main(int argc, char * argv[]) {
   if (task == TASK_ADD || task == TASK_CONVERT) {
     if (++arg == argc) {
       std::cerr << "Missing input file(s)\n";
-      return ERR_BADCFG;
+      return showusage();
     }
     for (; arg < argc; ++arg) {
       filenames.push_back(argv[arg]);
