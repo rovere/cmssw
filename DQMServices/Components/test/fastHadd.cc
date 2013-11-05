@@ -209,6 +209,7 @@ void fillMessage(dqmstorepb::ROOTFilePB &dqmstore_output_msg,
     h->set_size(buffer.Length());
     h->set_streamed_histo((const void*)buffer.Buffer(),
                           buffer.Length());
+    delete mi->obj;
   }
 }
 
