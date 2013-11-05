@@ -84,6 +84,7 @@ PATH=/afs/cern.ch/work/r/rovere/protocolbuf/bin
 #include <set>
 #include <string>
 #include <iostream>
+#include <memory>
 #include "DQMServices/Core/src/ROOTFilePB.pb.h"
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/gzip_stream.h>
@@ -93,6 +94,7 @@ PATH=/afs/cern.ch/work/r/rovere/protocolbuf/bin
 #include <TBufferFile.h>
 #include <TObject.h>
 #include <TH1.h>
+#include <TKey.h>
 
 #define DEBUG(x, msg) if (debug >= x) std::cout << "DEBUG: " << msg << std::flush
 
@@ -128,7 +130,8 @@ struct MicroME {
 enum TaskType {
   TASK_ADD,
   TASK_DUMP,
-  TASK_CONVERT
+  TASK_CONVERT,
+  TASK_ENCODE
 };
 
 enum ErrType {
@@ -170,6 +173,99 @@ static void get_info(const dqmstorepb::ROOTFilePB::Histo &h,
   if (!*obj) {
     std::cerr << "Error reading element: " << h.full_pathname() << std::endl;
   }
+}
+
+void writeMessage(const dqmstorepb::ROOTFilePB &dqmstore_output_msg,
+                  const std::string &output_filename) {
+
+  DEBUG(1, "Writing file" << std::endl);
+
+  int out_fd = ::open(output_filename.c_str(),
+                      O_WRONLY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
+  FileOutputStream out_stream(out_fd);
+  GzipOutputStream::Options options;
+  options.format = GzipOutputStream::GZIP;
+  options.compression_level = 2;
+  GzipOutputStream gzip_stream(&out_stream,
+                               options);
+  dqmstore_output_msg.SerializeToZeroCopyStream(&gzip_stream);
+
+  google::protobuf::ShutdownProtobufLibrary();
+}
+
+
+void fillMessage(dqmstorepb::ROOTFilePB &dqmstore_output_msg,
+                 const std::set<MicroME> & micromes) {
+  std::set<MicroME>::iterator mi = micromes.begin();
+  std::set<MicroME>::iterator me = micromes.end();
+
+  DEBUG(1, "Streaming ROOT objects" << std::endl);
+  for (; mi != me; ++mi) {
+    dqmstorepb::ROOTFilePB::Histo* h = dqmstore_output_msg.add_histo();
+    DEBUG(2, "Streaming ROOT object " << *(mi->fullname) << "\n");
+    h->set_full_pathname(*(mi->fullname));
+    TBufferFile buffer(TBufferFile::kWrite);
+    buffer.WriteObject(mi->obj);
+    h->set_size(buffer.Length());
+    h->set_streamed_histo((const void*)buffer.Buffer(),
+                          buffer.Length());
+  }
+}
+
+
+void processDirectory(TFile *file,
+                      const std::string& curdir,
+                      std::set<std::string> &dirs,
+                      std::set<std::string> &objs,
+                      std::set<std::string> &fullnames,
+                      std::set<MicroME>& micromes) {
+  DEBUG(1, "Processing directory " << curdir << "\n");
+  file->cd(curdir.c_str());
+  TKey *key;
+  TIter next (gDirectory->GetListOfKeys());
+  while ((key = (TKey *) next())) {
+    TObject * obj = key->ReadObj();
+    if (dynamic_cast<TDirectory *>(obj)) {
+      std::string subdir;
+      subdir.reserve(curdir.size() + strlen(obj->GetName()) + 2);
+      subdir += curdir;
+      if (! curdir.empty())
+        subdir += '/';
+      subdir += obj->GetName();
+      processDirectory(file, subdir, dirs, objs, fullnames, micromes);
+    } else if (dynamic_cast<TH1 *>(obj)) {
+      (dynamic_cast<TH1*>(obj))->SetDirectory(0);
+      DEBUG(2, curdir << "/" << obj->GetName() << "\n");
+      MicroME mme(&*(fullnames.insert(curdir
+                                      + '/'
+                                      + std::string(obj->GetName())).first),
+                     &*(dirs.insert(curdir).first),
+                     &*(objs.insert(obj->GetName()).first));
+      if (obj) {
+        mme.obj = dynamic_cast<TH1*>(obj);
+        micromes.insert(mme);
+      }
+    }
+  }
+}
+
+
+int encodeFile(const std::string &output_filename,
+               const std::vector<std::string> &filenames) {
+  assert(filenames.size() == 1);
+  TFile input(filenames[0].c_str());
+  DEBUG(0, "Encoding file " << filenames[0] << std::endl);
+  std::set<std::string> dirs;
+  std::set<std::string> objs;
+  std::set<std::string> fullnames;
+  std::set<MicroME> micromes;
+  dqmstorepb::ROOTFilePB dqmstore_message;
+
+  processDirectory(&input, "", dirs, objs, fullnames, micromes);
+  fillMessage(dqmstore_message, micromes);
+  writeMessage(dqmstore_message, output_filename);
+
+  return 0;
 }
 
 int convertFile(const std::string &output_filename,
@@ -401,33 +497,10 @@ int addFiles(const std::string &output_filename,
     }
   }
 
-  std::set<MicroME>::iterator mi = micromes.begin();
-  std::set<MicroME>::iterator me = micromes.end();
   dqmstorepb::ROOTFilePB dqmstore_output_msg;
+  fillMessage(dqmstore_output_msg, micromes);
+  writeMessage(dqmstore_output_msg, output_filename);
 
-  DEBUG(1, "Streaming ROOT objects" << std::endl);
-  for (; mi != me; ++mi) {
-    dqmstorepb::ROOTFilePB::Histo* h = dqmstore_output_msg.add_histo();
-    h->set_full_pathname(*(mi->fullname));
-    TBufferFile buffer(TBufferFile::kWrite);
-    buffer.WriteObject(mi->obj);
-    h->set_size(buffer.Length());
-    h->set_streamed_histo((const void*)buffer.Buffer(),
-                          buffer.Length());
-  }
-  DEBUG(1, "Writing merged file" << std::endl);
-
-  int out_fd = ::open(output_filename.c_str(),
-                      O_WRONLY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
-  FileOutputStream out_stream(out_fd);
-  GzipOutputStream::Options options;
-  options.format = GzipOutputStream::GZIP;
-  options.compression_level = 2;
-  GzipOutputStream gzip_stream(&out_stream,
-                               options);
-  dqmstore_output_msg.SerializeToZeroCopyStream(&gzip_stream);
-
-  google::protobuf::ShutdownProtobufLibrary();
   return 0;
 }
 
@@ -439,7 +512,8 @@ showusage(void)
   std::cerr << "Usage: " << app_name
             << " [--[no-]debug] TASK OPTIONS\n\n  "
             << app_name << " [OPTIONS] add -o OUTPUT_FILE [DAT FILE...]\n  "
-            << app_name << " [OPTIONS] convert -o OUTPUT_FILE DAT_FILE\n  "
+            << app_name << " [OPTIONS] convert -o ROOT_FILE DAT_FILE\n  "
+            << app_name << " [OPTIONS] encode -o DAT_FILE ROOT_FILE\n  "
             << app_name << " [OPTIONS] dump [DAT FILE...]\n  ";
   return ERR_BADCFG;
 }
@@ -473,6 +547,9 @@ int main(int argc, char * argv[]) {
     } else if (! strcmp(argv[arg], "convert")) {
       ++arg;
       task = TASK_CONVERT;
+    } else if (! strcmp(argv[arg], "encode")) {
+      ++arg;
+      task = TASK_ENCODE;
     } else {
       std::cerr << "Unknown action: " << argv[arg] << std::endl;
       return showusage();
@@ -482,9 +559,9 @@ int main(int argc, char * argv[]) {
     return showusage();
   }
 
-  if (task == TASK_ADD || task == TASK_CONVERT) {
+  if (task == TASK_ADD || task == TASK_CONVERT || task == TASK_ENCODE) {
     if (arg == argc) {
-      std::cerr << "add|convert actions requires a -o option to be set\n";
+      std::cerr << "add|convert|encode actions requires a -o option to be set\n";
       return showusage();
     }
     if (! strcmp(argv[arg], "-o")) {
@@ -505,7 +582,7 @@ int main(int argc, char * argv[]) {
     }
   }
 
-  if (task == TASK_ADD || task == TASK_CONVERT) {
+  if (task == TASK_ADD || task == TASK_CONVERT || task == TASK_ENCODE) {
     if (++arg == argc) {
       std::cerr << "Missing input file(s)\n";
       return showusage();
@@ -521,6 +598,8 @@ int main(int argc, char * argv[]) {
     ret = dumpFiles(filenames);
   else if (task == TASK_CONVERT)
     ret = convertFile(output_file, filenames);
+  else if (task == TASK_ENCODE)
+    ret = encodeFile(output_file, filenames);
 
   return ret;
 }

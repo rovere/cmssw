@@ -6,8 +6,8 @@ cumPBFile='prova.pb'
 cumPBFile_inROOT='provaPB.root'
 cumPBFileThreaded='provaThreaded.pb'
 cumPBFileThreaded_inROOT='provaPBThreaded.root'
-numThreads=8
-numGroup=$(bc <<< ($numFiles+$numThreads-1)/$numThreads)
+numThreads=4
+numGroup=$(( (numFiles+numThreads-1)/numThreads ))
 timecmd='/usr/bin/time -f %E'
 
 clean_up() {
@@ -35,7 +35,8 @@ convertROOT2PB() {
 
     for file in $(ls Merge*root)
     do
-	cmsRun convertRoot2PB.py $file &> /dev/null
+        fastHadd encode -o `basename $file .root`.pb $file
+#	cmsRun convertRoot2PB.py $file &> /dev/null
 	if [ $? -ne 0 ]; then
 	    exit $?
 	fi
@@ -75,7 +76,7 @@ check_hadd() {
 fasthadd_merge() {
     echo "Merging with fastHadd"
 
-    $timecmd fastHadd -d add -o $cumPBFile $(ls DQM*.pb) 2>&1 > /dev/null
+    $timecmd fastHadd -d add -o $cumPBFile $(ls Merge*.pb) 2>&1 > /dev/null
 
     if [ $? -ne 0 ]; then
 	exit $?
@@ -111,7 +112,7 @@ check_fasthadd() {
 fasthadd_parallel_merge() {
     echo "Merging with parallel fastHadd, $numThreads threads with $numGroup groups"
 
-    $timecmd python fastParallelHadd.py -j $numThreads -g $numGroup -o $cumPBFileThreaded $(ls DQM*.pb) 2>&1 > /dev/null
+    $timecmd python fastParallelHadd.py -j $numThreads -g $numGroup -o $cumPBFileThreaded $(ls Merge*.pb) 2>&1 > /dev/null
 
     if [ $? -ne 0 ]; then
 	exit $?
