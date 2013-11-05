@@ -405,6 +405,7 @@ int addFiles(const std::string &output_filename,
   std::set<MicroME>::iterator me = micromes.end();
   dqmstorepb::ROOTFilePB dqmstore_output_msg;
 
+  DEBUG(1, "Streaming ROOT objects" << std::endl);
   for (; mi != me; ++mi) {
     dqmstorepb::ROOTFilePB::Histo* h = dqmstore_output_msg.add_histo();
     h->set_full_pathname(*(mi->fullname));
@@ -414,13 +415,14 @@ int addFiles(const std::string &output_filename,
     h->set_streamed_histo((const void*)buffer.Buffer(),
                           buffer.Length());
   }
+  DEBUG(1, "Writing merged file" << std::endl);
 
   int out_fd = ::open(output_filename.c_str(),
                       O_WRONLY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
   FileOutputStream out_stream(out_fd);
   GzipOutputStream::Options options;
   options.format = GzipOutputStream::GZIP;
-  options.compression_level = 6;
+  options.compression_level = 2;
   GzipOutputStream gzip_stream(&out_stream,
                                options);
   dqmstore_output_msg.SerializeToZeroCopyStream(&gzip_stream);
