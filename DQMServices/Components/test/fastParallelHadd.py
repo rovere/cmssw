@@ -30,7 +30,7 @@ class SingleMerge(Thread):
             print "Merge job failed for %s" % com
         self.sm_.appendFile(self.output_filename_)
 
-class SampleManager:
+class SampleManager(object):
     def __init__(self, opt, files):
         self.lock_ = Lock()
         self.files_ = files

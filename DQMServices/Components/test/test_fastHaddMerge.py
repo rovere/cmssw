@@ -13,7 +13,7 @@ import re
 
 word2num = {'One': 1, 'Two': 2, 'Ten': 10, 'Twenty': 20, 'Fifty': 50}
 
-class Histo():
+class Histo(object):
     def __init__(self, name, entries,
                  bins, xmin, xmax,
                  value, folder):
@@ -41,7 +41,7 @@ class Histo():
             histo.Fill(self.value_)
         histo.Write()
 
-class FileProducer():
+class FileProducer(object):
     def __init__(self, prefix, numFiles, folders, histo_per_folder):
         self.prefix_ = prefix
         self.numFiles_ = numFiles

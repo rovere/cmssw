@@ -1,6 +1,6 @@
 #!/bin/bash
 
-numFiles=30
+numFiles=15
 cumRootFile='prova.root'
 cumPBFile='prova.pb'
 cumPBFile_inROOT='provaPB.root'
