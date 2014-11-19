@@ -1,66 +1,91 @@
 #! /usr/bin/env python
 
-from Validation.RecoTrack.plotting.validation import Sample
-import Validation.RecoTrack.plotting.trackingPlots as trackingPlots
-import Validation.RecoTrack.plotting.validation as validation
+import os
+import sys
+import fileinput
+import string
+import copy
 
 #########################################################
 ########### User Defined Variables (BEGIN) ##############
 
+
 ### Reference release
-RefRelease='CMSSW_7_2_0_pre8'
+RefRelease='CMSSW_7_2_0_pre3'
 
 ### Relval release (set if different from $CMSSW_VERSION)
-NewRelease='CMSSW_7_3_0_pre1'
+NewRelease='CMSSW_7_2_0_pre4'
 
-#import Validation.RecoTrack.plotting.plotting as plotting
-#plotting.missingOk = True
+### sample list 
 
 ### This is the list of IDEAL-conditions relvals 
 startupsamples= [
-    Sample('RelValMinBias', midfix="13"),
-    Sample('RelValTTbar', midfix="13"),
-    Sample('RelValQCD_Pt_3000_3500', midfix="13"),
-    Sample('RelValQCD_Pt_600_800', midfix="13"),
-    Sample('RelValSingleElectronPt35', midfix="UP15"),
-    Sample('RelValSingleElectronPt10', midfix="UP15"),
-    Sample('RelValSingleMuPt10', midfix="UP15"),
-    Sample('RelValSingleMuPt100', midfix="UP15")
+#'RelValMinBias',   ### list of samples to be validated for each pre-release  
+#'RelValTTbar', 
+#'RelValQCD_Pt_3000_3500',
+#'RelValQCD_Pt_600_800',
+'RelValSingleElectronPt35', 
+'RelValSingleElectronPt10', 
+'RelValSingleMuPt10', 
+'RelValSingleMuPt100',
 ]
 
 pileupstartupsamples = [
-    Sample('RelValTTbar', putype="25ns", midfix="13"),
-    Sample('RelValTTbar', putype="50ns", midfix="13")
-]
-
-upgradesamples = [
-#    Sample("RelValTTbar", midfix="14TeV", scenario="UPG2019withGEM"  ),
-#    Sample("RelValTTbar", midfix="14TeV", scenario="UPG2023SHNoTaper"),
-#    Sample('RelValQCD_Pt_3000_3500', midfix="14TeV", scenario="UPG2019withGEM"  ),
-#    Sample('RelValQCD_Pt_3000_3500', midfix="14TeV", scenario="UPG2023SHNoTaper"),
-#    Sample('RelValSingleElectronPt35', scenario="UPG2019withGEM"  ),
-#    Sample('RelValSingleElectronPt35', scenario="UPG2023SHNoTaper"),
-#    Sample('RelValSingleElectronPt10', scenario="UPG2019withGEM"  ),
-#    Sample('RelValSingleElectronPt10', scenario="UPG2023SHNoTaper"),
-#    Sample('RelValSingleMuPt10', scenario="UPG2019withGEM"  ),
-#    Sample('RelValSingleMuPt10', scenario="UPG2023SHNoTaper"),
-#    Sample('RelValSingleMuPt100', scenario="UPG2019withGEM"  ),
-#    Sample('RelValSingleMuPt100', scenario="UPG2023SHNoTaper"),
-#    Sample('RelValTenMuExtendedE_0_200', scenario="UPG2019withGEM"  ),
-#    Sample('RelValTenMuExtendedE_0_200', scenario="UPG2023SHNoTaper"),
+#'RelValTTbar'
 ]
 
 fastsimstartupsamples = [
-    Sample('RelValTTbar', midfix="13", fastsim=True)
+#'RelValTTbar'
 ]
 
 pileupfastsimstartupsamples = [
-    Sample('RelValTTbar', putype="AVE20", midfix="13", fastsim=True, fastsimCorrespondingFullsimPileup="50ns")
+#'RelValTTbar'
 ]
 
+putype = '25ns'
+
+### Sample version: v1,v2,etc..
+Version='v2'
+
+# Global tags
+StartupTag='POSTLS172_V3'
+
+RefStartupTag='POSTLS172_V3'
+
+
+#FastSimStartupTag='START72_V1'
+FastSimStartupTag='POSTLS172_V3'
+
+#FastSimRefStartupTag='START71_V7'
+FastSimRefStartupTag='POSTLS172_V3'
+
+
 ### Track algorithm name and quality. Can be a list.
-Algos= ['ootb', 'initialStep', 'lowPtTripletStep','pixelPairStep','detachedTripletStep','mixedTripletStep','pixelLessStep','tobTecStep','jetCoreRegionalStep','muonSeededStepInOut','muonSeededStepOutIn']
+Algos= ['ootb', 'iter0', 'iter1','iter2','iter3','iter4','iter5','iter6','iter7','iter9','iter10']
 Qualities=['', 'highPurity']
+
+### Leave unchanged unless the track collection name changes
+Tracksname=''
+
+# Sequence. Possible values:
+#   -only_validation
+#   -re_tracking
+#   -digi2track
+#   -only_validation_and_TP
+#   -re_tracking_and_TP
+#   -digi2track_and_TP
+#   -harvesting
+#   -preproduction
+#   -comparison_only
+
+
+Sequence='comparison_only'
+
+
+
+### Default label is GlobalTag_noPU__Quality_Algo. Change this variable if you want to append an additional string.
+NewSelectionLabel=''
+
 
 ### Reference and new repository
 RefRepository = '/afs/cern.ch/cms/Physics/tracking/validation/MC'
@@ -107,25 +132,25 @@ def replace(map, filein, fileout):
 def do_validation(samples, GlobalTag, trackquality, trackalgorithm, PileUp, sampleType, dofastfull):
     global Sequence, Version, RefSelection, RefRepository, NewSelection, NewRepository, defaultNevents, Events, castorHarvestedFilesDirectory
     global cfg, macro, Tracksname
-    tracks_map = { 'ootb':'general_AssociatorByHitsRecoDenom','initialStep':'cutsRecoZero_AssociatorByHitsRecoDenom','lowPtTripletStep':'cutsRecoFirst_AssociatorByHitsRecoDenom','pixelPairStep':'cutsRecoSecond_AssociatorByHitsRecoDenom','detachedTripletStep':'cutsRecoThird_AssociatorByHitsRecoDenom','mixedTripletStep':'cutsRecoFourth_AssociatorByHitsRecoDenom','pixelLessStep':'cutsRecoFifth_AssociatorByHitsRecoDenom','tobTecStep':'cutsRecoSixth_AssociatorByHitsRecoDenom','jetCoreRegionalStep':'cutsRecoSeventh_AssociatorByHitsRecoDenom','muonSeededStepInOut':'cutsRecoNinth_AssociatorByHitsRecoDenom','muonSeededStepOutIn':'cutsRecoTenth_AssociatorByHitsRecoDenom'}
-    tracks_map_hp = { 'ootb':'cutsRecoHp_AssociatorByHitsRecoDenom','initialStep':'cutsRecoZeroHp_AssociatorByHitsRecoDenom','lowPtTripletStep':'cutsRecoFirstHp_AssociatorByHitsRecoDenom','pixelPairStep':'cutsRecoSecondHp_AssociatorByHitsRecoDenom','detachedTripletStep':'cutsRecoThirdHp_AssociatorByHitsRecoDenom','mixedTripletStep':'cutsRecoFourthHp_AssociatorByHitsRecoDenom','pixelLessStep':'cutsRecoFifthHp_AssociatorByHitsRecoDenom','tobTecStep':'cutsRecoSixthHp_AssociatorByHitsRecoDenom','jetCoreRegionalStep':'cutsRecoSeventhHp_AssociatorByHitsRecoDenom','muonSeededStepInOut':'cutsRecoNinthHp_AssociatorByHitsRecoDenom','muonSeededStepOutIn':'cutsRecoTenthHp_AssociatorByHitsRecoDenom'}
-    if(trackalgorithm=='initialStep' or trackalgorithm=='ootb'):
+    tracks_map = { 'ootb':'general_AssociatorByHitsRecoDenom','iter0':'cutsRecoZero_AssociatorByHitsRecoDenom','iter1':'cutsRecoFirst_AssociatorByHitsRecoDenom','iter2':'cutsRecoSecond_AssociatorByHitsRecoDenom','iter3':'cutsRecoThird_AssociatorByHitsRecoDenom','iter4':'cutsRecoFourth_AssociatorByHitsRecoDenom','iter5':'cutsRecoFifth_AssociatorByHitsRecoDenom','iter6':'cutsRecoSixth_AssociatorByHitsRecoDenom','iter7':'cutsRecoSeventh_AssociatorByHitsRecoDenom','iter9':'cutsRecoNinth_AssociatorByHitsRecoDenom','iter10':'cutsRecoTenth_AssociatorByHitsRecoDenom'}
+    tracks_map_hp = { 'ootb':'cutsRecoHp_AssociatorByHitsRecoDenom','iter0':'cutsRecoZeroHp_AssociatorByHitsRecoDenom','iter1':'cutsRecoFirstHp_AssociatorByHitsRecoDenom','iter2':'cutsRecoSecondHp_AssociatorByHitsRecoDenom','iter3':'cutsRecoThirdHp_AssociatorByHitsRecoDenom','iter4':'cutsRecoFourthHp_AssociatorByHitsRecoDenom','iter5':'cutsRecoFifthHp_AssociatorByHitsRecoDenom','iter6':'cutsRecoSixthHp_AssociatorByHitsRecoDenom','iter7':'cutsRecoSeventhHp_AssociatorByHitsRecoDenom','iter9':'cutsRecoNinthHp_AssociatorByHitsRecoDenom','iter10':'cutsRecoTenthHp_AssociatorByHitsRecoDenom'}
+    if(trackalgorithm=='iter0' or trackalgorithm=='ootb'):
         mineff='0.0'
         maxeff='1.025'
         maxfake='0.7'
-    elif(trackalgorithm=='lowPtTripletStep'):
+    elif(trackalgorithm=='iter1'):
         mineff='0.0'
         maxeff='0.5'
         maxfake='0.8'
-    elif(trackalgorithm=='pixelPairStep'):
+    elif(trackalgorithm=='iter2'):
         mineff='0.0'
         maxeff='0.25'
         maxfake='0.8'
-    elif(trackalgorithm=='mixedTripletStep'):
+    elif(trackalgorithm=='iter4'):
         mineff='0.0'
         maxeff='0.3'
         maxfake='0.8'
-    elif(trackalgorithm=='pixelLessStep' or trackalgorithm=='tobTecStep'):
+    elif(trackalgorithm=='iter5' or trackalgorithm=='iter6'):
         mineff='0.0'
         maxeff='1.0'
         maxfake='0.8'
@@ -439,22 +464,3 @@ for algo in Algos:
             RefSelection+= putype
         do_validation(pileupfastsimstartupsamples, FastSimStartupTag, quality , algo, PileUp, sampleType, dofastfull)
 
-=======
-# Tracking validation plots
-val = trackingPlots.TrackingValidation(
-    fullsimSamples = startupsamples + pileupstartupsamples + upgradesamples,
-    fastsimSamples = fastsimstartupsamples + pileupfastsimstartupsamples,
-    newRelease=NewRelease,
-)
-val.download()
-val.doPlots(algos=Algos, qualities=Qualities, refRelease=RefRelease,
-                   refRepository=RefRepository, newRepository=NewRepository, plotter=trackingPlots.plotter)
-
-# Timing plots
-#val2 = validation.Validation(
-#    fullsimSamples = startupsamples, fastsimSamples=[],
-#    newRelease=NewRelease)
-#val2.doPlots(refRelease=RefRelease,
-#             refRepository=RefRepository, newRepository=NewRepository, plotter=trackingPlots.timePlotter,
-#             algos=None, qualities=None)
->>>>>>> remotes/matti/trackingValidation
