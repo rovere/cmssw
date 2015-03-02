@@ -24,12 +24,18 @@ process.load("DQMOffline.Configuration.DQMOfflineMC_cff")
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff")
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10)
+    input = cms.untracked.int32(-1)
 )
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring("file:step2.root"),
+    fileNames = cms.untracked.vstring(
+    "/store/relval/CMSSW_7_4_0_pre8/RelValSingleMuPt10_UP15/GEN-SIM-DIGI-RAW-HLTDEBUG/MCRUN2_74_V7-v1/00000/2AD75824-F7BC-E411-A98F-0025905A48B2.root",
+    "/store/relval/CMSSW_7_4_0_pre8/RelValSingleMuPt10_UP15/GEN-SIM-DIGI-RAW-HLTDEBUG/MCRUN2_74_V7-v1/00000/34DAB86B-2EBD-E411-8A68-0025905A60FE.root",
+    "/store/relval/CMSSW_7_4_0_pre8/RelValSingleMuPt10_UP15/GEN-SIM-DIGI-RAW-HLTDEBUG/MCRUN2_74_V7-v1/00000/38A75F26-F7BC-E411-B1C7-0025905A60EE.root",
+    "/store/relval/CMSSW_7_4_0_pre8/RelValSingleMuPt10_UP15/GEN-SIM-DIGI-RAW-HLTDEBUG/MCRUN2_74_V7-v1/00000/3E2FFB1A-F7BC-E411-AE8A-0025905B8606.root",
+    "/store/relval/CMSSW_7_4_0_pre8/RelValSingleMuPt10_UP15/GEN-SIM-DIGI-RAW-HLTDEBUG/MCRUN2_74_V7-v1/00000/DCB5C918-F7BC-E411-AD78-0025905A60F8.root"
+    ),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -49,7 +55,7 @@ process.configurationMetadata = cms.untracked.PSet(
 process.RECOSIMoutput = cms.OutputModule("PoolOutputModule",
     dataset = cms.untracked.PSet(
         dataTier = cms.untracked.string("GEN-SIM-RECO"),
-        filterName = cms.untracked.string(")
+        filterName = cms.untracked.string('')
     ),
     eventAutoFlushCompressedSize = cms.untracked.int32(5242880),
     fileName = cms.untracked.string("file:step3.root"),
@@ -60,7 +66,7 @@ process.RECOSIMoutput = cms.OutputModule("PoolOutputModule",
 process.DQMoutput = cms.OutputModule("DQMRootOutputModule",
     dataset = cms.untracked.PSet(
         dataTier = cms.untracked.string("DQMIO"),
-        filterName = cms.untracked.string(")
+        filterName = cms.untracked.string('')
     ),
     fileName = cms.untracked.string("file:step3_inDQM.root"),
     outputCommands = process.DQMEventContent.outputCommands,
@@ -70,12 +76,12 @@ process.DQMoutput = cms.OutputModule("DQMRootOutputModule",
 # Additional output definition
 
 # Other statements
-process.mix.playback = "TRUE"
+process.mix.playback =  True
 process.mix.digitizers = cms.PSet()
 for a in process.aliases: delattr(process, a)
 process.RandomNumberGeneratorService.restoreStateLabel=cms.untracked.string("randomEngineStateProducer")
 from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, "auto:run2_mc", ")
+process.GlobalTag = GlobalTag(process.GlobalTag, "auto:run2_mc", '')
 
 # Path and EndPath definitions
 process.raw2digi_step = cms.Path(process.RawToDigi)
