@@ -129,6 +129,7 @@ bool BaseCkfTrajectoryBuilder::toBeContinued (TempTrajectory& traj, bool inOut) 
   // worth continuing to build this track candidate.
   if (inOut) {
     // if (theInOutFilter == 0) edm::LogError("CkfPattern") << "CkfTrajectoryBuilder error: trying to use dedicated filter for in-out tracking phase, when none specified";
+    LogDebug("CkfPattern") << "Returning: " << theInOutFilter->toBeContinued(traj) << std::endl;
     return theInOutFilter->toBeContinued(traj);
   } else {
     return theFilter->toBeContinued(traj);

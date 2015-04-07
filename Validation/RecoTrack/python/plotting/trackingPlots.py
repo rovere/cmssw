@@ -282,17 +282,17 @@ tpPlotter = Plotter([
 
 _tracks_map = {
     '': { # all tracks
-        'ootb':  'general_AssociatorByHitsRecoDenom',
-        'iter0': 'cutsRecoZero_AssociatorByHitsRecoDenom',
-        'iter1': 'cutsRecoFirst_AssociatorByHitsRecoDenom',
-        'iter2': 'cutsRecoSecond_AssociatorByHitsRecoDenom',
-        'iter3': 'cutsRecoThird_AssociatorByHitsRecoDenom',
-        'iter4': 'cutsRecoFourth_AssociatorByHitsRecoDenom',
-        'iter5': 'cutsRecoFifth_AssociatorByHitsRecoDenom',
-        'iter6': 'cutsRecoSixth_AssociatorByHitsRecoDenom',
-        'iter7': 'cutsRecoSeventh_AssociatorByHitsRecoDenom',
-        'iter9': 'cutsRecoNinth_AssociatorByHitsRecoDenom',
-        'iter10':'cutsRecoTenth_AssociatorByHitsRecoDenom'
+        'ootb':  'cutsReco_quickAssociatorByHits'
+        # 'iter0': 'cutsRecoZero_AssociatorByHitsRecoDenom',
+        # 'iter1': 'cutsRecoFirst_AssociatorByHitsRecoDenom',
+        # 'iter2': 'cutsRecoSecond_AssociatorByHitsRecoDenom',
+        # 'iter3': 'cutsRecoThird_AssociatorByHitsRecoDenom',
+        # 'iter4': 'cutsRecoFourth_AssociatorByHitsRecoDenom',
+        # 'iter5': 'cutsRecoFifth_AssociatorByHitsRecoDenom',
+        # 'iter6': 'cutsRecoSixth_AssociatorByHitsRecoDenom',
+        # 'iter7': 'cutsRecoSeventh_AssociatorByHitsRecoDenom',
+        # 'iter9': 'cutsRecoNinth_AssociatorByHitsRecoDenom',
+        # 'iter10':'cutsRecoTenth_AssociatorByHitsRecoDenom'
     },
     "highPurity": {
         'ootb':   'cutsRecoHp_AssociatorByHitsRecoDenom',
