@@ -277,6 +277,26 @@ void DuplicateTrackMerger::produce(edm::Event& iEvent, const edm::EventSetup& iS
       if(mvaBDTG < minBDTG_)continue;
       
       
+      LogDebug("DuplicateTrackMerger") << "Merging tracks i, j " << i << ", " << j
+                                       << "\nTrack 1: pt = " << t1->innerMomentum().Rho()
+                                       << "\nTrack 1: p = " << t1->innerMomentum().R()
+                                       << "\nTrack 1: algo = " << t1->algo() - 4
+                                       << "\nTrack 2: pt = " << t2->innerMomentum().Rho()
+                                       << "\nTrack 2: p = " << t2->innerMomentum().R()
+                                       << "\nTrack 2: algo = " << t2->algo() - 4
+                                       << "\ndeltaR3d = " << deltaR3d
+                                       << "\nDCA = " << (ftsn2.position()-ftsn1.position()).mag()
+                                       << "\ntmva_ddsz_ = " << gbrVals_[0]
+                                       << "\ntmva_ddxy_ = " << gbrVals_[1]
+                                       << "\ntmva_dphi_ = " << gbrVals_[2]
+                                       << "\ntmva_dlambda_ = " << gbrVals_[3]
+                                       << "\ntmva_dqoverp_ = " << gbrVals_[4]
+                                       << "\ntmva_d3dr_ = " << gbrVals_[5]
+                                       << "\ntmva_d3dz_ = " << gbrVals_[6]
+                                       << "\ntmva_outer_nMissingInner_(t2) = " << gbrVals_[7]
+                                       << "\ntmva_inner_nMissingOuter_(t1) = " << gbrVals_[8]
+                                       << std::endl;
+
       TrackCandidate mergedTrack = merger_.merge(*t1,*t2);
       out_duplicateCandidates->push_back(mergedTrack);
       std::pair<TrackRef,TrackRef> trackPair(TrackRef(refTrks,i),TrackRef(refTrks,j));

@@ -145,12 +145,14 @@ TkStripMeasurementDet::recHits( const TrajectoryStateOnSurface& stateOnThisDet, 
       while ( --leftCluster >=  detSet.begin()) {
 	SiStripClusterRef clusterref = edmNew::makeRefTo( data.stripData().handle(), leftCluster ); 
 	bool isCompatible = filteredRecHits(clusterref, stateOnThisDet, est, data.stripClustersToSkip(), result, diffs);
+        LogDebug("TkStripMeasurementDet") << "recHits(tsos, est, data) 1 " << isCompatible << std::endl;
 	if(!isCompatible) break; // exit loop on first incompatible hit
       }
     }
     for ( ; rightCluster != detSet.end(); rightCluster++) {
       SiStripClusterRef clusterref = edmNew::makeRefTo( data.stripData().handle(), rightCluster ); 
       bool isCompatible = filteredRecHits(clusterref, stateOnThisDet, est, data.stripClustersToSkip(), result,diffs);
+      LogDebug("TkStripMeasurementDet") << "recHits(tsos, est, data) 2 " << isCompatible << std::endl;
       if(!isCompatible) break; // exit loop on first incompatible hit
     }
     
