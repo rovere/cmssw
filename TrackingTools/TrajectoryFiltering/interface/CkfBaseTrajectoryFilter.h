@@ -57,14 +57,37 @@ protected:
     return true;}
 
   template <class T> bool TBC(T& traj) const{
-    if (!theMaxHitsTrajectoryFilter->toBeContinued(traj)) return false;     
-    if (!theMaxLostHitsTrajectoryFilter->toBeContinued(traj)) return false;
-    if (!theMaxConsecLostHitsTrajectoryFilter->toBeContinued(traj)) return false;
-    if (!theLostHitsFractionTrajectoryFilter->toBeContinued(traj)) return false;
-    if (!theMinPtTrajectoryFilter->toBeContinued(traj)) return false;     
-    if (!theChargeSignificanceTrajectoryFilter->toBeContinued(traj)) return false;
-    if (!theLooperTrajectoryFilter->toBeContinued(traj)) return false;
-    return true;}
+    if (!theMaxHitsTrajectoryFilter->toBeContinued(traj)) {
+      LogDebug("CkfBaseTrajectoryFilter") << "Killing PR due to maxHits" << std::endl;
+      return false;     
+    }
+    if (!theMaxLostHitsTrajectoryFilter->toBeContinued(traj)) {
+      LogDebug("CkfBaseTrajectoryFilter") << "Killing PR due to maxLostHits" << std::endl;
+      return false;
+    }
+    if (!theMaxConsecLostHitsTrajectoryFilter->toBeContinued(traj)) {
+      LogDebug("CkfBaseTrajectoryFilter") << "Killing PR due to maxConsecLostHits" << std::endl;
+      return false;
+    }
+    if (!theLostHitsFractionTrajectoryFilter->toBeContinued(traj)) {
+      LogDebug("CkfBaseTrajectoryFilter") << "Killing PR due to LostHitsFrac" << std::endl;
+      return false;
+    }
+    if (!theMinPtTrajectoryFilter->toBeContinued(traj)) {
+      LogDebug("CkfBaseTrajectoryFilter") << "Killing PR due to minPt" << std::endl;
+      return false;     
+    }
+    if (!theChargeSignificanceTrajectoryFilter->toBeContinued(traj)) {
+      LogDebug("CkfBaseTrajectoryFilter") << "Killing PR due to chargeSignificance" << std::endl;
+      return false;
+    }
+    if (!theLooperTrajectoryFilter->toBeContinued(traj)) {
+      LogDebug("CkfBaseTrajectoryFilter") << "Killing PR due to Looper" << std::endl;
+      return false;
+    }
+    LogDebug("CkfBaseTrajectoryFilter") << "Trajectory is good." << std::endl;
+    return true;
+  }
 
   
 

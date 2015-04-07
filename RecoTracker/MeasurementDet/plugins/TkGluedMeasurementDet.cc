@@ -447,6 +447,7 @@ TkGluedMeasurementDet::HitCollectorForRecHits::addProjected(const TrackingRecHit
 void
 TkGluedMeasurementDet::HitCollectorForSimpleHits::add(SiStripMatchedRecHit2D const & hit2d) 
 {
+  LogDebug("TkGluedMeasurementDet") << "Adding SiStripMatchedRecHit2D" << std::endl;
   hasNewHits_ = true; //FIXME: see also what happens moving this within testAndPush   // consistent with previous code
   if ( !est_.preFilter(stateOnThisDet_, ClusterFilterPayload(hit2d.geographicalId(), &hit2d.monoCluster(), &hit2d.stereoCluster()) ) ) return; 
   hasNewHits_ = true; //FIXME: see also what happens moving this within testAndPush
@@ -454,6 +455,9 @@ TkGluedMeasurementDet::HitCollectorForSimpleHits::add(SiStripMatchedRecHit2D con
   std::pair<bool,double> diffEst = est_.estimate( stateOnThisDet_, hit2d);
   if (diffEst.first)
     target_.emplace_back(new SiStripMatchedRecHit2D(hit2d));  // fix to use move (really needed???)
+  LogDebug("TkGluedMeasurementDet") << "Adding SiStripMatchedRecHit2D: done, compatible: "
+                                    << diffEst.first
+                                    << ", chi2: " << diffEst.second << std::endl;
 }
 
 
@@ -462,6 +466,7 @@ void
 TkGluedMeasurementDet::HitCollectorForSimpleHits::addProjected(const TrackingRecHit& hit,
 							       const GlobalVector & gdir)
 {
+  LogDebug("TkGluedMeasurementDet") << "addProjected TrackingRecHits" << std::endl;
  auto const & thit = reinterpret_cast<TrackerSingleRecHit const&>(hit);
  if ( !est_.preFilter(stateOnThisDet_, ClusterFilterPayload(hit.geographicalId(), &thit.stripCluster()) ) ) return;
 
@@ -472,6 +477,9 @@ TkGluedMeasurementDet::HitCollectorForSimpleHits::addProjected(const TrackingRec
   if ( diffEst.first) {
     target_.emplace_back(phit.release());
   }
+  LogDebug("TkGluedMeasurementDet") << "addProjected TrackingRecHit: done, compatible: "
+                                    << diffEst.first
+                                    << ", chi2: " << diffEst.second << std::endl;
 }
 
 
@@ -493,6 +501,7 @@ TkGluedMeasurementDet::HitCollectorForFastMeasurements::HitCollectorForFastMeasu
 void
 TkGluedMeasurementDet::HitCollectorForFastMeasurements::add(SiStripMatchedRecHit2D const& hit2d) 
 {
+  LogDebug("TkGluedMeasurementDet") << "Adding SiStripMatchedRecHit2D" << std::endl;
   hasNewHits_ = true; //FIXME: see also what happens moving this within testAndPush  // consistent with previous code...
   if ( !est_.preFilter(stateOnThisDet_, ClusterFilterPayload(hit2d.geographicalId(), &hit2d.monoCluster(), &hit2d.stereoCluster()) ) ) return;
   hasNewHits_ = true; //FIXME: see also what happens moving this within testAndPush
@@ -500,6 +509,9 @@ TkGluedMeasurementDet::HitCollectorForFastMeasurements::add(SiStripMatchedRecHit
   std::pair<bool,double> diffEst = est_.estimate( stateOnThisDet_, hit2d);
   if (diffEst.first)
     target_.add(std::move(hit2d.cloneSH()),diffEst.second);
+  LogDebug("TkGluedMeasurementDet") << "Adding SiStripMatchedRecHit2D: done, compatible: "
+                                    << diffEst.first
+                                    << ", chi2: " << diffEst.second << std::endl;
 }
 
 
@@ -507,6 +519,7 @@ void
 TkGluedMeasurementDet::HitCollectorForFastMeasurements::addProjected(const TrackingRecHit& hit,
 								     const GlobalVector & gdir)
 {
+  LogDebug("TkGluedMeasurementDet") << "addProjected TrackingRecHit" << std::endl;
   auto const & thit = reinterpret_cast<TrackerSingleRecHit const&>(hit);
   if ( !est_.preFilter(stateOnThisDet_, ClusterFilterPayload(hit.geographicalId(), &thit.stripCluster()) ) ) return;
 
@@ -519,6 +532,9 @@ TkGluedMeasurementDet::HitCollectorForFastMeasurements::addProjected(const Track
   if ( diffEst.first) {
     target_.add(phit, diffEst.second);
   }
+  LogDebug("TkGluedMeasurementDet") << "addProjected TrackingRecHit: done, compatible: "
+                                    << diffEst.first
+                                    << ", chi2: " << diffEst.second << std::endl;
 }
 
 

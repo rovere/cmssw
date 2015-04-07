@@ -198,14 +198,17 @@ public:
 			std::vector<SiStripRecHit2D> & result) const {
     if (isMasked(*cluster)) return true;
     const GeomDetUnit& gdu( specificGeomDet());
+    LogDebug("TkStripMeasurementDet") << "1" << std::endl;
     if (!accept(cluster, skipClusters)) return true;
+    LogDebug("TkStripMeasurementDet") << "2" << std::endl;
     if (!est.preFilter(ltp, ClusterFilterPayload(rawId(),&*cluster) )) return true;   // avoids shadow; consistent with previous statement...
+    LogDebug("TkStripMeasurementDet") << "3" << std::endl;
     VLocalValues const & vlv = cpe()->localParametersV( *cluster, gdu, ltp);
     bool isCompatible(false);
     for(auto vl : vlv) {
       auto && recHit  = SiStripRecHit2D( vl.first, vl.second, gdu, cluster);   // FIXME add cluster count in OmniRef
       std::pair<bool,double> diffEst = est.estimate(ltp, recHit);
-      LogDebug("TkStripMeasurementDet")<<" chi2=" << diffEst.second;
+      LogDebug("TkStripMeasurementDet") << "compatible " << diffEst.first << ", chi2=" << diffEst.second;
       if ( diffEst.first ) {
 	result.push_back(std::move(recHit));
 	isCompatible = true;

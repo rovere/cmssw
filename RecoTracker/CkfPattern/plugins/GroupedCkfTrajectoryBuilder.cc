@@ -223,8 +223,18 @@ GroupedCkfTrajectoryBuilder::rebuildTrajectories(TempTrajectory const & starting
   work.reserve(result.size());
   for (TrajectoryContainer::iterator traj=result.begin();
        traj!=result.end(); ++traj) {
-    if(traj->isValid()) work.push_back(TempTrajectory(std::move(*traj)));
+    LogDebug("CkfPattern") << "Trajectory is valid: " << traj->isValid() << std::endl;
+    if(traj->isValid()) {
+      LogDebug("CkfPattern") << "Selecting Trajectory with:\n"
+                             << "foundHits:   " << traj->foundHits()
+                             << "\nLostHits:   " << traj->lostHits()
+                             << "\nchiSquared: " << traj->chiSquared()
+                             << "\nndof:       " << traj->ndof() << std::endl;
+      work.push_back(TempTrajectory(std::move(*traj)));
+    }
+    
   }
+  LogDebug("CkfPattern") << "work size: " << work.size() << std::endl;
 
   rebuildSeedingRegion(seed,startingTraj,work);
   final.reserve(work.size());
@@ -409,7 +419,7 @@ std::string whatIsTheNextStep(TempTrajectory const& traj , std::pair<TrajectoryS
     buffer << "Started from " << traj.lastLayer() << " z " << sfdl->specificSurface().position().z()
 	   << " phi " << sfdl->specificSurface().phi() << endl;
   }
-  buffer << "Trying to go to";
+  buffer << "Trying to go to: " << std::endl;
   for ( vector<const DetLayer*>::iterator il=nl.begin();
 	il!=nl.end(); il++){ 
     //B.M. buffer << " " << layerName(*il)  << " " << *il << endl;
@@ -434,7 +444,8 @@ std::string whatIsTheStateToUse(TrajectoryStateOnSurface &initial, TrajectorySta
 	 << stateToUse.globalMomentum().phi() << " / " 
     	 << stateToUse.globalMomentum().z() << " / " 
 	 << stateToUse.charge()
-	 << " for layer at "<< l << endl;
+	 << " for layer at "<< l
+	 << " of kind "<< l->subDetector() << endl;
   buffer << "     errors:";
   for ( int i=0; i<5; i++ )  buffer << " " << sqrt(stateToUse.curvilinearError().matrix()(i,i));
   buffer << endl;
@@ -638,7 +649,8 @@ GroupedCkfTrajectoryBuilder::advanceOneLayer (const TrajectorySeed& seed,
        //GIO// for ( vector<TM>::const_iterator im=measurements.begin();
       //GIO//        im!=measurements.end(); im++ )  newTraj.push(*im);
       //if ( toBeContinued(newTraj,regionalCondition) ) { TOBE FIXED
-      if ( toBeContinued(newTraj, inOut) ) {
+    LogDebug("CkfPattern") << "toBeContinued: " << toBeContinued(newTraj, inOut) << std::endl;
+    if ( toBeContinued(newTraj, inOut) ) {
 	// Have added one more hit to track candidate
 	
 	LogDebug("CkfPattern")<<"GCTB: adding updated trajectory to candidates: inOut="<<inOut<<" hits="<<newTraj.foundHits();
@@ -1021,8 +1033,8 @@ GroupedCkfTrajectoryBuilder::backwardFit (TempTrajectory& candidate, unsigned in
   if unlikely( candidate.measurements().size()<=nSeed ) return TempTrajectory();
 
   LogDebug("CkfPattern")<<"nSeed " << nSeed << endl
-			<< "Old traj direction = " << candidate.direction() << endl
-			<<PrintoutHelper::dumpMeasurements(candidate.measurements());
+			<< "\nOld traj direction = " << candidate.direction() << endl
+			<< "\n" << PrintoutHelper::dumpMeasurements(candidate.measurements());
 
   //
   // backward fit trajectory.

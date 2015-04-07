@@ -54,11 +54,13 @@ private:
   float pTChargeCutThreshold2_;
 
   bool checkClusterCharge(DetId id, SiStripCluster const & cluster, const TrajectoryStateOnSurface& ts) const {
+    LogDebug("TkStripMeasurementDet") << "Chi2ChargeMeasurementEstimator::checkClusterCharge detid: "
+                                      << id.rawId() << " chargePerCM: " <<
+        siStripClusterTools::chargePerCM(id, cluster, ts.localParameters() )
+                                      << " minGoodStripCharge_ " << minGoodStripCharge_ << std::endl;
     return siStripClusterTools::chargePerCM(id, cluster, ts.localParameters() ) >  minGoodStripCharge_;
 
   }
-
-
 };
 
 bool Chi2ChargeMeasurementEstimator::preFilter(const TrajectoryStateOnSurface& ts,

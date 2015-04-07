@@ -351,10 +351,12 @@ TrackListMerger::~TrackListMerger() { }
     float trackMVAs[rSize];
     reco::TrackBase::TrackAlgorithm oriAlgo[rSize];
     std::vector<reco::TrackBase::AlgoMask> algoMask(rSize);
+
     for (unsigned int j=0; j<rSize;j++) {
       indexG[j]=-1; selected[j]=1; trkUpdated[j]=false; trackCollNum[j]=0; trackQuals[j]=0;trackMVAs[j] = -998.0;oriAlgo[j]=reco::TrackBase::undefAlgorithm;
     }
 
+    LogDebug("TrackListMerger") << "Importing all tracks" << std::endl;
     int ngood=0;
     for (unsigned int j=0; j!= collsSize; j++) {
       const reco::TrackCollection *tC1=trackColls[j];
@@ -377,6 +379,15 @@ TrackListMerger::~TrackListMerger() { }
           algoMask[i]=track->algoMask();
  
 	  reco::TrackRef trkRef=reco::TrackRef(trackHandles[j],iC);
+          LogDebug("TrackListMerger") << "Importing track_index: " << i
+                                      << " from collection_index: " << j
+                                      << " with index_in_track_collection: " << (i-trackCollFirsts[j])
+                                      << "\n pt=" << track->pt()
+                                      << "\n algo=" << track->algo()
+                                      << "\n normChi2=" << track->normalizedChi2()
+                                      << "\n found=" << track->found()
+                                      << "\n qual=" << (hasSelector_[j] > 0 ? (*trackSelColl)[trkRef] : -9999)
+                                      << std::endl;
 	  if ( copyMVA_ )
 	    if( (*trackMVAStore).contains(trkRef.id()) ) trackMVAs[i] = (*trackMVAStore)[trkRef];
 	  if ( hasSelector_[j]>0 ) {
@@ -409,10 +420,16 @@ TrackListMerger::~TrackListMerger() { }
 	  }
 	  // good!
 	  indexG[i] = ngood++;
+          LogDebug("TrackListMerger") << "Selected track_index: " << i
+                                      << " from collection_index: " << j
+                                      << "\nselected: " << selected[i]
+                                      << "\nquality: " << selected[i]-10 << std::endl;
 	  //if ( beVerb) std::cout << "inverb " << track->pt() << " " << selected[i] << std::endl;
 	}//end loop over tracks
       }//end more than 0 track
     } // loop over trackcolls
+    LogDebug("TrackListMerger") << "Importing all tracks: done."
+                                << "\nImported tracks: " << ngood << std::endl;
 
 
     statCount.pre(ngood);
@@ -476,6 +493,12 @@ TrackListMerger::~TrackListMerger() { }
 	int nhit1 = nh1; // validHits[k1];
 	float score1 = score[k1];
 
+        LogDebug("TrackListMerger") << "Analyzing track_index: " << i
+                                    << "'n collection_index: " << collNum
+                                    << "\n k1: " << k1
+                                    << "\n nh1: " << nh1
+                                    << "\n quality: " << qualityMaskT1
+                                    << "\n score: " << score1 << std::endl;
 	// start at next collection
 	for ( unsigned int j=i+1; j<rSize; j++) {
 	  if (selected[j]==0) continue;
@@ -496,6 +519,12 @@ TrackListMerger::~TrackListMerger() { }
 	  int nhit2 = nh2;
 
 
+          LogDebug("TrackListMerger") << "Analyzing track_index: " << j
+                                      << "'n collection_index: " << collNum2
+                                      << "\n k2: " << k2
+                                      << "\n nh2: " << nh2
+                                      << "\n quality: " << newQualityMask
+                                      << "\n score: " << score[k2] << std::endl;
 	  auto share = use_sharesInput_ ?
 	    [](const TrackingRecHit*  it,const TrackingRecHit*  jt, float)->bool { return it->sharesInput(jt,TrackingRecHit::some); } :
 	  [](const TrackingRecHit*  it,const TrackingRecHit*  jt, float eps)->bool {
@@ -555,6 +584,7 @@ TrackListMerger::~TrackListMerger() { }
          };
 
 	  if ( dupfound ) {
+            LogDebug("TrackListMerger") << "Duplicate Found." << std::endl;
 	    float score2 = score[k2];
 	    constexpr float almostSame = 0.01f; // difference rather than ratio due to possible negative values for score
 	    if ( score1 - score2 > almostSame ) {

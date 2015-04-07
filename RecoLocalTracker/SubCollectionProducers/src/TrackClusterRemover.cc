@@ -159,6 +159,8 @@ namespace {
 	  //note that this does not work for some trackquals (goodIterative  or undefQuality)
 	  else
 	    goodTk = ( qual & (1<<trackQuality_))>>trackQuality_;
+          LogDebug("TrackClusterRemover") << "Quality: " << qual
+                                          << "\ngoodTk:" << goodTk << std::endl;
 	}
 	else
 	  goodTk=(track.quality(trackQuality_));
