@@ -166,7 +166,8 @@ pixelLessStepSelector = RecoTracker.FinalTrackSelectors.multiTrackSelector_cfi.m
             d0_par2 = ( 0.7, 4.0 ),
             dz_par2 = ( 0.7, 4.0 )
             ),
-        ) #end of vpset
+        ),
+    vertices = cms.InputTag("pixelVertices")#end of vpset
     ) #end of clone
 
 

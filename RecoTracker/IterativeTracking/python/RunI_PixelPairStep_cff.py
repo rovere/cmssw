@@ -39,6 +39,7 @@ pixelPairStepSeeds = RecoTracker.TkSeedGenerator.GlobalSeedsFromPairsWithVertice
 pixelPairStepSeeds.RegionFactoryPSet.RegionPSet.ptMin = 0.6
 pixelPairStepSeeds.RegionFactoryPSet.RegionPSet.originRadius = 0.015
 pixelPairStepSeeds.RegionFactoryPSet.RegionPSet.fixedError = 0.03
+pixelPairStepSeeds.RegionFactoryPSet.RegionPSet.VertexCollection = 'pixelVertices'
 pixelPairStepSeeds.OrderedHitsFactoryPSet.SeedingLayers = cms.InputTag('pixelPairStepSeedLayers')
 
 pixelPairStepSeeds.SeedComparitorPSet = cms.PSet(
@@ -115,7 +116,8 @@ pixelPairStepSelector = RecoTracker.FinalTrackSelectors.multiTrackSelector_cfi.m
             name = 'pixelPairStep',
             preFilterName = 'pixelPairStepTight',
             ),
-        ) #end of vpset
+        ),
+    vertices = cms.InputTag("pixelVertices")#end of vpset
     ) #end of clone
 
 # Final sequence

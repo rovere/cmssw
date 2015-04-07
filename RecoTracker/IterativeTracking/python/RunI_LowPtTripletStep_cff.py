@@ -120,7 +120,8 @@ lowPtTripletStepSelector = RecoTracker.FinalTrackSelectors.multiTrackSelector_cf
             name = 'lowPtTripletStep',
             preFilterName = 'lowPtTripletStepTight',
             ),
-        ) #end of vpset
+        ),
+    vertices = cms.InputTag("pixelVertices")#end of vpset
     ) #end of clone
 
 # Final sequence

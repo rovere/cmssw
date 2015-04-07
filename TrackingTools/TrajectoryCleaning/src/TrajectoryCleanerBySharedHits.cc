@@ -47,29 +47,29 @@ void TrajectoryCleanerBySharedHits::clean( TrajectoryPointerContainer & tc) cons
   theRecHitMap.clear(10*tc.size());           // set 10*tc.size() active buckets
                                               // numbers are not optimized
 
-  DEBUG_PRINT(std::cout << "Filling RecHit map" << std::endl);
+  LogDebug("CkfPattern") << "Filling RecHit map" << std::endl;
   for (TrajectoryPointerContainer::iterator
 	 it = tc.begin(); it != tc.end(); ++it) {
-    DEBUG_PRINT(std::cout << "  Processing trajectory " << *it << " (" << (*it)->foundHits() << " valid hits)" << std::endl);
+    LogDebug("CkfPattern") << "  Processing trajectory " << *it << " (" << (*it)->foundHits() << " valid hits)" << std::endl;
     const Trajectory::DataContainer & pd = (*it)->measurements();
     for (Trajectory::DataContainer::const_iterator im = pd.begin();
     	 im != pd.end(); im++) {
       const TransientTrackingRecHit* theRecHit = &(*(*im).recHit());
       if (theRecHit->isValid()) {
-        DEBUG_PRINT(std::cout << "    Added hit " << theRecHit << " for trajectory " << *it << std::endl);
+        LogDebug("CkfPattern") << "    Added hit " << theRecHit << " for trajectory " << *it << std::endl;
         theRecHitMap.insert(theRecHit, *it);
       }
     }
   }
-  DEBUG_PRINT(theRecHitMap.dump());
+  //  DEBUG_PRINT(theRecHitMap.dump());
 
-  DEBUG_PRINT(std::cout << "Using RecHit map" << std::endl);
+  LogDebug("CkfPattern") << "Using RecHit map" << std::endl;
   // for each trajectory fill theTrajMap
   auto & theTrajMap = theMaps.theTrajMap; 
   for (TrajectoryCleaner::TrajectoryPointerIterator
 	 itt = tc.begin(); itt != tc.end(); ++itt) {
     if((*itt)->isValid()){  
-      DEBUG_PRINT(std::cout << "  Processing trajectory " << *itt << " (" << (*itt)->foundHits() << " valid hits)" << std::endl);
+      LogDebug("CkfPattern") << "  Processing trajectory " << *itt << " (" << (*itt)->foundHits() << " valid hits)" << std::endl;
       theTrajMap.clear();
       const Trajectory::DataContainer & pd = (*itt)->measurements();
       for (Trajectory::DataContainer::const_iterator im = pd.begin();
@@ -77,7 +77,7 @@ void TrajectoryCleanerBySharedHits::clean( TrajectoryPointerContainer & tc) cons
 	//RC const TransientTrackingRecHit* theRecHit = ((*im).recHit());
 	const TransientTrackingRecHit* theRecHit = &(*(*im).recHit());
         if (theRecHit->isValid()) {
-          DEBUG_PRINT(std::cout << "    Searching for overlaps on hit " << theRecHit << " for trajectory " << *itt << std::endl);
+          LogDebug("CkfPattern") << "    Searching for overlaps on hit " << theRecHit << " for trajectory " << *itt << std::endl;
           for (RecHitMap::value_iterator ivec = theRecHitMap.values(theRecHit);
                 ivec.good(); ++ivec) {
               if (*ivec != *itt){
@@ -114,6 +114,13 @@ void TrajectoryCleanerBySharedHits::clean( TrajectoryPointerContainer & tc) cons
 	      Trajectory* badtraj;
 	      double score1 = validHitBonus_*nhit1 - missingHitPenalty_*(*itt)->lostHits() - (*itt)->chiSquared();
 	      double score2 = validHitBonus_*nhit2 - missingHitPenalty_*(*imapp).first->lostHits() - (*imapp).first->chiSquared();
+              LogDebug("CkfPattern") << "validhit1: " << validHitBonus_*nhit1
+                                     << " missing1: " << missingHitPenalty_*(*itt)->lostHits()
+                                     << " Chi2_1: " << (*itt)->chiSquared() << std::endl;
+              LogDebug("CkfPattern") << "validhit2: " << validHitBonus_*nhit2
+                                     << " missing2: " << missingHitPenalty_*(*imapp).first->lostHits()
+                                     << " Chi2_2: " << (*imapp).first->chiSquared() << std::endl;
+              LogDebug("CkfPattern") << "Score1: " << score1 << " score2: " << score2 << std::endl;
 	      badtraj = (score1 > score2) ? (*imapp).first : *itt;
 	      badtraj->invalidate();  // invalidate this trajectory
 	    }
