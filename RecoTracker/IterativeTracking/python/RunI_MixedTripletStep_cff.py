@@ -75,11 +75,7 @@ mixedTripletStepSeedLayersB = cms.EDProducer("SeedingLayersEDProducer",
     ),
     TIB = cms.PSet(
         matchedRecHits = cms.InputTag("siStripMatchedRecHits","matchedRecHit"),
-<<<<<<< HEAD
-        TTRHBuilder = cms.string('WithTrackAngle'), clusterChargeCut = cms.PSet(refToPSet_ = cms.string('SiStripClusterChargeCutTight')),
-=======
-        TTRHBuilder = cms.string('WithTrackAngle'),
->>>>>>> FETCH_HEAD
+        TTRHBuilder = cms.string('WithTrackAngle'), clusterChargeCut = cms.PSet(refToPSet_ = cms.string('SiStripClusterChargeCutNone')),
         skipClusters = cms.InputTag('mixedTripletStepClusters')
     )
 )
