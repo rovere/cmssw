@@ -35,7 +35,8 @@ import TrackingTools.KalmanUpdators.Chi2MeasurementEstimatorESProducer_cfi
 initialStepChi2Est = TrackingTools.KalmanUpdators.Chi2MeasurementEstimatorESProducer_cfi.Chi2MeasurementEstimator.clone(
     ComponentName = cms.string('initialStepChi2Est'),
     nSigma = cms.double(3.0),
-    MaxChi2 = cms.double(30.0)
+    MaxChi2 = cms.double(30.0),
+    clusterChargeCut = cms.PSet(refToPSet_ = cms.string('SiStripClusterChargeCutNone')),
 )
 
 import RecoTracker.CkfPattern.GroupedCkfTrajectoryBuilder_cfi

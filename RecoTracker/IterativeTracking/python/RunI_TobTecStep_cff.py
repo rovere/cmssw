@@ -29,7 +29,7 @@ tobTecStepSeedLayers = cms.EDProducer("SeedingLayersEDProducer",
     TOB = cms.PSet(
         matchedRecHits = cms.InputTag("siStripMatchedRecHits","matchedRecHit"),
         skipClusters = cms.InputTag('tobTecStepClusters'),
-        TTRHBuilder = cms.string('WithTrackAngle'), clusterChargeCut = cms.PSet(refToPSet_ = cms.string('SiStripClusterChargeCutTight'))
+        TTRHBuilder = cms.string('WithTrackAngle'), clusterChargeCut = cms.PSet(refToPSet_ = cms.string('SiStripClusterChargeCutNone'))
     ),
 
     TEC = cms.PSet(
@@ -37,7 +37,7 @@ tobTecStepSeedLayers = cms.EDProducer("SeedingLayersEDProducer",
         skipClusters = cms.InputTag('tobTecStepClusters'),
         #    untracked bool useSimpleRphiHitsCleaner = false
         useRingSlector = cms.bool(True),
-        TTRHBuilder = cms.string('WithTrackAngle'), clusterChargeCut = cms.PSet(refToPSet_ = cms.string('SiStripClusterChargeCutTight')),
+        TTRHBuilder = cms.string('WithTrackAngle'), clusterChargeCut = cms.PSet(refToPSet_ = cms.string('SiStripClusterChargeCutNone')),
         minRing = cms.int32(5),
         maxRing = cms.int32(5)
     )
@@ -73,7 +73,8 @@ import TrackingTools.KalmanUpdators.Chi2MeasurementEstimatorESProducer_cfi
 tobTecStepChi2Est = TrackingTools.KalmanUpdators.Chi2MeasurementEstimatorESProducer_cfi.Chi2MeasurementEstimator.clone(
     ComponentName = cms.string('tobTecStepChi2Est'),
     nSigma = cms.double(3.0),
-    MaxChi2 = cms.double(16.0)
+    MaxChi2 = cms.double(16.0),
+    clusterChargeCut = cms.PSet(refToPSet_ = cms.string('SiStripClusterChargeCutNone'))
 )
 
 # TRACK BUILDING
