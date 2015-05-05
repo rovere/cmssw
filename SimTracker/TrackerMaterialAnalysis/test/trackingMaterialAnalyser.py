@@ -6,8 +6,8 @@ process = cms.Process("MaterialAnalyser")
 
 
 # Configuration and Conditions
-process.load("Configuration.StandardSequences.Geometry_cff")
-process.load("Configuration.StandardSequences.MagneticField_40T_cff")
+process.load("Configuration.Geometry.GeometryExtended2015_cff")
+process.load("Configuration.StandardSequences.MagneticField_38T_cff")
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff")
 process.load('FWCore.MessageService.MessageLogger_cfi')
 #Global Tag
