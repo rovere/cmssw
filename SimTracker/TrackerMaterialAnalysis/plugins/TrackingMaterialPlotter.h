@@ -1,6 +1,8 @@
 #ifndef TrackingMaterialPlotter_h
 #define TrackingMaterialPlotter_h
 
+#include "boost/format.hpp"
+
 #include <algorithm>
 #include <vector>
 #include <sstream>
@@ -9,13 +11,15 @@
 
 #include <TH2F.h>
 #include <TColor.h>
+#include <TLine.h>
+#include <TText.h>
 
 #include "XHistogram.h"
 class MaterialAccountingStep;
 
 class TrackingMaterialPlotter {
 public:
-  
+
   typedef std::pair<double, double> Range;
 
   TrackingMaterialPlotter( float maxZ, float maxR, float resolution );
@@ -37,7 +41,7 @@ private:
   void fill_color();
   unsigned int fill_gradient(const TColor & first, const TColor & last, unsigned int steps = 100, unsigned int index = 0);
   unsigned int fill_gradient(unsigned int first, unsigned int last, unsigned int steps = 100, unsigned int index = 0);
-
+  std::vector<std::pair<std::shared_ptr<TLine>, std::shared_ptr<TText> > > overlayEtaReferences();
 };
 
 #endif // TrackingMaterialPlotter_h

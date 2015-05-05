@@ -144,6 +144,7 @@ void TrackingMaterialPlotter::draw( void )
 {
   const double scale = 10.;
   TCanvas* canvas;
+  std::vector<std::pair<std::shared_ptr<TLine>, std::shared_ptr<TText> > > lines = overlayEtaReferences();
 
   XHistogram::Histogram* radlen = m_tracker.get(0);
   canvas = new TCanvas("radlen_rz", "RadiationLengths - RZ view", (int) (600 * scale * 1.25),  (int) (120 * scale * 1.50));
@@ -153,6 +154,13 @@ void TrackingMaterialPlotter::draw( void )
   canvas->GetFrame()->SetFillColor(kWhite);
   radlen->Draw("colz");
   radlen->Draw("same axis y+");
+  for (auto line : lines) {
+    line.first->SetLineWidth(5);
+    line.first->SetLineColor(kSpring);
+    line.first->Draw();
+    line.second->SetTextColor(kSpring);
+    line.second->Draw();
+  }
   radlen->SaveAs("radlen.root");
   canvas->SaveAs("radlen.png");
   delete canvas;
@@ -165,6 +173,13 @@ void TrackingMaterialPlotter::draw( void )
   gStyle->SetNumberContours( m_gradient.size() );
   dedx->Draw("colz");
   dedx->Draw("same axis y+");
+  for (auto line : lines) {
+    line.first->SetLineWidth(5);
+    line.first->SetLineColor(kSpring);
+    line.first->Draw();
+    line.second->SetTextColor(kSpring);
+    line.second->Draw();
+  }
   dedx->SaveAs("dedx.root");
   canvas->SaveAs("dedx.png");
   delete canvas;
@@ -184,3 +199,58 @@ void TrackingMaterialPlotter::draw( void )
   delete canvas;
 }
 
+std::vector<std::pair<std::shared_ptr<TLine>, std::shared_ptr<TText> > >
+TrackingMaterialPlotter::overlayEtaReferences() {
+  std::vector<std::pair<std::shared_ptr<TLine>, std::shared_ptr<TText> > > lines;
+
+  lines.reserve(40);
+  std::pair<float, float> deltaZ(293, 298);
+  std::pair<float, float> deltaR(115, 118);
+  float text_size = 0.033;
+
+  for (float eta = 0.; eta <= 3.8; eta += 0.2) {
+    float theta = 2. * atan (exp(-eta));
+    if (eta >= 1.8) {
+      lines.push_back(
+          std::make_pair<std::shared_ptr<TLine>, std::shared_ptr<TText> > (
+              std::make_shared<TLine>(
+                  deltaZ.first, deltaZ.first * tan(theta), deltaZ.second, deltaZ.second * tan(theta)),
+              std::make_shared<TText>(
+                  deltaZ.first, deltaZ.first * tan(theta), str(boost::format("%2.1f") % eta).c_str())));
+      lines.back().second->SetTextFont(42);
+      lines.back().second->SetTextSize(text_size);
+      lines.back().second->SetTextAlign(33);
+      lines.push_back(
+          std::make_pair<std::shared_ptr<TLine>, std::shared_ptr<TText> > (
+              std::make_shared<TLine>(
+                  -deltaZ.first, deltaZ.first * tan(theta), -deltaZ.second, deltaZ.second * tan(theta)),
+              std::make_shared<TText>(
+                  -deltaZ.first, deltaZ.first * tan(theta), str(boost::format("-%2.1f") % eta).c_str())));
+      lines.back().second->SetTextFont(42);
+      lines.back().second->SetTextSize(text_size);
+      lines.back().second->SetTextAlign(13);
+    } else {
+      lines.push_back(
+          std::make_pair<std::shared_ptr<TLine>, std::shared_ptr<TText> > (
+              std::make_shared<TLine>(
+                  deltaR.first / tan(theta), deltaR.first, deltaR.second / tan(theta), deltaR.second),
+              std::make_shared<TText>(
+                  deltaR.first / tan(theta), deltaR.first, str(boost::format("%2.1f") % eta).c_str())));
+      lines.back().second->SetTextFont(42);
+      lines.back().second->SetTextSize(text_size);
+      lines.back().second->SetTextAlign(23);
+      if (eta != 0) {
+        lines.push_back(
+            std::make_pair<std::shared_ptr<TLine>, std::shared_ptr<TText> > (
+                std::make_shared<TLine>(
+                    - deltaR.first / tan(theta), deltaR.first, - deltaR.second / tan(theta), deltaR.second),
+                std::make_shared<TText>(
+                    - deltaR.first / tan(theta), deltaR.first, str(boost::format("-%2.1f") % eta).c_str())));
+        lines.back().second->SetTextFont(42);
+        lines.back().second->SetTextSize(text_size);
+        lines.back().second->SetTextAlign(23);
+      }
+    }
+  }
+  return lines;
+}
