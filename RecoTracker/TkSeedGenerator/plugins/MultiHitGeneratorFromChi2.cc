@@ -109,6 +109,7 @@ void MultiHitGeneratorFromChi2::initES(const edm::EventSetup& es)
   else es.get<IdealMagneticFieldRecord>().get(bfield_h);
   bfield = bfield_h.product();
   nomField = bfield->nominalValue();
+  std::cout << "Nominal B-Field value: " << nomField << std::endl;
 
   edm::ESHandle<ClusterShapeHitFilter> filterHandle_;
   es.get<CkfComponentsRecord>().get(filterName_, filterHandle_);
@@ -203,7 +204,7 @@ void MultiHitGeneratorFromChi2::hitSets(const TrackingRegion& region,
 	  { double angle = hi->phi();
 	    double myz = barrelLayer? hi->hit()->globalPosition().z() : hi->hit()->globalPosition().perp();
 
-	    if (debug && hi->hit()->rawId()==debug_Id2) {
+	    if (debug || hi->hit()->rawId()==debug_Id2) {
 	      cout << "filling KDTree with hit in id=" << debug_Id2 
 		   << " with pos: " << hi->hit()->globalPosition() 
 		   << " phi=" << hi->hit()->globalPosition().phi() 
@@ -232,7 +233,9 @@ void MultiHitGeneratorFromChi2::hitSets(const TrackingRegion& region,
   //gc: this sets the minPt of the triplet
   double curv = PixelRecoUtilities::curvature(1. / region.ptMin(), es);
 
-  if (debug) std::cout << "pair size=" << pairs.size() << std::endl;
+  if (debug)
+    std::cout << "pair size=" << pairs.size() <<
+        " curv=" << curv << std::endl;
 
   //gc: now we loop over all pairs
   for (OrderedHitPairs::const_iterator ip = pairs.begin(); ip != pairs.end(); ++ip) {
@@ -250,7 +253,7 @@ void MultiHitGeneratorFromChi2::hitSets(const TrackingRegion& region,
     GlobalPoint gp0 = hit0->globalPosition();
     GlobalPoint gp1 = hit1->globalPosition();
 
-    bool debugPair = debug && ip->inner()->rawId()==debug_Id0 && ip->outer()->rawId()==debug_Id1;
+    bool debugPair = debug || ip->inner()->rawId()==debug_Id0 || ip->outer()->rawId()==debug_Id1;
 
     if (debugPair) {
       cout << endl << endl
@@ -530,7 +533,7 @@ void MultiHitGeneratorFromChi2::hitSets(const TrackingRegion& region,
 	rzLine.fit(cottheta, intercept, covss, covii, covsi);
 	float chi2 = rzLine.chi2(cottheta, intercept);
 
-	bool debugTriplet = debugPair && hit2->rawId()==debug_Id2;
+	bool debugTriplet = debugPair || hit2->rawId()==debug_Id2;
 	if (debugTriplet) {
 	  std::cout << endl << "triplet candidate in debug id" << std::endl;
 	  cout << "hit in id="<<hit2->rawId()<<" (from KDTree) with pos: " << KDdata->hit()->globalPosition()
@@ -552,7 +555,7 @@ void MultiHitGeneratorFromChi2::hitSets(const TrackingRegion& region,
 	  if (debugTriplet) {
 	    std::cout << "triplet pT=" << pt << std::endl;
 	  }
-	  if (pt<region.ptMin()) continue;
+          if (pt<region.ptMin()) continue;
 	  
 	  if (chi2_cuts.size()==4) {
 	    if ( ( pt>pt_interv[0] && pt<=pt_interv[1] && chi2 > chi2_cuts[0] ) ||
