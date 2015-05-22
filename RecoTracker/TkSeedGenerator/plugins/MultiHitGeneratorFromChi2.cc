@@ -159,7 +159,7 @@ void MultiHitGeneratorFromChi2::hitSets(const TrackingRegion& region,
   thePairGenerator->hitPairs(region,pairs,ev,es);
   if (debug) cout << endl;
   if (pairs.empty()) {
-    //cout << "empy pairs" << endl;
+    cout << "empy pairs" << endl;
     return;
   }
   
@@ -270,9 +270,9 @@ void MultiHitGeneratorFromChi2::hitSets(const TrackingRegion& region,
 
       //fixme add pixels
       bool passFilterHit0 = true;
-      if (//hit0->geographicalId().subdetId() > 2
-	  hit0->geographicalId().subdetId()==SiStripDetId::TIB 
-	  || hit0->geographicalId().subdetId()==SiStripDetId::TID
+      if (nomField !=0 && //hit0->geographicalId().subdetId() > 2
+          (hit0->geographicalId().subdetId()==SiStripDetId::TIB
+           || hit0->geographicalId().subdetId()==SiStripDetId::TID)
 	  //|| hit0->geographicalId().subdetId()==SiStripDetId::TOB
 	  //|| hit0->geographicalId().subdetId()==SiStripDetId::TEC
 	  ) {	
@@ -292,9 +292,9 @@ void MultiHitGeneratorFromChi2::hitSets(const TrackingRegion& region,
       if (debugPair&&!passFilterHit0)  cout << "hit0 did not pass cluster shape filter" << endl;
       if (!passFilterHit0) continue;
       bool passFilterHit1 = true;
-      if (//hit1->geographicalId().subdetId() > 2
-	  hit1->geographicalId().subdetId()==SiStripDetId::TIB 
-	  || hit1->geographicalId().subdetId()==SiStripDetId::TID
+      if (nomField != 0 && //hit1->geographicalId().subdetId() > 2
+          (hit1->geographicalId().subdetId()==SiStripDetId::TIB
+           || hit1->geographicalId().subdetId()==SiStripDetId::TID)
 	  //|| hit1->geographicalId().subdetId()==SiStripDetId::TOB
 	  //|| hit1->geographicalId().subdetId()==SiStripDetId::TEC
 	  ) {	
