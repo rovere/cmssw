@@ -182,7 +182,7 @@ public:
     for(auto vl : vlv) {
       SiStripRecHit2D recHit(vl.first, vl.second, fastGeomDet(), cluster); // FIXME add cluster count in OmniRef
       std::pair<bool,double> diffEst = est.estimate(ltp, recHit);
-      LogDebug("TkStripMeasurementDet")<<" chi2=" << diffEst.second;
+      LogDebug("TkStripMeasurementDet|FTD")<<" chi2=" << diffEst.second;
       if ( diffEst.first ) {
 	result.push_back(std::move(std::make_shared<SiStripRecHit2D>(recHit)));
 	diffs.push_back(diffEst.second);
@@ -198,17 +198,17 @@ public:
 			std::vector<SiStripRecHit2D> & result) const {
     if (isMasked(*cluster)) return true;
     const GeomDetUnit& gdu( specificGeomDet());
-    LogDebug("TkStripMeasurementDet") << "1" << std::endl;
+    LogDebug("TkStripMeasurementDet|FTD") << "1" << std::endl;
     if (!accept(cluster, skipClusters)) return true;
-    LogDebug("TkStripMeasurementDet") << "2" << std::endl;
+    LogDebug("TkStripMeasurementDet|FTD") << "2" << std::endl;
     if (!est.preFilter(ltp, ClusterFilterPayload(rawId(),&*cluster) )) return true;   // avoids shadow; consistent with previous statement...
-    LogDebug("TkStripMeasurementDet") << "3" << std::endl;
+    LogDebug("TkStripMeasurementDet|FTD") << "3" << std::endl;
     VLocalValues const & vlv = cpe()->localParametersV( *cluster, gdu, ltp);
     bool isCompatible(false);
     for(auto vl : vlv) {
       auto && recHit  = SiStripRecHit2D( vl.first, vl.second, gdu, cluster);   // FIXME add cluster count in OmniRef
       std::pair<bool,double> diffEst = est.estimate(ltp, recHit);
-      LogDebug("TkStripMeasurementDet") << "compatible " << diffEst.first << ", chi2=" << diffEst.second;
+      LogDebug("TkStripMeasurementDet|FTD") << "compatible " << diffEst.first << ", chi2=" << diffEst.second;
       if ( diffEst.first ) {
 	result.push_back(std::move(recHit));
 	isCompatible = true;
@@ -288,7 +288,7 @@ public:
   inline bool accept(SiStripClusterRef const & r, const std::vector<bool> & skipClusters) const {
     if(skipClusters.empty()) return true;
    if (r.key()>=skipClusters.size()){
-      LogDebug("TkStripMeasurementDet")<<r.key()<<" is larger than: "<<skipClusters.size()
+      LogDebug("TkStripMeasurementDet|FTD")<<r.key()<<" is larger than: "<<skipClusters.size()
 				       <<"\n This must be a new cluster, and therefore should not be skiped most likely.";
       // edm::LogError("WrongStripMasking")<<r.key()<<" is larger than: "<<skipClusters.size()<<" no skipping done"; // protect for on demand???
       return true;

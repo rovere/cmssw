@@ -43,7 +43,7 @@ namespace {
     void truncated() { ++trunc;}
     void invalid() { ++totInvCand;}
     void print() const {
-      LogDebug("TSB")<< "TrajectorySegmentBuilder stat\nGroup/Seg/Lock/Inv/Trunc "
+      LogDebug("TSB|FTD")<< "TrajectorySegmentBuilder stat\nGroup/Seg/Lock/Inv/Trunc "
     		<< totGroup<<'/'<<totSeg<<'/'<<totLockHits<<'/'<<totInvCand<<'/'<<trunc
 		<< std::endl;
     }
@@ -82,7 +82,7 @@ TrajectorySegmentBuilder::segments (const TSOS startingState)
     theLayerMeasurements->groupedMeasurements(theLayer,startingState,theFullPropagator,theEstimator);
 
 #ifdef DBG_TSB
-  LogDebug("TSB") << "TSB: number of measurement groups = " << measGroups.size() << endl;
+  LogDebug("TSB|FTD") << "TSB: number of measurement groups = " << measGroups.size() << endl;
   //  theDbgFlg = measGroups.size()>1;
   theDbgFlg = true;
 #else
@@ -118,7 +118,7 @@ TrajectorySegmentBuilder::segments (const TSOS startingState)
 	break;
       }
   }  
-  //   LogDebug("TSB") << "Groups / combinations = " << measGroups.size() << " " << ncomb << endl;
+  //   LogDebug("TSB|FTD") << "Groups / combinations = " << measGroups.size() << " " << ncomb << endl;
   if unlikely( truncate && ngrp>0 )  measGroups.resize(ngrp-1);
 
 #endif
@@ -135,39 +135,39 @@ TrajectorySegmentBuilder::segments (const TSOS startingState)
 	    im!=measurements.end(); ++im ) {
 	if ( im->recHit()->isValid() )  ngrp++;
       }
-      LogDebug("TSB") << " " << ngrp;
+      LogDebug("TSB|FTD") << " " << ngrp;
       if ( ngrp>0 )  ntot *= ngrp;
     }  
 
-    LogDebug("TSB") << "TrajectorySegmentBuilder::partialTrajectories:: det ids & hit types / group" << endl;
+    LogDebug("TSB|FTD") << "TrajectorySegmentBuilder::partialTrajectories:: det ids & hit types / group" << endl;
     for (vector<TMG>::const_iterator ig=measGroups.begin();
 	 ig!=measGroups.end(); ++ig) {
       const vector<TM>& measurements = ig->measurements();
       for ( vector<TM>::const_iterator im=measurements.begin();
 	    im!=measurements.end(); ++im ) {
-	if ( im!=measurements.begin() )  LogDebug("TSB") << " / ";
+	if ( im!=measurements.begin() )  LogDebug("TSB|FTD") << " / ";
 	if ( im->recHit()->det() )
-	  LogDebug("TSB") << im->recHit()->det()->geographicalId().rawId() << " "
+	  LogDebug("TSB|FTD") << im->recHit()->det()->geographicalId().rawId() << " "
 	       << im->recHit()->getType();
 	else
-	  LogDebug("TSB") << "no det";
+	  LogDebug("TSB|FTD") << "no det";
       }
-      LogDebug("TSB") << endl;
+      LogDebug("TSB|FTD") << endl;
     }  
   
 
 //   if ( measGroups.size()>4 ) {
-    LogDebug("TSB") << typeid(theLayer).name() << endl;
-    LogDebug("TSB") << startingState.localError().matrix() << endl;
+    LogDebug("TSB|FTD") << typeid(theLayer).name() << endl;
+    LogDebug("TSB|FTD") << startingState.localError().matrix() << endl;
 //     for (vector<TMG>::const_iterator ig=measGroups.begin();
 // 	 ig!=measGroups.end(); ig++) {
-//       LogDebug("TSB") << "Nr. of measurements = " << ig->measurements().size() << endl;
+//       LogDebug("TSB|FTD") << "Nr. of measurements = " << ig->measurements().size() << endl;
 //       const DetGroup& dg = ig->detGroup();
 //       for ( DetGroup::const_iterator id=dg.begin();
 // 	    id!=dg.end(); id++ ) {
 // 	GlobalPoint p(id->det()->position());
 // 	GlobalVector v(id->det()->toGlobal(LocalVector(0.,0.,1.)));
-// 	LogDebug("TSB") << p.perp() << " " << p.phi() << " " << p.z() << " ; "
+// 	LogDebug("TSB|FTD") << p.perp() << " " << p.phi() << " " << p.z() << " ; "
 // 	     << v.phi() << " " << v.z() << endl;
 //       }
 //     }
@@ -178,7 +178,7 @@ TrajectorySegmentBuilder::segments (const TSOS startingState)
   TempTrajectoryContainer && candidates = 
     addGroup(startingTrajectory,measGroups.begin(),measGroups.end());
 
-  if unlikely(theDbgFlg) LogDebug("TSB") << "TSB: back with " << candidates.size() << " candidates" << endl;
+  if unlikely(theDbgFlg) LogDebug("TSB|FTD") << "TSB: back with " << candidates.size() << " candidates" << endl;
 
   //
   // add invalid hit - try to get first detector hit by the extrapolation
@@ -186,7 +186,7 @@ TrajectorySegmentBuilder::segments (const TSOS startingState)
 
   updateWithInvalidHit(startingTrajectory,measGroups,candidates);
 
-  if unlikely(theDbgFlg) LogDebug("TSB") << "TSB: " << candidates.size() << " candidates after invalid hit" << endl;
+  if unlikely(theDbgFlg) LogDebug("TSB|FTD") << "TSB: " << candidates.size() << " candidates after invalid hit" << endl;
 
   statCount.incr(measGroups.size(), candidates.size(), theLockedHits.size());
 
@@ -210,11 +210,11 @@ void TrajectorySegmentBuilder::updateTrajectory (TempTrajectory& traj, TM tm) co
 //     if ( tm.updatedState().isValid() ) {
 //       if ( !hit.det().surface()->bounds().inside(tm.updatedState().localPosition(),
 // 						tm.updatedState().localError().positionError(),3.f) ) {
-// 	LogDebug("TSB") << "Incompatibility after update for det at " << hit.det().position() << ":" << endl;
-// 	LogDebug("TSB") << tm.predictedState().localPosition() << " " 
+// 	LogDebug("TSB|FTD") << "Incompatibility after update for det at " << hit.det().position() << ":" << endl;
+// 	LogDebug("TSB|FTD") << tm.predictedState().localPosition() << " " 
 // 	     << tm.predictedState().localError().positionError() << endl;
-// 	LogDebug("TSB") << hit.localPosition() << " " << hit.localPositionError() << endl;
-// 	LogDebug("TSB") << tm.updatedState().localPosition() << " "
+// 	LogDebug("TSB|FTD") << hit.localPosition() << " " << hit.localPositionError() << endl;
+// 	LogDebug("TSB|FTD") << tm.updatedState().localPosition() << " "
 // 	     << tm.updatedState().localError().positionError() << endl;
 //       }
 //     }
@@ -232,14 +232,14 @@ TrajectorySegmentBuilder::addGroup (TempTrajectory const & traj,
 {
   vector<TempTrajectory> ret;
   if ( begin==end ) {
-    //LogDebug("TSB")<< "TrajectorySegmentBuilder::addGroup" << " traj.empty()=" << traj.empty() << "EMPTY" << std::endl;
-    if unlikely(theDbgFlg) LogDebug("TSB") << "TSB::addGroup : no groups left" << endl;
+    //LogDebug("TSB|FTD")<< "TrajectorySegmentBuilder::addGroup" << " traj.empty()=" << traj.empty() << "EMPTY" << std::endl;
+    if unlikely(theDbgFlg) LogDebug("TSB|FTD") << "TSB::addGroup : no groups left" << endl;
     if ( !traj.empty() )
       ret.push_back(traj);
     return ret;
   }
   
-  if unlikely(theDbgFlg) LogDebug("TSB") << "TSB::addGroup : traj.size() = " << traj.measurements().size()
+  if unlikely(theDbgFlg) LogDebug("TSB|FTD") << "TSB::addGroup : traj.size() = " << traj.measurements().size()
 			      << " first group at " << &(*begin)
 	       //        << " nr. of candidates = " << candidates.size() 
 			      << endl;
@@ -253,7 +253,7 @@ TrajectorySegmentBuilder::addGroup (TempTrajectory const & traj,
     } else {
       updateCandidates(traj,begin->measurements(),updatedTrajectories);
     }
-    if unlikely(theDbgFlg) LogDebug("TSB") << "TSB::addGroup : updating with first group - "
+    if unlikely(theDbgFlg) LogDebug("TSB|FTD") << "TSB::addGroup : updating with first group - "
 				<< updatedTrajectories.size() << " trajectories" << endl;
   }
   else {
@@ -266,7 +266,7 @@ TrajectorySegmentBuilder::addGroup (TempTrajectory const & traj,
       updateCandidates(traj,std::move(meas),
 		       updatedTrajectories);
     }
-    if unlikely(theDbgFlg) LogDebug("TSB") << "TSB::addGroup : updating"
+    if unlikely(theDbgFlg) LogDebug("TSB|FTD") << "TSB::addGroup : updating"
 				<< updatedTrajectories.size() << " trajectories-1" << endl;
     } 
   }
@@ -278,10 +278,10 @@ TrajectorySegmentBuilder::addGroup (TempTrajectory const & traj,
   if (begin+1 != end) {
     ret.reserve(4); // a good upper bound
     for (auto const & ut : updatedTrajectories) {
-      if unlikely(theDbgFlg) LogDebug("TSB") << "TSB::addGroup : trying to extend candidate at "
+      if unlikely(theDbgFlg) LogDebug("TSB|FTD") << "TSB::addGroup : trying to extend candidate at "
 				  << &ut << " size " << ut.measurements().size() << endl;
       vector<TempTrajectory> && finalTrajectories = addGroup(ut,begin+1,end);
-      if unlikely(theDbgFlg) LogDebug("TSB") << "TSB::addGroup : " << finalTrajectories.size()
+      if unlikely(theDbgFlg) LogDebug("TSB|FTD") << "TSB::addGroup : " << finalTrajectories.size()
 				  << " finalised candidates before cleaning" << endl;
       //B.M. to be ported later
       // V.I. only mark invalidate
@@ -289,7 +289,7 @@ TrajectorySegmentBuilder::addGroup (TempTrajectory const & traj,
       
       if unlikely(theDbgFlg) {
 	  int ntf=0; for ( auto const & t : finalTrajectories) if (t.isValid()) ++ntf;
-	  LogDebug("TSB") << "TSB::addGroup : got " << ntf
+	  LogDebug("TSB|FTD") << "TSB::addGroup : got " << ntf
 	       << " finalised candidates" << endl;
 	}
       
@@ -305,7 +305,7 @@ TrajectorySegmentBuilder::addGroup (TempTrajectory const & traj,
       if (!t.empty()) ret.push_back(std::move(t));
   }
   
-  //LogDebug("TSB")<< "TrajectorySegmentBuilder::addGroup" << 
+  //LogDebug("TSB|FTD")<< "TrajectorySegmentBuilder::addGroup" << 
   //             " traj.empty()=" << traj.empty() << 
   //             " end-begin=" << (end-begin)  <<
   //             " #updated=" << updatedTrajectories.size() << 
@@ -352,7 +352,7 @@ TrajectorySegmentBuilder::redoMeasurements (const TempTrajectory& traj,
   //
   // loop over all dets
   //
-  if unlikely(theDbgFlg) LogDebug("TSB") << "TSB::redoMeasurements : nr. of measurements / group =";
+  if unlikely(theDbgFlg) LogDebug("TSB|FTD") << "TSB::redoMeasurements : nr. of measurements / group =";
 
   tracking::TempMeasurements tmps;
 
@@ -363,7 +363,7 @@ TrajectorySegmentBuilder::redoMeasurements (const TempTrajectory& traj,
 						 traj.lastMeasurement().updatedState(),
 						 theGeomPropagator,theEstimator);
     
-    if unlikely(theDbgFlg && !compat.first) LogDebug("TSB")<< " 0";
+    if unlikely(theDbgFlg && !compat.first) LogDebug("TSB|FTD")<< " 0";
 
     if(!compat.first) continue;
 
@@ -373,12 +373,12 @@ TrajectorySegmentBuilder::redoMeasurements (const TempTrajectory& traj,
       for (std::size_t i=0; i!=tmps.size(); ++i)
 	result.emplace_back(compat.second,std::move(tmps.hits[i]),tmps.distances[i],&theLayer);
 
-    if unlikely(theDbgFlg) LogDebug("TSB") << " " << tmps.size();
+    if unlikely(theDbgFlg) LogDebug("TSB|FTD") << " " << tmps.size();
     tmps.clear();
     
   }
 
-  if unlikely(theDbgFlg) LogDebug("TSB") << endl;  
+  if unlikely(theDbgFlg) LogDebug("TSB|FTD") << endl;  
 
   std::sort( result.begin(), result.end(), TrajMeasLessEstim());
 
@@ -414,7 +414,7 @@ TrajectorySegmentBuilder::updateWithInvalidHit (TempTrajectory& traj,
 	    // add the hit
             candidates.push_back(traj); 
             updateTrajectory(candidates.back(), *im);
-	    if unlikely( theDbgFlg ) LogDebug("TSB") << "TrajectorySegmentBuilder::updateWithInvalidHit "
+	    if unlikely( theDbgFlg ) LogDebug("TSB|FTD") << "TrajectorySegmentBuilder::updateWithInvalidHit "
 				  << "added inactive hit" << endl;
 	    return;
 	  }
@@ -447,12 +447,12 @@ TrajectorySegmentBuilder::updateWithInvalidHit (TempTrajectory& traj,
 	}
       }
     }
-    if unlikely( theDbgFlg && iteration==0 ) LogDebug("TSB") << "TrajectorySegmentBuilder::updateWithInvalidHit: "
+    if unlikely( theDbgFlg && iteration==0 ) LogDebug("TSB|FTD") << "TrajectorySegmentBuilder::updateWithInvalidHit: "
 				    << " did not find invalid hit on 1st iteration" << endl;
   }
 
   if unlikely( theDbgFlg)
-	       LogDebug("TSB") << "TrajectorySegmentBuilder::updateWithInvalidHit: "
+	       LogDebug("TSB|FTD") << "TrajectorySegmentBuilder::updateWithInvalidHit: "
 		    << " did not find invalid hit" << endl;
 }
 
@@ -505,10 +505,10 @@ TrajectorySegmentBuilder::cleanCandidates (vector<TempTrajectory>& candidates) c
   const int NC = candidates.size();
   int index[NC]; for (int i=0; i!=NC; ++i) index[i]=i;
   std::sort(index,index+NC,[&candidates](int i, int j) { return lessByFoundHits(candidates[i],candidates[j]);});
-//   LogDebug("TSB") << "SortedCandidates.foundHits";
+//   LogDebug("TSB|FTD") << "SortedCandidates.foundHits";
 //   for (auto i1 : index) 
-//     LogDebug("TSB") << " " << candidates[i1].foundHits();
-//   LogDebug("TSB") << endl;
+//     LogDebug("TSB|FTD") << " " << candidates[i1].foundHits();
+//   LogDebug("TSB|FTD") << endl;
   //
   for ( auto i1 = index; i1!=index+NC-1; ++i1) {
     // get measurements of candidate to be checked

@@ -322,7 +322,7 @@ bool StripSubClusterShapeTrajectoryFilter::toBeContinued
 {
    const TempTrajectory::DataContainer & tms = trajectory.measurements();
    bool return_value = testLastHit(*tms.rbegin());
-   LogDebug("StripSubClusterShapeTrajectoryFilter") << "Returning " << return_value << std::endl;
+   LogDebug("StripSubClusterShapeTrajectoryFilter|FTD") << "Returning " << return_value << std::endl;
    return return_value;
 }
 

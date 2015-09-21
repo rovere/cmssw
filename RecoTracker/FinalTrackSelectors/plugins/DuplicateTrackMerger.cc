@@ -277,7 +277,7 @@ void DuplicateTrackMerger::produce(edm::Event& iEvent, const edm::EventSetup& iS
       if(mvaBDTG < minBDTG_)continue;
       
       
-      LogDebug("DuplicateTrackMerger") << "Merging tracks i, j " << i << ", " << j
+      LogDebug("DuplicateTrackMerger|FTD") << "Merging tracks i, j " << i << ", " << j
                                        << "\nTrack 1: pt = " << t1->innerMomentum().Rho()
                                        << "\nTrack 1: p = " << t1->innerMomentum().R()
                                        << "\nTrack 1: algo = " << t1->algo() - 4

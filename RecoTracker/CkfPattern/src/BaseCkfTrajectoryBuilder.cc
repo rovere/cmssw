@@ -107,7 +107,7 @@ createStartingTrajectory( const TrajectorySeed& seed) const
   TempTrajectory result(seed.direction());
   seedMeasurements(seed, result);
 
-  LogDebug("CkfPattern")
+  LogDebug("CkfPattern|FTD")
     <<" initial trajectory from the seed: "<<PrintoutHelper::dumpCandidate(result,true);
   
   return result;
@@ -129,7 +129,7 @@ bool BaseCkfTrajectoryBuilder::toBeContinued (TempTrajectory& traj, bool inOut) 
   // worth continuing to build this track candidate.
   if (inOut) {
     // if (theInOutFilter == 0) edm::LogError("CkfPattern") << "CkfTrajectoryBuilder error: trying to use dedicated filter for in-out tracking phase, when none specified";
-    LogDebug("CkfPattern") << "Returning: " << theInOutFilter->toBeContinued(traj) << std::endl;
+    LogDebug("CkfPattern|FTD") << "Returning: " << theInOutFilter->toBeContinued(traj) << std::endl;
     return theInOutFilter->toBeContinued(traj);
   } else {
     return theFilter->toBeContinued(traj);
@@ -161,7 +161,7 @@ BaseCkfTrajectoryBuilder::addToResult (boost::shared_ptr<const TrajectorySeed> c
   traj.setSharedSeed(seed);
   // discard latest dummy measurements
   while (!traj.empty() && !traj.lastMeasurement().recHit()->isValid()) traj.pop();
-  LogDebug("CkfPattern")<<inOut<<"=inOut option. pushing a Trajectory with: "<<traj.foundHits()<<" found hits. "<<traj.lostHits()
+  LogDebug("CkfPattern|FTD")<<inOut<<"=inOut option. pushing a Trajectory with: "<<traj.foundHits()<<" found hits. "<<traj.lostHits()
 			<<" lost hits. Popped :"<<(tmptraj.measurements().size())-(traj.measurements().size())<<" hits.";
   result.push_back(std::move(traj));
 }
@@ -177,7 +177,7 @@ BaseCkfTrajectoryBuilder::addToResult (TempTrajectory const & tmptraj,
   // discard latest dummy measurements
   TempTrajectory traj = tmptraj;
   while (!traj.empty() && !traj.lastMeasurement().recHit()->isValid()) traj.pop();
-  LogDebug("CkfPattern")<<inOut<<"=inOut option. pushing a TempTrajectory with: "<<traj.foundHits()<<" found hits. "<<traj.lostHits()
+  LogDebug("CkfPattern|FTD")<<inOut<<"=inOut option. pushing a TempTrajectory with: "<<traj.foundHits()<<" found hits. "<<traj.lostHits()
 			<<" lost hits. Popped :"<<(tmptraj.measurements().size())-(traj.measurements().size())<<" hits.";
   result.push_back(std::move(traj));
 }
@@ -191,7 +191,7 @@ BaseCkfTrajectoryBuilder::moveToResult (TempTrajectory&& traj,
   if ( !qualityFilter(traj, inOut) )  return;
   // discard latest dummy measurements
   while (!traj.empty() && !traj.lastMeasurement().recHitR().isValid()) traj.pop();
-  LogDebug("CkfPattern")<<inOut<<"=inOut option. pushing a TempTrajectory with: "<<traj.foundHits()<<" found hits. "<<traj.lostHits();
+  LogDebug("CkfPattern|FTD")<<inOut<<"=inOut option. pushing a TempTrajectory with: "<<traj.foundHits()<<" found hits. "<<traj.lostHits();
     //			<<" lost hits. Popped :"<<(ttraj.measurements().size())-(traj.measurements().size())<<" hits.";
   result.push_back(std::move(traj));
 }

@@ -50,7 +50,7 @@ TkStripMeasurementDet::recHits( const TrajectoryStateOnSurface& ts, const Measur
       SiStripClusterRef  cluster = edmNew::makeRefTo( data.stripData().handle(), ci ); 
       if (accept(cluster, data.stripClustersToSkip()))
 	result.push_back( buildRecHit( cluster, ts));
-      else LogDebug("TkStripMeasurementDet")<<"skipping this str from last iteration on"<<rawId()<<" key: "<<cluster.key();
+      else LogDebug("TkStripMeasurementDet|FTD")<<"skipping this str from last iteration on"<<rawId()<<" key: "<<cluster.key();
     }
   return result;
 
@@ -145,14 +145,14 @@ TkStripMeasurementDet::recHits( const TrajectoryStateOnSurface& stateOnThisDet, 
       while ( --leftCluster >=  detSet.begin()) {
 	SiStripClusterRef clusterref = edmNew::makeRefTo( data.stripData().handle(), leftCluster ); 
 	bool isCompatible = filteredRecHits(clusterref, stateOnThisDet, est, data.stripClustersToSkip(), result, diffs);
-        LogDebug("TkStripMeasurementDet") << "recHits(tsos, est, data) 1 " << isCompatible << std::endl;
+        LogDebug("TkStripMeasurementDet|FTD") << "recHits(tsos, est, data) 1 " << isCompatible << std::endl;
 	if(!isCompatible) break; // exit loop on first incompatible hit
       }
     }
     for ( ; rightCluster != detSet.end(); rightCluster++) {
       SiStripClusterRef clusterref = edmNew::makeRefTo( data.stripData().handle(), rightCluster ); 
       bool isCompatible = filteredRecHits(clusterref, stateOnThisDet, est, data.stripClustersToSkip(), result,diffs);
-      LogDebug("TkStripMeasurementDet") << "recHits(tsos, est, data) 2 " << isCompatible << std::endl;
+      LogDebug("TkStripMeasurementDet|FTD") << "recHits(tsos, est, data) 2 " << isCompatible << std::endl;
       if(!isCompatible) break; // exit loop on first incompatible hit
     }
     
@@ -164,13 +164,13 @@ bool TkStripMeasurementDet::measurements( const TrajectoryStateOnSurface& stateO
 					  TempMeasurements & result) const {
 
   if (!isActive(data)) {
-    LogDebug("TkStripMeasurementDet")<<" found an inactive module "<<rawId();
+    LogDebug("TkStripMeasurementDet|FTD")<<" found an inactive module "<<rawId();
      result.add(theInactiveHit, 0.F);
     return true;
   }
   
   if (!isEmpty(data.stripData())){
-    LogDebug("TkStripMeasurementDet")<<" found hit on this module "<<rawId();
+    LogDebug("TkStripMeasurementDet|FTD")<<" found hit on this module "<<rawId();
     RecHitContainer rechits;
     std::vector<float>  diffs;
     if (recHits(stateOnThisDet,est,data,result.hits,result.distances)) return true;
@@ -187,12 +187,12 @@ bool TkStripMeasurementDet::measurements( const TrajectoryStateOnSurface& stateO
   float utraj =  specificGeomDet().specificTopology().measurementPosition( stateOnThisDet.localPosition()).x();
   float uerr= sqrt(specificGeomDet().specificTopology().measurementError(stateOnThisDet.localPosition(),stateOnThisDet.localError().positionError()).uu());
   if (testStrips(utraj,uerr)) {
-    //LogDebug("TkStripMeasurementDet") << " DetID " << id_ << " empty after search, but active ";
+    //LogDebug("TkStripMeasurementDet|FTD") << " DetID " << id_ << " empty after search, but active ";
     result.add(theMissingHit, 0.F);
     return false;
   }
 
-  //LogDebug("TkStripMeasurementDet") << " DetID " << id_ << " empty after search, and inactive ";
+  //LogDebug("TkStripMeasurementDet|FTD") << " DetID " << id_ << " empty after search, and inactive ";
   result.add(theInactiveHit, 0.F);
   return true;
 
@@ -217,7 +217,7 @@ TkStripMeasurementDet::simpleRecHits( const TrajectoryStateOnSurface& ts, const 
       SiStripClusterRef  cluster = edmNew::makeRefTo( data.stripData().handle(), ci ); 
       if (accept(cluster, data.stripClustersToSkip()))
 	buildSimpleRecHit( cluster, ts,result);
-      else LogDebug("TkStripMeasurementDet")<<"skipping this str from last iteration on"<<rawId()<<" key: "<<cluster.key();
+      else LogDebug("TkStripMeasurementDet|FTD")<<"skipping this str from last iteration on"<<rawId()<<" key: "<<cluster.key();
     }
 }
 
@@ -261,7 +261,7 @@ TkStripMeasurementDet::testStrips(float utraj, float uerr) const {
     int16_t end   = (int16_t) std::min<float>(utraj + 3.f*uerr, totalStrips());
 
     if (start >= end) { // which means either end <=0 or start >= totalStrips_
-        /* LogDebug("TkStripMeasurementDet") << "Testing module " << id_ <<","<<
+        /* LogDebug("TkStripMeasurementDet|FTD") << "Testing module " << id_ <<","<<
             " U = " << utraj << " +/- " << uerr << 
             "; Range [" << (utraj - 3*uerr) << ", " << (utraj + 3*uerr) << "] " << 
             ": YOU'RE COMPLETELY OFF THE MODULE."; */

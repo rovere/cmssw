@@ -223,9 +223,9 @@ GroupedCkfTrajectoryBuilder::rebuildTrajectories(TempTrajectory const & starting
   work.reserve(result.size());
   for (TrajectoryContainer::iterator traj=result.begin();
        traj!=result.end(); ++traj) {
-    LogDebug("CkfPattern") << "Trajectory is valid: " << traj->isValid() << std::endl;
+    LogDebug("CkfPattern|FTD") << "Trajectory is valid: " << traj->isValid() << std::endl;
     if(traj->isValid()) {
-      LogDebug("CkfPattern") << "Selecting Trajectory with:\n"
+      LogDebug("CkfPattern|FTD") << "Selecting Trajectory with:\n"
                              << "foundHits:   " << traj->foundHits()
                              << "\nLostHits:   " << traj->lostHits()
                              << "\nchiSquared: " << traj->chiSquared()
@@ -234,7 +234,7 @@ GroupedCkfTrajectoryBuilder::rebuildTrajectories(TempTrajectory const & starting
     }
     
   }
-  LogDebug("CkfPattern") << "work size: " << work.size() << std::endl;
+  LogDebug("CkfPattern|FTD") << "work size: " << work.size() << std::endl;
 
   rebuildSeedingRegion(seed,startingTraj,work);
   final.reserve(work.size());
@@ -305,7 +305,7 @@ GroupedCkfTrajectoryBuilder::buildTrajectories (const TrajectorySeed& seed,
 
   analyseResult(result);
 
-  LogDebug("CkfPattern")<< "GroupedCkfTrajectoryBuilder: returning result of size " << result.size();
+  LogDebug("CkfPattern|FTD")<< "GroupedCkfTrajectoryBuilder: returning result of size " << result.size();
   statCount.traj(result.size());
 
 #ifdef VI_DEBUG
@@ -361,11 +361,11 @@ GroupedCkfTrajectoryBuilder::groupedLimitedCandidates (const TrajectorySeed& see
     for (TempTrajectoryContainer::iterator traj=candidates.begin();
 	 traj!=candidates.end(); traj++) {
       if ( !advanceOneLayer(seed, *traj, regionalCondition, propagator, inOut, newCand, result) ) {
-	LogDebug("CkfPattern")<< "GCTB: terminating after advanceOneLayer==false";
+	LogDebug("CkfPattern|FTD")<< "GCTB: terminating after advanceOneLayer==false";
  	continue;
       }
 
-      LogDebug("CkfPattern")<<"newCand(1): after advanced one layer:\n"<<PrintoutHelper::dumpCandidates(newCand);
+      LogDebug("CkfPattern|FTD")<<"newCand(1): after advanced one layer:\n"<<PrintoutHelper::dumpCandidates(newCand);
 
       if ((int)newCand.size() > theMaxCand) {
 	//ShowCand()(newCand);
@@ -373,10 +373,10 @@ GroupedCkfTrajectoryBuilder::groupedLimitedCandidates (const TrajectorySeed& see
  	sort( newCand.begin(), newCand.end(), GroupedTrajCandLess(theLostHitPenalty,theFoundHitBonus));
  	newCand.erase( newCand.begin()+theMaxCand, newCand.end());
       }
-      LogDebug("CkfPattern")<<"newCand(2): after removing extra candidates.\n"<<PrintoutHelper::dumpCandidates(newCand);
+      LogDebug("CkfPattern|FTD")<<"newCand(2): after removing extra candidates.\n"<<PrintoutHelper::dumpCandidates(newCand);
     }
 
-    LogDebug("CkfPattern") << "newCand.size() at end = " << newCand.size();
+    LogDebug("CkfPattern|FTD") << "newCand.size() at end = " << newCand.size();
 /*
     if (theIntermediateCleaning) {
       candidates.clear();
@@ -395,7 +395,7 @@ GroupedCkfTrajectoryBuilder::groupedLimitedCandidates (const TrajectorySeed& see
     }	
     candidates.swap(newCand);
 
-    LogDebug("CkfPattern") <<"candidates(3): "<<result.size()<<" candidates after "<<nIter++<<" groupedCKF iteration: \n"
+    LogDebug("CkfPattern|FTD") <<"candidates(3): "<<result.size()<<" candidates after "<<nIter++<<" groupedCKF iteration: \n"
       			   <<PrintoutHelper::dumpCandidates(result)
 			   <<"\n "<<candidates.size()<<" running candidates are: \n"
 			   <<PrintoutHelper::dumpCandidates(candidates);
@@ -496,7 +496,7 @@ GroupedCkfTrajectoryBuilder::advanceOneLayer (const TrajectorySeed& seed,
   //   }
   
 #ifdef EDM_ML_DEBUG
-  LogDebug("CkfPattern")<<whatIsTheNextStep(traj, stateAndLayers);
+  LogDebug("CkfPattern|FTD")<<whatIsTheNextStep(traj, stateAndLayers);
 #endif
   
   bool foundSegments(false);
@@ -564,7 +564,7 @@ GroupedCkfTrajectoryBuilder::advanceOneLayer (const TrajectorySeed& seed,
 	  }
 	}else{ // loopers not requested (why else???)
 	// ------ For cosmics reconstruction
-	  LogDebug("CkfPattern")<<" self propagating in advanceOneLayer.\n from: \n"<<stateToUse;
+	  LogDebug("CkfPattern|FTD")<<" self propagating in advanceOneLayer.\n from: \n"<<stateToUse;
 	  //self navigation case
 	  // go to a middle point first
 	  TransverseImpactPointExtrapolator middle;
@@ -572,7 +572,7 @@ GroupedCkfTrajectoryBuilder::advanceOneLayer (const TrajectorySeed& seed,
 	  stateToUse = middle.extrapolate(stateToUse, center, *(forwardPropagator(seed)));
 	  
 	  if (!stateToUse.isValid()) continue;
-	  LogDebug("CkfPattern")<<"to: "<<stateToUse;
+	  LogDebug("CkfPattern|FTD")<<"to: "<<stateToUse;
 	}
       } // last layer... 
     
@@ -584,12 +584,12 @@ GroupedCkfTrajectoryBuilder::advanceOneLayer (const TrajectorySeed& seed,
 					  theLockHits,theBestHitOnly,theMaxCand);
 
 #ifdef EDM_ML_DEBUG
-    LogDebug("CkfPattern")<<whatIsTheStateToUse(stateAndLayers.first,stateToUse,*il);
+    LogDebug("CkfPattern|FTD")<<whatIsTheStateToUse(stateAndLayers.first,stateToUse,*il);
 #endif
     
     auto && segments= layerBuilder.segments(stateToUse);
 
-    LogDebug("CkfPattern")<< "GCTB: number of segments = " << segments.size();
+    LogDebug("CkfPattern|FTD")<< "GCTB: number of segments = " << segments.size();
 
     if ( !segments.empty() )  foundSegments = true;
     
@@ -649,11 +649,11 @@ GroupedCkfTrajectoryBuilder::advanceOneLayer (const TrajectorySeed& seed,
        //GIO// for ( vector<TM>::const_iterator im=measurements.begin();
       //GIO//        im!=measurements.end(); im++ )  newTraj.push(*im);
       //if ( toBeContinued(newTraj,regionalCondition) ) { TOBE FIXED
-    LogDebug("CkfPattern") << "toBeContinued: " << toBeContinued(newTraj, inOut) << std::endl;
+    LogDebug("CkfPattern|FTD") << "toBeContinued: " << toBeContinued(newTraj, inOut) << std::endl;
     if ( toBeContinued(newTraj, inOut) ) {
 	// Have added one more hit to track candidate
 	
-	LogDebug("CkfPattern")<<"GCTB: adding updated trajectory to candidates: inOut="<<inOut<<" hits="<<newTraj.foundHits();
+	LogDebug("CkfPattern|FTD")<<"GCTB: adding updated trajectory to candidates: inOut="<<inOut<<" hits="<<newTraj.foundHits();
 
 	newCand.push_back(std::move(newTraj));
 	foundNewCandidates = true;
@@ -661,7 +661,7 @@ GroupedCkfTrajectoryBuilder::advanceOneLayer (const TrajectorySeed& seed,
       else {
 	// Have finished building this track. Check if it passes cuts.
 
-	LogDebug("CkfPattern")<< "GCTB: adding completed trajectory to results if passes cuts: inOut="<<inOut<<" hits="<<newTraj.foundHits();
+	LogDebug("CkfPattern|FTD")<< "GCTB: adding completed trajectory to results if passes cuts: inOut="<<inOut<<" hits="<<newTraj.foundHits();
 
 	moveToResult(std::move(newTraj), result, inOut);
       }
@@ -669,7 +669,7 @@ GroupedCkfTrajectoryBuilder::advanceOneLayer (const TrajectorySeed& seed,
   } // loop over layers
 
   if ( !foundSegments ){
-    LogDebug("CkfPattern")<< "GCTB: adding input trajectory to result";
+    LogDebug("CkfPattern|FTD")<< "GCTB: adding input trajectory to result";
     addToResult(traj, result, inOut);
   }
   return foundNewCandidates;
@@ -838,7 +838,7 @@ GroupedCkfTrajectoryBuilder::rebuildSeedingRegion(const TrajectorySeed&seed,
   // which will be replaced with the solutions after rebuild
   // (assume vector::swap is more efficient than building new container)
   //
-  LogDebug("CkfPattern")<< "Starting to rebuild " << result.size() << " tracks";
+  LogDebug("CkfPattern|FTD")<< "Starting to rebuild " << result.size() << " tracks";
   //
   // Fitter (need to create it here since the propagation direction
   // might change between different starting trajectories)
@@ -867,7 +867,7 @@ GroupedCkfTrajectoryBuilder::rebuildSeedingRegion(const TrajectorySeed&seed,
 
     if ( it->measurements().size()<=startingTraj.measurements().size() ) {
       rebuiltTrajectories.push_back(std::move(*it));
-      LogDebug("CkfPattern")<< "RebuildSeedingRegion skipped as in-out trajectory does not exceed seed size.";
+      LogDebug("CkfPattern|FTD")<< "RebuildSeedingRegion skipped as in-out trajectory does not exceed seed size.";
       continue;
     }
     //
@@ -878,11 +878,11 @@ GroupedCkfTrajectoryBuilder::rebuildSeedingRegion(const TrajectorySeed&seed,
     auto && reFitted = backwardFit(*it,nSeed,fitter,seedHits);
     if unlikely( !reFitted.isValid() ) {
 	rebuiltTrajectories.push_back(std::move(*it));
-	LogDebug("CkfPattern")<< "RebuildSeedingRegion skipped as backward fit failed";
+	LogDebug("CkfPattern|FTD")<< "RebuildSeedingRegion skipped as backward fit failed";
 	//			    << "after reFitted.size() " << reFitted.size();
 	continue;
       }
-    //LogDebug("CkfPattern")<<"after reFitted.size() " << reFitted.size();
+    //LogDebug("CkfPattern|FTD")<<"after reFitted.size() " << reFitted.size();
     //
     // Rebuild seeding part. In case it fails: keep initial trajectory
     // (better to drop it??)
@@ -952,7 +952,7 @@ GroupedCkfTrajectoryBuilder::rebuildSeedingRegion(const TrajectorySeed&seed,
   const bool inOut = false;
   groupedLimitedCandidates(seed, candidate, nullptr, backwardPropagator(seed), inOut, rebuiltTrajectories);
 
-  LogDebug("CkfPattern")<<" After backward building: "<<PrintoutHelper::dumpCandidates(rebuiltTrajectories);
+  LogDebug("CkfPattern|FTD")<<" After backward building: "<<PrintoutHelper::dumpCandidates(rebuiltTrajectories);
 
   //
   // Check & count resulting candidates
@@ -972,7 +972,7 @@ GroupedCkfTrajectoryBuilder::rebuildSeedingRegion(const TrajectorySeed&seed,
       orig_ok = true;
       // no hits found (and possibly some invalid hits discarded): drop track
       if ( newMeasurements.size()<=candidate.measurements().size() ){  
-	LogDebug("CkfPattern") << "newMeasurements.size()<=candidate.measurements().size()";
+	LogDebug("CkfPattern|FTD") << "newMeasurements.size()<=candidate.measurements().size()";
 	continue;
       }	
       // verify presence of hits
@@ -981,7 +981,7 @@ GroupedCkfTrajectoryBuilder::rebuildSeedingRegion(const TrajectorySeed&seed,
       if ( !verifyHits(newMeasurements.rbegin(), 
                        newMeasurements.size() - candidate.measurements().size(),
 		       seedHits) ){
-	LogDebug("CkfPattern")<< "seed hits not found in rebuild";
+	LogDebug("CkfPattern|FTD")<< "seed hits not found in rebuild";
 	continue; 
       }
     }
@@ -998,7 +998,7 @@ GroupedCkfTrajectoryBuilder::rebuildSeedingRegion(const TrajectorySeed&seed,
       reversedTrajectory.push(*im);
     }
     
-    LogDebug("CkgPattern")<<"New traj direction = " << reversedTrajectory.direction()<<"\n"
+    LogDebug("CkgPattern|FTD")<<"New traj direction = " << reversedTrajectory.direction()<<"\n"
 			  <<PrintoutHelper::dumpMeasurements(reversedTrajectory.measurements());
   } // rebuiltTrajectories
 
@@ -1032,7 +1032,7 @@ GroupedCkfTrajectoryBuilder::backwardFit (TempTrajectory& candidate, unsigned in
   //
   if unlikely( candidate.measurements().size()<=nSeed ) return TempTrajectory();
 
-  LogDebug("CkfPattern")<<"nSeed " << nSeed << endl
+  LogDebug("CkfPattern|FTD")<<"nSeed " << nSeed << endl
 			<< "\nOld traj direction = " << candidate.direction() << endl
 			<< "\n" << PrintoutHelper::dumpMeasurements(candidate.measurements());
 
@@ -1053,7 +1053,7 @@ GroupedCkfTrajectoryBuilder::backwardFit (TempTrajectory& candidate, unsigned in
   // we want to rebuild only if the number of VALID measurements excluding the seed measurements is higher than the cut
   if unlikely(nHitMin<theMinNrOfHitsForRebuild) return TempTrajectory();
 
-  LogDebug("CkfPattern")/* << "nHitMin " << nHitMin*/ <<"Sizes: " << candidate.measurements().size() << " / ";
+  LogDebug("CkfPattern|FTD")/* << "nHitMin " << nHitMin*/ <<"Sizes: " << candidate.measurements().size() << " / ";
   //
   // create input trajectory for backward fit
   //
@@ -1108,7 +1108,7 @@ GroupedCkfTrajectoryBuilder::backwardFit (TempTrajectory& candidate, unsigned in
   if unlikely(!bwdFitted.isValid()) return TempTrajectory();
 
 
-  LogDebug("CkfPattern")<<"Obtained bwdFitted trajectory with measurement size " << bwdFitted.measurements().size();
+  LogDebug("CkfPattern|FTD")<<"Obtained bwdFitted trajectory with measurement size " << bwdFitted.measurements().size();
   TempTrajectory fitted(fwdTraj.direction());
   fitted.setNLoops(fwdTraj.nLoops());
   vector<TM> const & tmsbf = bwdFitted.measurements();
@@ -1126,7 +1126,7 @@ GroupedCkfTrajectoryBuilder::backwardFit (TempTrajectory& candidate, unsigned in
 		    bwdDetLayer[iDetLayer]
 		    );
     
-    LogDebug("CkfPattern")<<PrintoutHelper::dumpMeasurement(*im);
+    LogDebug("CkfPattern|FTD")<<PrintoutHelper::dumpMeasurement(*im);
     iDetLayer++;
   }
   /*
@@ -1152,7 +1152,7 @@ GroupedCkfTrajectoryBuilder::verifyHits (TempTrajectory::DataContainer::const_it
   //
   // verify presence of the seeding hits
   //
-  LogDebug("CkfPattern")<<"Checking for " << hits.size() << " hits in "
+  LogDebug("CkfPattern|FTD")<<"Checking for " << hits.size() << " hits in "
 			<< maxDepth << " measurements" << endl;
 
   auto rend = rbegin; 

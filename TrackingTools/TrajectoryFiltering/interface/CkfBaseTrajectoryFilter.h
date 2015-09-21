@@ -58,34 +58,34 @@ protected:
 
   template <class T> bool TBC(T& traj) const{
     if (!theMaxHitsTrajectoryFilter->toBeContinued(traj)) {
-      LogDebug("CkfBaseTrajectoryFilter") << "Killing PR due to maxHits" << std::endl;
+      LogDebug("CkfBaseTrajectoryFilter|FTD") << "Killing PR due to maxHits" << std::endl;
       return false;     
     }
     if (!theMaxLostHitsTrajectoryFilter->toBeContinued(traj)) {
-      LogDebug("CkfBaseTrajectoryFilter") << "Killing PR due to maxLostHits" << std::endl;
+      LogDebug("CkfBaseTrajectoryFilter|FTD") << "Killing PR due to maxLostHits" << std::endl;
       return false;
     }
     if (!theMaxConsecLostHitsTrajectoryFilter->toBeContinued(traj)) {
-      LogDebug("CkfBaseTrajectoryFilter") << "Killing PR due to maxConsecLostHits" << std::endl;
+      LogDebug("CkfBaseTrajectoryFilter|FTD") << "Killing PR due to maxConsecLostHits" << std::endl;
       return false;
     }
     if (!theLostHitsFractionTrajectoryFilter->toBeContinued(traj)) {
-      LogDebug("CkfBaseTrajectoryFilter") << "Killing PR due to LostHitsFrac" << std::endl;
+      LogDebug("CkfBaseTrajectoryFilter|FTD") << "Killing PR due to LostHitsFrac" << std::endl;
       return false;
     }
     if (!theMinPtTrajectoryFilter->toBeContinued(traj)) {
-      LogDebug("CkfBaseTrajectoryFilter") << "Killing PR due to minPt" << std::endl;
+      LogDebug("CkfBaseTrajectoryFilter|FTD") << "Killing PR due to minPt" << std::endl;
       return false;     
     }
     if (!theChargeSignificanceTrajectoryFilter->toBeContinued(traj)) {
-      LogDebug("CkfBaseTrajectoryFilter") << "Killing PR due to chargeSignificance" << std::endl;
+      LogDebug("CkfBaseTrajectoryFilter|FTD") << "Killing PR due to chargeSignificance" << std::endl;
       return false;
     }
     if (!theLooperTrajectoryFilter->toBeContinued(traj)) {
-      LogDebug("CkfBaseTrajectoryFilter") << "Killing PR due to Looper" << std::endl;
+      LogDebug("CkfBaseTrajectoryFilter|FTD") << "Killing PR due to Looper" << std::endl;
       return false;
     }
-    LogDebug("CkfBaseTrajectoryFilter") << "Trajectory is good." << std::endl;
+    LogDebug("CkfBaseTrajectoryFilter|FTD") << "Trajectory is good." << std::endl;
     return true;
   }
 

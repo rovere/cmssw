@@ -124,7 +124,7 @@ namespace {
       edm::Handle<StripMaskContainer> oldStrMask;
       iEvent.getByToken(oldPxlMaskToken_ ,oldPxlMask);
       iEvent.getByToken(oldStrMaskToken_ ,oldStrMask);
-      LogDebug("TrackClusterRemover")<<"to merge in, "<<oldStrMask->size()<<" strp and "<<oldPxlMask->size()<<" pxl";
+      LogDebug("TrackClusterRemover|FTD")<<"to merge in, "<<oldStrMask->size()<<" strp and "<<oldPxlMask->size()<<" pxl";
       oldStrMask->copyMaskTo(collectedStrips);
       oldPxlMask->copyMaskTo(collectedPixels);
       assert(stripClusters->dataSize()>=collectedStrips.size());
@@ -159,7 +159,7 @@ namespace {
 	  //note that this does not work for some trackquals (goodIterative  or undefQuality)
 	  else
 	    goodTk = ( qual & (1<<trackQuality_))>>trackQuality_;
-          LogDebug("TrackClusterRemover") << "Quality: " << qual
+          LogDebug("TrackClusterRemover|FTD") << "Quality: " << qual
                                           << "\ngoodTk:" << goodTk << std::endl;
 	}
 	else
@@ -185,13 +185,13 @@ namespace {
 
     std::auto_ptr<StripMaskContainer> removedStripClusterMask(
          new StripMaskContainer(edm::RefProd<edmNew::DetSetVector<SiStripCluster> >(stripClusters),collectedStrips));
-      LogDebug("TrackClusterRemover")<<"total strip to skip: "<<std::count(collectedStrips.begin(),collectedStrips.end(),true);
+      LogDebug("TrackClusterRemover|FTD")<<"total strip to skip: "<<std::count(collectedStrips.begin(),collectedStrips.end(),true);
       // std::cout << "TrackClusterRemover " <<"total strip to skip: "<<std::count(collectedStrips_.begin(),collectedStrips_.end(),true) <<std::endl;
        iEvent.put( removedStripClusterMask );
 
       std::auto_ptr<PixelMaskContainer> removedPixelClusterMask(
          new PixelMaskContainer(edm::RefProd<edmNew::DetSetVector<SiPixelCluster> >(pixelClusters),collectedPixels));      
-      LogDebug("TrackClusterRemover")<<"total pxl to skip: "<<std::count(collectedPixels.begin(),collectedPixels.end(),true);
+      LogDebug("TrackClusterRemover|FTD")<<"total pxl to skip: "<<std::count(collectedPixels.begin(),collectedPixels.end(),true);
       iEvent.put( removedPixelClusterMask );
  
 
