@@ -23,7 +23,7 @@ class PrintoutHelper{
 template<class Candidate>
 std::string PrintoutHelper::dumpCandidate( const Candidate & traj,bool showErrors ){
 
-  LogDebug("PrintoutHelperError")<<"switching on error printout"<<(showErrors=true);
+  LogDebug("PrintoutHelperError|FTD")<<"switching on error printout"<<(showErrors=true);
 
   std::stringstream buffer;
   if (!traj.measurements().empty()){

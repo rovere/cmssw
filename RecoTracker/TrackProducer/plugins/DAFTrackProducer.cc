@@ -85,7 +85,7 @@ void DAFTrackProducer::produce(edm::Event& theEvent, const edm::EventSetup& setu
     //measurementCollectorHandle->updateEvent(theEvent);
 
     //run the algorithm  
-    LogDebug("DAFTrackProducer") << "run the DAF algorithm" << "\n";
+    LogDebug("DAFTrackProducer|FTD") << "run the DAF algorithm" << "\n";
     theAlgo.runWithCandidate(theG.product(), theMF.product(), *theTrajectoryCollection, &*mte,
                              theFitter.product(), theBuilder.product(), 
 			     measurementCollectorHandle.product(), updatorHandle.product(), bs, 
@@ -102,7 +102,7 @@ void DAFTrackProducer::produce(edm::Event& theEvent, const edm::EventSetup& setu
            outputTrajectoryColl, algoResults, theBuilder.product());
   putInEvtTrajAnn(theEvent, trajannResults, outputTrajAnnColl);
 
-  LogDebug("DAFTrackProducer") << "end the DAF algorithm." << "\n";
+  LogDebug("DAFTrackProducer|FTD") << "end the DAF algorithm." << "\n";
 }
 
 void DAFTrackProducer::getFromEvt(edm::Event& theEvent,edm::Handle<TrajectoryCollection>& theTrajectoryCollection, reco::BeamSpot& bs)

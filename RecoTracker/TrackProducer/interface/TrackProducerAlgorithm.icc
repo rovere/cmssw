@@ -42,7 +42,7 @@ TrackProducerAlgorithm<T>::runWithCandidate(const TrackingGeometry * theG,
 			   		    const reco::BeamSpot& bs,
 					    AlgoProductCollection& algoResults)
 {
-  LogDebug("TrackProducer") << "Number of TrackCandidates: " << theTCCollection.size() << "\n";
+  LogDebug("TrackProducer|FTD") << "Number of TrackCandidates: " << theTCCollection.size() << "\n";
 
   int cont = 0;
   for (TrackCandidateCollection::const_iterator i=theTCCollection.begin(); i!=theTCCollection.end();i++)
@@ -61,7 +61,7 @@ TrackProducerAlgorithm<T>::runWithCandidate(const TrackingGeometry * theG,
 								     &(theG->idToDet(detId)->surface()), 
 								     theMF);
 
-      LogDebug("TrackProducer") << "Initial TSOS\n" << theTSOS << "\n";
+      LogTrace("TrackProducer|FTD") << "Initial TSOS\n" << theTSOS << "\n";
       
       //convert the TrackingRecHit vector to a TransientTrackingRecHit vector
       TrackingRecHit::RecHitContainer hits;
@@ -74,14 +74,14 @@ TrackProducerAlgorithm<T>::runWithCandidate(const TrackingGeometry * theG,
       }      
       
       //build Track
-      LogDebug("TrackProducer") << "going to buildTrack"<< "\n";
+      LogTrace("TrackProducer|FTD") << "going to buildTrack"<< "\n";
       FitterCloner fc(theFitter,builder);   
       bool ok = buildTrack(fc.fitter.get(),thePropagator,algoResults, hits, theTSOS, seed, ndof, bs,
       	      		    theTC->seedRef(),0,theTC->nLoops());
-      LogDebug("TrackProducer") << "buildTrack result: " << ok << "\n";
+      LogTrace("TrackProducer|FTD") << "buildTrack result: " << ok << "\n";
       if(ok) cont++;
     }
-  LogDebug("TrackProducer") << "Number of Tracks found: " << cont << "\n";
+  LogDebug("TrackProducer|FTD") << "Number of Tracks found: " << cont << "\n";
 }
 
 
@@ -97,7 +97,7 @@ TrackProducerAlgorithm<T>::runWithTrack(const TrackingGeometry * theG,
 			   		const reco::BeamSpot& bs,
 					AlgoProductCollection& algoResults)
 {
-  LogDebug("TrackProducer") << "Number of input Tracks: " << theTCollection.size() << "\n";
+  LogDebug("TrackProducer|FTD") << "Number of input Tracks: " << theTCollection.size() << "\n";
   const TkTransientTrackingRecHitBuilder * builder = dynamic_cast<TkTransientTrackingRecHitBuilder const *>(gbuilder);
   assert(builder);
   int cont = 0;
@@ -167,7 +167,7 @@ TrackProducerAlgorithm<T>::runWithTrack(const TrackingGeometry * theG,
 	const TrajectorySeed seed = TrajectorySeed(PTrajectoryStateOnDet(),
 						   TrajectorySeed::recHitContainer(), seedDir);
 	// =========================
-	//LogDebug("TrackProducer") << "seed.direction()=" << seed.direction();
+	//LogDebug("TrackProducer|FTD") << "seed.direction()=" << seed.direction();
 
 	//set the algo_ member in order to propagate the old alog name
 	algo_=theT->algo();	
@@ -182,7 +182,7 @@ TrackProducerAlgorithm<T>::runWithTrack(const TrackingGeometry * theG,
         throw;
       }
     }
-  LogDebug("TrackProducer") << "Number of Tracks found: " << cont << "\n";
+  LogDebug("TrackProducer|FTD") << "Number of Tracks found: " << cont << "\n";
   
 }
 
@@ -196,7 +196,7 @@ TrackProducerAlgorithm<T>::runWithMomentum(const TrackingGeometry * theG,
 			   		   const reco::BeamSpot& bs,
 					   AlgoProductCollection& algoResults){
   
-  LogDebug("TrackProducer") << "Number of input Tracks: " << theTCollectionWithConstraint.size() << "\n";
+  LogDebug("TrackProducer|FTD") << "Number of input Tracks: " << theTCollectionWithConstraint.size() << "\n";
     const TkTransientTrackingRecHitBuilder * builder = dynamic_cast<TkTransientTrackingRecHitBuilder const *>(gbuilder);
 
   int cont = 0;
@@ -204,7 +204,7 @@ TrackProducerAlgorithm<T>::runWithMomentum(const TrackingGeometry * theG,
       try{
 	const T * theT = i->key.get();
 
-	LogDebug("TrackProducer") << "Running Refitter with Momentum Constraint. p=" << i->val->momentum << " err=" << i->val->error;
+	LogDebug("TrackProducer|FTD") << "Running Refitter with Momentum Constraint. p=" << i->val->momentum << " err=" << i->val->error;
 
 	float ndof=0;
 	PropagationDirection seedDir = theT->seedDirection();
@@ -236,7 +236,7 @@ TrackProducerAlgorithm<T>::runWithMomentum(const TrackingGeometry * theG,
 	const TrajectorySeed seed = TrajectorySeed(PTrajectoryStateOnDet(),
 						   TrajectorySeed::recHitContainer(), seedDir);
 	// =========================
-	//LogDebug("TrackProducer") << "seed.direction()=" << seed.direction();
+	//LogDebug("TrackProducer|FTD") << "seed.direction()=" << seed.direction();
 	
 	//=====  the hits are in the same order as they were in the track::extra.
         FitterCloner fc(theFitter,builder);     
@@ -248,7 +248,7 @@ TrackProducerAlgorithm<T>::runWithMomentum(const TrackingGeometry * theG,
         throw;
       }
     }
-  LogDebug("TrackProducer") << "Number of Tracks found: " << cont << "\n";
+  LogDebug("TrackProducer|FTD") << "Number of Tracks found: " << cont << "\n";
   
 }
 
@@ -263,7 +263,7 @@ TrackProducerAlgorithm<T>::runWithTrackParameters(const TrackingGeometry * theG,
 						  const reco::BeamSpot& bs,
 						  AlgoProductCollection& algoResults)
 {
-  LogDebug("TrackProducer") << "Number of input Tracks: " << theTCollectionWithConstraint.size() << "\n";
+  LogDebug("TrackProducer|FTD") << "Number of input Tracks: " << theTCollectionWithConstraint.size() << "\n";
   const TkTransientTrackingRecHitBuilder * builder = dynamic_cast<TkTransientTrackingRecHitBuilder const *>(gbuilder);
 
   int cont = 0;
@@ -273,7 +273,7 @@ TrackProducerAlgorithm<T>::runWithTrackParameters(const TrackingGeometry * theG,
       try{
 	const T * theT = i->key.get();
 
-	LogDebug("TrackProducer") << "Running Refitter with Track Parameter Constraint. TSOS = " << *(i->val);
+	LogDebug("TrackProducer|FTD") << "Running Refitter with Track Parameter Constraint. TSOS = " << *(i->val);
 
 	TransientTrackingRecHit::RecHitPointer constraintHit = TRecHit5DParamConstraint::build( *(i->val) );
 
@@ -304,7 +304,7 @@ TrackProducerAlgorithm<T>::runWithTrackParameters(const TrackingGeometry * theG,
         throw;
       }
     }
-  LogDebug("TrackProducer") << "Number of Tracks found: " << cont << "\n";
+  LogDebug("TrackProducer|FTD") << "Number of Tracks found: " << cont << "\n";
 }
 
 
@@ -319,7 +319,7 @@ TrackProducerAlgorithm<T>::runWithVertex(const TrackingGeometry * theG,
 					 AlgoProductCollection& algoResults){
   const TkTransientTrackingRecHitBuilder * builder = dynamic_cast<TkTransientTrackingRecHitBuilder const *>(gbuilder);
 
-  LogDebug("TrackProducer") << "Number of input Tracks: " << theTCollectionWithConstraint.size() << "\n";
+  LogDebug("TrackProducer|FTD") << "Number of input Tracks: " << theTCollectionWithConstraint.size() << "\n";
   
 //   PropagatorWithMaterial myPropagator(anyDirection,0.105,theMF);
   AnalyticalPropagator myPropagator(theMF,anyDirection);  // no material surface inside 1st hit
@@ -331,7 +331,7 @@ TrackProducerAlgorithm<T>::runWithVertex(const TrackingGeometry * theG,
       try{
 	const T * theT = i->key.get();
 
-	LogDebug("TrackProducer") << "Running Refitter with Vertex Constraint. pos=" << i->val->first << " err=" << i->val->second.matrix();
+	LogDebug("TrackProducer|FTD") << "Running Refitter with Vertex Constraint. pos=" << i->val->first << " err=" << i->val->second.matrix();
 
 	float ndof=0;
 	PropagationDirection seedDir = theT->seedDirection();
@@ -394,7 +394,7 @@ TrackProducerAlgorithm<T>::runWithVertex(const TrackingGeometry * theG,
 	const TrajectorySeed seed = TrajectorySeed(PTrajectoryStateOnDet(),
 						   TrajectorySeed::recHitContainer(), seedDir);
 	// =========================
-	//LogDebug("TrackProducer") << "seed.direction()=" << seed.direction();
+	//LogDebug("TrackProducer|FTD") << "seed.direction()=" << seed.direction();
 
 	//=====  the hits are in the same order as they were in the track::extra.        
         FitterCloner fc(theFitter,builder);
@@ -406,7 +406,7 @@ TrackProducerAlgorithm<T>::runWithVertex(const TrackingGeometry * theG,
         throw;
       }
     }
-  LogDebug("TrackProducer") << "Number of Tracks found: " << cont << "\n";
+  LogDebug("TrackProducer|FTD") << "Number of Tracks found: " << cont << "\n";
 
 }
 

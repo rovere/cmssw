@@ -42,7 +42,7 @@ void DAFTrackProducerAlgorithm::runWithCandidate(const TrackingGeometry * theG,
 						 TrajAnnealingCollection& trajann,
 						 bool TrajAnnSaving_) const
 {
-  LogDebug("DAFTrackProducerAlgorithm") << "Number of Trajectories: " << theTrajectoryCollection.size() << "\n";
+  LogDebug("DAFTrackProducerAlgorithm|FTD") << "Number of Trajectories: " << theTrajectoryCollection.size() << "\n";
   int cont = 0;
 
   //running on src trajectory collection
@@ -57,7 +57,7 @@ void DAFTrackProducerAlgorithm::runWithCandidate(const TrackingGeometry * theG,
     //no need to have std::vector<Trajectory> vtraj !
     if ( (*ivtraj).isValid() ){
 
-      LogDebug("DAFTrackProducerAlgorithm") << "The trajectory is valid. \n";
+      LogDebug("DAFTrackProducerAlgorithm|FTD") << "The trajectory is valid. \n";
 
       //getting the MultiRecHit collection and the trajectory with a first fit-smooth round
       std::pair<TransientTrackingRecHit::RecHitContainer, TrajectoryStateOnSurface> hits = 
@@ -71,7 +71,7 @@ void DAFTrackProducerAlgorithm::runWithCandidate(const TrackingGeometry * theG,
 
         if (currentTraj.isValid()){
 
-	  LogDebug("DAFTrackProducerAlgorithm") << "Seed direction is " << currentTraj.seed().direction() 
+	  LogDebug("DAFTrackProducerAlgorithm|FTD") << "Seed direction is " << currentTraj.seed().direction() 
 	 	                                << ".Traj direction is " << currentTraj.direction();
 
           //updating MultiRecHits and fit-smooth again 
@@ -85,7 +85,7 @@ void DAFTrackProducerAlgorithm::runWithCandidate(const TrackingGeometry * theG,
 	    trajann.push_back(temp);
           }
 
-          LogDebug("DAFTrackProducerAlgorithm") << "done annealing value "  <<  (*ian) ;
+          LogDebug("DAFTrackProducerAlgorithm|FTD") << "done annealing value "  <<  (*ian) ;
 
 	} 
         else break;
@@ -93,7 +93,7 @@ void DAFTrackProducerAlgorithm::runWithCandidate(const TrackingGeometry * theG,
 
       } //end of annealing program
 
-      LogDebug("DAFTrackProducerAlgorithm") << "Ended annealing program with " << (1.*checkHits(*ivtraj, currentTraj))/(1.*(*ivtraj).measurements().size())*100. << " unchanged." << std::endl;
+      LogDebug("DAFTrackProducerAlgorithm|FTD") << "Ended annealing program with " << (1.*checkHits(*ivtraj, currentTraj))/(1.*(*ivtraj).measurements().size())*100. << " unchanged." << std::endl;
 
       //computing the ndof keeping into account the weights
       ndof = calculateNdof(currentTraj);
@@ -111,16 +111,16 @@ void DAFTrackProducerAlgorithm::runWithCandidate(const TrackingGeometry * theG,
 
       }
       else{
-        LogDebug("DAFTrackProducerAlgorithm")  << "Rejecting trajectory with " 
+        LogDebug("DAFTrackProducerAlgorithm|FTD")  << "Rejecting trajectory with " 
  					       << currentTraj.foundHits()<<" hits"; 
       }
     }
     else 
-      LogDebug("DAFTrackProducerAlgorithm") << "Rejecting empty trajectory" << std::endl;
+      LogDebug("DAFTrackProducerAlgorithm|FTD") << "Rejecting empty trajectory" << std::endl;
 
   } //end run on track collection
 
-  LogDebug("DAFTrackProducerAlgorithm") << "Number of Tracks found: " << cont << "\n";
+  LogDebug("DAFTrackProducerAlgorithm|FTD") << "Number of Tracks found: " << cont << "\n";
 
 }
 /*------------------------------------------------------------------------------------------------------*/
@@ -130,7 +130,7 @@ DAFTrackProducerAlgorithm::collectHits(const Trajectory vtraj,
                                        const MeasurementTrackerEvent *measTk) const
 {
 
-  LogDebug("DAFTrackProducerAlgorithm") << "Calling DAFTrackProducerAlgorithm::collectHits";
+  LogDebug("DAFTrackProducerAlgorithm|FTD") << "Calling DAFTrackProducerAlgorithm::collectHits";
 
   //getting the traj measurements from the MeasurementCollector 
   int nHits = 0;
@@ -199,7 +199,7 @@ Trajectory DAFTrackProducerAlgorithm::fit(const std::pair<TransientTrackingRecHi
 
   if( newVec.isValid() )  return newVec; 
   else{
-    LogDebug("DAFTrackProducerAlgorithm") << "Fit no valid.";
+    LogDebug("DAFTrackProducerAlgorithm|FTD") << "Fit no valid.";
     return Trajectory();
   }
 
@@ -214,7 +214,7 @@ bool DAFTrackProducerAlgorithm::buildTrack (const Trajectory vtraj,
   reco::Track * theTrack;
   Trajectory * theTraj; 
       
-  LogDebug("DAFTrackProducerAlgorithm") <<" BUILDER " << std::endl;;
+  LogDebug("DAFTrackProducerAlgorithm|FTD") <<" BUILDER " << std::endl;;
   TrajectoryStateOnSurface innertsos;
   
   if ( vtraj.isValid() ){
@@ -238,7 +238,7 @@ bool DAFTrackProducerAlgorithm::buildTrack (const Trajectory vtraj,
     GlobalVector p = tscbl.trackStateAtPCA().momentum();
     math::XYZVector mom( p.x(), p.y(), p.z() );
 
-    //    LogDebug("TrackProducer") <<v<<p<<std::endl;
+    //    LogDebug("TrackProducer|FTD") <<v<<p<<std::endl;
 
     theTrack = new reco::Track(vtraj.chiSquared(),
 			       ndof, //in the DAF the ndof is not-integer
@@ -290,14 +290,14 @@ void  DAFTrackProducerAlgorithm::filter(const TrajectoryFitter* fitter, std::vec
   }
 
 
-	LogDebug("DAFTrackProducerAlgorithm") << "Original number of valid hits " << input[0].foundHits() << "; after filtering " << ngoodhits;
+	LogDebug("DAFTrackProducerAlgorithm|FTD") << "Original number of valid hits " << input[0].foundHits() << "; after filtering " << ngoodhits;
 	//debug
 	if (ngoodhits>input[0].foundHits()) edm::LogError("DAFTrackProducerAlgorithm") << "Something wrong: the number of good hits from DAFTrackProducerAlgorithm::filter " << ngoodhits << " is higher than the original one " << input[0].foundHits();
 	
 	if (ngoodhits < minhits) return;	
 
 	TrajectoryStateOnSurface curstartingTSOS = input.front().lastMeasurement().updatedState();
-	LogDebug("DAFTrackProducerAlgorithm") << "starting tsos for final refitting " << curstartingTSOS ;
+	LogDebug("DAFTrackProducerAlgorithm|FTD") << "starting tsos for final refitting " << curstartingTSOS ;
         //curstartingTSOS.rescaleError(100);
 
 	output = fitter->fit(TrajectorySeed(PTrajectoryStateOnDet(),
@@ -305,7 +305,7 @@ void  DAFTrackProducerAlgorithm::filter(const TrajectoryFitter* fitter, std::vec
                                                 input.front().seed().direction()),
                                 hits,
                                 TrajectoryStateWithArbitraryError()(curstartingTSOS));
-	LogDebug("DAFTrackProducerAlgorithm") << "After filtering " << output.size() << " trajectories";
+	LogDebug("DAFTrackProducerAlgorithm|FTD") << "After filtering " << output.size() << " trajectories";
 
 }
 /*------------------------------------------------------------------------------------------------------*/
@@ -342,12 +342,12 @@ int DAFTrackProducerAlgorithm::checkHits( Trajectory iInitTraj, const Trajectory
   int ihit = 0;
 
   if( initmeasurements.empty() || finalmeasurements.empty() ){
-    LogDebug("DAFTrackProducerAlgorithm") << "Initial or Final Trajectory empty.";
+    LogDebug("DAFTrackProducerAlgorithm|FTD") << "Initial or Final Trajectory empty.";
     return 0;
   }
 
   if( initmeasurements.size() != finalmeasurements.size() ) {
-    LogDebug("DAFTrackProducerAlgorithm") << "Initial and Final Trajectory have different size.";
+    LogDebug("DAFTrackProducerAlgorithm|FTD") << "Initial and Final Trajectory have different size.";
     return 0;
   }
           

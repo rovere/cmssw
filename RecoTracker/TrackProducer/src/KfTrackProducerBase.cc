@@ -59,7 +59,7 @@ void KfTrackProducerBase::putInEvt(edm::Event& evt,
 
     PropagationDirection seedDir = alongMomentum;
 
-    LogDebug("TrackProducer") << "In KfTrackProducerBase::putInEvt - seedDir=" << seedDir;
+    LogDebug("TrackProducer|FTD") << "In KfTrackProducerBase::putInEvt - seedDir=" << seedDir;
 
 
     selTracks->push_back(std::move(*theTrack));
@@ -144,17 +144,17 @@ void KfTrackProducerBase::putInEvt(edm::Event& evt,
       }
   }
 
-  LogTrace("TrackingRegressionTest") << "========== TrackProducer Info ===================";
-  LogTrace("TrackingRegressionTest") << "number of finalTracks: " << selTracks->size();
+  LogTrace("TrackingRegressionTest|FTD") << "========== TrackProducer Info ===================";
+  LogTrace("TrackingRegressionTest|FTD") << "number of finalTracks: " << selTracks->size();
   for (reco::TrackCollection::const_iterator it = selTracks->begin(); it != selTracks->end(); it++) {
-    LogTrace("TrackingRegressionTest") << "track's n valid and invalid hit, chi2, pt, eta : " 
+    LogTrace("TrackingRegressionTest|FTD") << "track's n valid and invalid hit, chi2, pt, eta : " 
 				       << it->found() << " , " 
 				       << it->lost()  <<" , " 
 				       << it->normalizedChi2() << " , "
 				       << it->pt() << " , "
 				       << it->eta() ;
   }
-  LogTrace("TrackingRegressionTest") << "=================================================";
+  LogTrace("TrackingRegressionTest|FTD") << "=================================================";
   
   selTracks->shrink_to_fit();
   selTrackExtras->shrink_to_fit();

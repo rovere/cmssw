@@ -19,6 +19,8 @@
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
+#include <iomanip> // for std::setw
+
 std::string PrintoutHelper::dumpMeasurements(const std::vector<TrajectoryMeasurement> & v) 
 {
   std::stringstream buffer;
@@ -98,11 +100,12 @@ std::string PrintoutHelper::regressionTest(const TrackerGeometry & tracker,
        it != unsmoothedResult.end(); it++) {
     if (it->lastMeasurement().updatedState().isValid()) {
       buffer<< "candidate's n valid and invalid hit, chi2, pt, eta : " 
-	 << it->foundHits() << " , " 
-	 << it->lostHits() <<" , " 
-	 << it->chiSquared() << " , "
-	 << it->lastMeasurement().updatedState().globalMomentum().perp() << " , "
-         << it->lastMeasurement().updatedState().globalMomentum().eta()<<std::endl;
+            << std::setw(4);
+      buffer << it->foundHits() << " , " 
+             << it->lostHits() <<" , " 
+             << std::setprecision(4) << it->chiSquared() << " , "
+             << it->lastMeasurement().updatedState().globalMomentum().perp() << " , "
+             << it->lastMeasurement().updatedState().globalMomentum().eta()<<std::endl;
     } else if (it->lastMeasurement().predictedState().isValid()) {
       buffer<< "candidate's n valid and invalid hit, chi2, pt, eta : " 
 	 << it->foundHits() << " , " 

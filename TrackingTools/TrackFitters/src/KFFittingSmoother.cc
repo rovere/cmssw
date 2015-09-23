@@ -39,7 +39,7 @@ Trajectory KFFittingSmoother::fitOne(const TrajectorySeed& aSeed,
 				  const TrajectoryStateOnSurface& firstPredTsos,
 				  fitType type) const
 {
-  LogDebug("TrackFitters") << "In KFFittingSmoother::fit";
+  LogDebug("TrackFitters|FTD") << "In KFFittingSmoother::fit";
 
   if ( hits.empty() ) return Trajectory();
 
@@ -59,10 +59,10 @@ Trajectory KFFittingSmoother::fitOne(const TrajectorySeed& aSeed,
     //if no outliers the fit is done only once
     //for (unsigned int j=0;j<myHits.size();j++) {
     //if (myHits[j]->det())
-    //LogTrace("TrackFitters") << "hit #:" << j+1 << " rawId=" << myHits[j]->det()->geographicalId().rawId()
+    //LogTrace("TrackFitters|FTD") << "hit #:" << j+1 << " rawId=" << myHits[j]->det()->geographicalId().rawId()
     //<< " validity=" << myHits[j]->isValid();
     //else
-    //LogTrace("TrackFitters") << "hit #:" << j+1 << " Hit with no Det information";
+    //LogTrace("TrackFitters|FTD") << "hit #:" << j+1 << " Hit with no Det information";
     //}
 
     hasoutliers        = false;
@@ -86,19 +86,19 @@ Trajectory KFFittingSmoother::fitOne(const TrajectorySeed& aSeed,
 
     if ( !smoothed.isValid() )  {
       if ( rejectTracksFlag ) {
-	LogTrace("TrackFitters") << "smoothed invalid => trajectory rejected";
+	LogTrace("TrackFitters|FTD") << "smoothed invalid => trajectory rejected";
 	//return vector<Trajectory>(); // break is enough to get this
       } else {
-	LogTrace("TrackFitters") << "smoothed invalid => returning orignal trajectory" ;
+	LogTrace("TrackFitters|FTD") << "smoothed invalid => returning orignal trajectory" ;
 	std::swap(smoothed, tmp_first); // if first attempt, tmp_first would be invalid anyway
       }
       break;
     }
     //else {
-    //LogTrace("TrackFitters") << "dump hits after smoothing";
+    //LogTrace("TrackFitters|FTD") << "dump hits after smoothing";
     //Trajectory::DataContainer meas = smoothed[0].measurements();
     //for (Trajectory::DataContainer::iterator it=meas.begin();it!=meas.end();++it) {
-    //LogTrace("TrackFitters") << "hit #" << meas.end()-it-1 << " validity=" << it->recHit()->isValid()
+    //LogTrace("TrackFitters|FTD") << "hit #" << meas.end()-it-1 << " validity=" << it->recHit()->isValid()
     //<< " det=" << it->recHit()->geographicalId().rawId();
     //}
     //}
@@ -112,7 +112,7 @@ Trajectory KFFittingSmoother::fitOne(const TrajectorySeed& aSeed,
     if ( theEstimateCut > 0 || log_pixel_prob_cut > log_pixel_probability_lower_limit ) {
       if ( smoothed.foundHits() < theMinNumberOfHits ) {
 	if ( rejectTracksFlag ) {
-	  LogTrace("TrackFitters") << "smoothed.foundHits()<theMinNumberOfHits => trajectory rejected";
+	  LogTrace("TrackFitters|FTD") << "smoothed.foundHits()<theMinNumberOfHits => trajectory rejected";
 	  return Trajectory(); // invalid
 	} else{
 	  // it might be it's the first step
@@ -121,7 +121,7 @@ Trajectory KFFittingSmoother::fitOne(const TrajectorySeed& aSeed,
 	    std::swap(tmp_first,smoothed);
 	  }
 
-	  LogTrace("TrackFitters")
+	  LogTrace("TrackFitters|FTD")
 	    << "smoothed.foundHits()<theMinNumberOfHits => returning orignal trajectory with chi2="
 	    <<  smoothed.chiSquared() ;
 	}
@@ -178,7 +178,7 @@ Trajectory KFFittingSmoother::fitOne(const TrajectorySeed& aSeed,
 		double pixel_hit_probability = (float)pixhit->clusterProbability(0);
 
 		if ( pixel_hit_probability < 0.0 )
-		  LogDebug("From KFFittingSmoother.cc")
+		  LogDebug("From KFFittingSmoother.cc|FTD")
 		    << "Wraning : Negative pixel hit probability !!!! Will set the probability to 10^{-15} !!!" << endl;
 
 		if ( pixel_hit_probability <= 0.0 || log10( pixel_hit_probability ) < log_pixel_probability_lower_limit )
@@ -212,16 +212,16 @@ Trajectory KFFittingSmoother::fitOne(const TrajectorySeed& aSeed,
 	for ( unsigned int j=0; j<myHits.size(); ++j ) {
 	  if ( hasoutliers && outlierId == myHits[j]->geographicalId().rawId() )
 	    {
-	      LogTrace("TrackFitters") << "Rejecting outlier hit  with estimate " << cut << " at position "
+	      LogTrace("TrackFitters|FTD") << "Rejecting outlier hit  with estimate " << cut << " at position "
 				       << j << " with rawId=" << myHits[j]->geographicalId().rawId();
-	      LogTrace("TrackFitters") << "The fit will be repeated without the outlier";
+	      LogTrace("TrackFitters|FTD") << "The fit will be repeated without the outlier";
 	      myHits[j] = std::make_shared<InvalidTrackingRecHit>(*outlierDet, TrackingRecHit::missing);
 	    }
 	  else if ( has_low_pixel_prob && low_pixel_prob_Id == myHits[j]->geographicalId().rawId() ){
-	    LogTrace("TrackFitters") << "Rejecting low proability pixel hit with log_pixel_prob_cut = "
+	    LogTrace("TrackFitters|FTD") << "Rejecting low proability pixel hit with log_pixel_prob_cut = "
 				     << log_pixel_prob_cut << " at position "
 				     << j << " with rawId =" << myHits[j]->geographicalId().rawId();
-	    LogTrace("TrackFitters") << "The fit will be repeated without the outlier";
+	    LogTrace("TrackFitters|FTD") << "The fit will be repeated without the outlier";
 	    myHits[j] = std::make_shared<InvalidTrackingRecHit>(*low_pixel_prob_Det, TrackingRecHit::missing);
 	  }
 
@@ -236,7 +236,7 @@ Trajectory KFFittingSmoother::fitOne(const TrajectorySeed& aSeed,
 		   ((myHits[j+1]->type() == TrackingRecHit::missing) && (myHits[j+1]->geographicalId().rawId() != 0)) )
 		{
 		  firstinvalid = j;
-		  LogTrace("TrackFitters") << "Found two consecutive missing hits. First invalid: " << firstinvalid;
+		  LogTrace("TrackFitters|FTD") << "Found two consecutive missing hits. First invalid: " << firstinvalid;
 		  break;
 		}
 	    }
@@ -265,14 +265,14 @@ Trajectory KFFittingSmoother::fitOne(const TrajectorySeed& aSeed,
     if ( noInvalidHitsBeginEnd )  {
       // discard latest dummy measurements
       if (!smoothed.lastMeasurement().recHitR().isValid() )
-	LogTrace("TrackFitters") << "Last measurement is invalid";
+	LogTrace("TrackFitters|FTD") << "Last measurement is invalid";
 
       while (!smoothed.lastMeasurement().recHitR().isValid() )
 	smoothed.pop();
 
       //remove the invalid hits at the begin of the trajectory
       if ( !smoothed.firstMeasurement().recHitR().isValid() ) {
-	LogTrace("TrackFitters") << "First measurement is in`valid";
+	LogTrace("TrackFitters|FTD") << "First measurement is in`valid";
 	Trajectory tmpTraj(smoothed.seed(),smoothed.direction());
 	Trajectory::DataContainer  & meas = smoothed.measurements();
 	auto it = meas.begin();
@@ -289,13 +289,13 @@ Trajectory KFFittingSmoother::fitOne(const TrajectorySeed& aSeed,
 
     } // if ( noInvalidHitsBeginEnd )
 
-    LogTrace("TrackFitters") << "end: returning smoothed trajectory with chi2="
+    LogTrace("TrackFitters|FTD") << "end: returning smoothed trajectory with chi2="
 			     << smoothed.chiSquared() ;
 
-    //LogTrace("TrackFitters") << "dump hits before return";
+    //LogTrace("TrackFitters|FTD") << "dump hits before return";
     //Trajectory::DataContainer meas = smoothed[0].measurements();
     //for (Trajectory::DataContainer::iterator it=meas.begin();it!=meas.end();++it) {
-    //LogTrace("TrackFitters") << "hit #" << meas.end()-it-1 << " validity=" << it->recHit()->isValid()
+    //LogTrace("TrackFitters|FTD") << "hit #" << meas.end()-it-1 << " validity=" << it->recHit()->isValid()
     //<< " det=" << it->recHit()->geographicalId().rawId();
     //}
 

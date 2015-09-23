@@ -80,7 +80,7 @@ void GsfTrackRefitter::produce(edm::Event& theEvent, const edm::EventSetup& setu
       getFromEvt(theEvent,theTCollection,bs);
       if (theTCollection.failedToGet()){
 	edm::LogError("GsfTrackRefitter")<<"could not get the reco::GsfTrackCollection."; return;}
-      LogDebug("GsfTrackRefitter") << "run the algorithm" << "\n";
+      LogDebug("GsfTrackRefitter|FTD") << "run the algorithm" << "\n";
       try {
 	theAlgo.runWithTrack(theG.product(), theMF.product(), *theTCollection, 
 			     theFitter.product(), thePropagator.product(),  
@@ -97,7 +97,7 @@ void GsfTrackRefitter::produce(edm::Event& theEvent, const edm::EventSetup& setu
       bs = *recoBeamSpotHandle;      
       if (theTCollectionWithConstraint.failedToGet()){
 	edm::LogError("TrackRefitter")<<"could not get TrackVtxConstraintAssociationCollection product."; break;}
-      LogDebug("TrackRefitter") << "run the algorithm" << "\n";
+      LogDebug("TrackRefitter|FTD") << "run the algorithm" << "\n";
       try {
       theAlgo.runWithVertex(theG.product(), theMF.product(), *theTCollectionWithConstraint, 
 			    theFitter.product(), thePropagator.product(), theBuilder.product(), bs, algoResults);      
@@ -109,6 +109,6 @@ void GsfTrackRefitter::produce(edm::Event& theEvent, const edm::EventSetup& setu
   //put everything in th event
   putInEvt(theEvent, thePropagator.product(), theMeasTk.product(),
 	   outputRHColl, outputTColl, outputTEColl, outputGsfTEColl, outputTrajectoryColl, algoResults, theBuilder.product(), bs);
-  LogDebug("GsfTrackRefitter") << "end" << "\n";
+  LogDebug("GsfTrackRefitter|FTD") << "end" << "\n";
 }
 

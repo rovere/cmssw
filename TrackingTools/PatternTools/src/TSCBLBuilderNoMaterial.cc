@@ -17,7 +17,7 @@ TSCBLBuilderNoMaterial::operator()
 		GlobalVector(beamSpot.dxdz(), beamSpot.dydz(), 1.), 
 		0, &(originalFTS.parameters().magneticField()) ) );
   if (!status) {
-    LogDebug  ("TrackingTools|PatternTools")
+    LogDebug  ("TrackingTools|PatternTools|FTD")
       << "TSCBLBuilderNoMaterial: Failure in TTMD when searching for PCA of track to beamline.\n"
       << "TrajectoryStateClosestToBeamLine is now invalid.";
     return TrajectoryStateClosestToBeamLine();

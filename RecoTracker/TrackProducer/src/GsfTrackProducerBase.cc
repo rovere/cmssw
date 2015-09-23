@@ -62,7 +62,7 @@ GsfTrackProducerBase::putInEvt(edm::Event& evt,
     reco::GsfTrack * theTrack = (*i).second.first;
     PropagationDirection seedDir = (*i).second.second;  
     
-    LogDebug("TrackProducer") << "In GsfTrackProducerBase::putInEvt - seedDir=" << seedDir;
+    LogDebug("TrackProducer|FTD") << "In GsfTrackProducerBase::putInEvt - seedDir=" << seedDir;
 
     reco::GsfTrack t = * theTrack;
     selTracks->push_back( t );
@@ -230,17 +230,17 @@ GsfTrackProducerBase::putInEvt(edm::Event& evt,
     delete theTraj;
   }
 
-  LogTrace("TrackingRegressionTest") << "========== TrackProducer Info ===================";
-  LogTrace("TrackingRegressionTest") << "number of finalGsfTracks: " << selTracks->size();
+  LogTrace("TrackingRegressionTest|FTD") << "========== TrackProducer Info ===================";
+  LogTrace("TrackingRegressionTest|FTD") << "number of finalGsfTracks: " << selTracks->size();
   for (reco::GsfTrackCollection::const_iterator it = selTracks->begin(); it != selTracks->end(); it++) {
-    LogTrace("TrackingRegressionTest") << "track's n valid and invalid hit, chi2, pt : " 
+    LogTrace("TrackingRegressionTest|FTD") << "track's n valid and invalid hit, chi2, pt : " 
 				       << it->found() << " , " 
 				       << it->lost()  <<" , " 
 				       << it->normalizedChi2() << " , "
 				       << it->pt() << " , "
 				       << it->eta() ;
   }
-  LogTrace("TrackingRegressionTest") << "=================================================";
+  LogTrace("TrackingRegressionTest|FTD") << "=================================================";
   
 
   rTracks_ = evt.put( selTracks );

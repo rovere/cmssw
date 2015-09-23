@@ -162,11 +162,14 @@ std::cout << algo_ << ": " <<  hits.size() <<'|' <<theTraj->measurements().size(
   TrajectoryStateOnSurface stateForProjectionToBeamLineOnSurface;
   if (geometricInnerState_) {
     stateForProjectionToBeamLineOnSurface = theTraj->closestMeasurement(GlobalPoint(bs.x0(),bs.y0(),bs.z0())).updatedState();
+    LogDebug("TrackProducer|FTD") << "With geometricInnerState_: stateForProjectionToBeamLineOnSurface: \n" << stateForProjectionToBeamLineOnSurface;
   } else {
     if (theTraj->direction() == alongMomentum) {
       stateForProjectionToBeamLineOnSurface = theTraj->firstMeasurement().updatedState();
+      LogDebug("TrackProducer|FTD") << "alongMomentum: stateForProjectionToBeamLineOnSurface: \n" << stateForProjectionToBeamLineOnSurface;
     } else { 
       stateForProjectionToBeamLineOnSurface = theTraj->lastMeasurement().updatedState();
+      LogDebug("TrackProducer|FTD") << "oppositeMomentum: stateForProjectionToBeamLineOnSurface: \n" << stateForProjectionToBeamLineOnSurface;
     }
   }
 
@@ -177,14 +180,14 @@ std::cout << algo_ << ": " <<  hits.size() <<'|' <<theTraj->measurements().size(
   }
   const FreeTrajectoryState & stateForProjectionToBeamLine=*stateForProjectionToBeamLineOnSurface.freeState();
   
-  LogDebug("TrackProducer") << "stateForProjectionToBeamLine=" << stateForProjectionToBeamLine;
+  LogDebug("TrackProducer|FTD") << "stateForProjectionToBeamLine: \n" << stateForProjectionToBeamLine;
   
 //  TSCBLBuilderNoMaterial tscblBuilder;
 //  TrajectoryStateClosestToBeamLine tscbl = tscblBuilder(stateForProjectionToBeamLine,bs);
 
   TrajectoryStateClosestToBeamLine tscbl;
   if (usePropagatorForPCA_){
-    //std::cout << "PROPAGATOR FOR PCA" << std::endl;
+    LogTrace("TrackProducer|FTD") << "PROPAGATOR FOR PCA" << std::endl;
     TSCBLBuilderWithPropagator tscblBuilder(*thePropagator);
     tscbl = tscblBuilder(stateForProjectionToBeamLine,bs);
   } else {
@@ -203,7 +206,7 @@ std::cout << algo_ << ": " <<  hits.size() <<'|' <<theTraj->measurements().size(
   GlobalVector p = tscbl.trackStateAtPCA().momentum();
   math::XYZVector mom( p.x(), p.y(), p.z() );
   
-  LogDebug("TrackProducer") << "pos=" << v << " mom=" << p << " pt=" << p.perp() << " mag=" << p.mag();
+  LogTrace("TrackProducer|FTD") << "pos=" << v << " mom=" << p << " pt=" << p.perp() << " mag=" << p.mag();
   
   auto theTrack = new reco::Track(theTraj->chiSquared(),
 			     int(ndof),//FIXME fix weight() in TrackingRecHit
@@ -214,9 +217,9 @@ std::cout << algo_ << ": " <<  hits.size() <<'|' <<theTraj->measurements().size(
   theTrack->setQualityMask(qualityMask);
   theTrack->setNLoops(nLoops);
   
-  LogDebug("TrackProducer") << "theTrack->pt()=" << theTrack->pt();
+  LogTrace("TrackProducer|FTD") << "theTrack->pt()=" << theTrack->pt();
   
-  LogDebug("TrackProducer") <<"track done\n";
+  LogTrace("TrackProducer|FTD") <<"track done\n";
   
   AlgoProduct aProduct(theTraj,std::make_pair(theTrack,seedDir));
   algoResults.push_back(aProduct);
@@ -306,7 +309,7 @@ TrackProducerAlgorithm<reco::GsfTrack>::buildTrack (const TrajectoryFitter * the
   
   const FreeTrajectoryState & stateForProjectionToBeamLine=*stateForProjectionToBeamLineOnSurface.freeState();
   
-  LogDebug("GsfTrackProducer") << "stateForProjectionToBeamLine=" << stateForProjectionToBeamLine;
+  LogDebug("GsfTrackProducer|FTD") << "stateForProjectionToBeamLine=" << stateForProjectionToBeamLine;
   
 //  TSCBLBuilderNoMaterial tscblBuilder;
 //  TrajectoryStateClosestToBeamLine tscbl = tscblBuilder(stateForProjectionToBeamLine,bs);
@@ -331,7 +334,7 @@ TrackProducerAlgorithm<reco::GsfTrack>::buildTrack (const TrajectoryFitter * the
   GlobalVector p = tscbl.trackStateAtPCA().momentum();
   math::XYZVector mom( p.x(), p.y(), p.z() );
   
-  LogDebug("GsfTrackProducer") << "pos=" << v << " mom=" << p << " pt=" << p.perp() << " mag=" << p.mag();
+  LogDebug("GsfTrackProducer|FTD") << "pos=" << v << " mom=" << p << " pt=" << p.perp() << " mag=" << p.mag();
   
   auto theTrack = new reco::GsfTrack(theTraj->chiSquared(),
 				int(ndof),//FIXME fix weight() in TrackingRecHit
@@ -341,12 +344,12 @@ TrackProducerAlgorithm<reco::GsfTrack>::buildTrack (const TrajectoryFitter * the
 				pos, mom, tscbl.trackStateAtPCA().charge(), tscbl.trackStateAtPCA().curvilinearError());    
   theTrack->setAlgorithm(algo_);
   
-  LogDebug("GsfTrackProducer") <<"track done\n";
+  LogDebug("GsfTrackProducer|FTD") <<"track done\n";
   
   AlgoProduct aProduct(theTraj,std::make_pair(theTrack,seedDir));
-  LogDebug("GsfTrackProducer") <<"track done1\n";
+  LogDebug("GsfTrackProducer|FTD") <<"track done1\n";
   algoResults.push_back(aProduct);
-  LogDebug("GsfTrackProducer") <<"track done2\n";
+  LogDebug("GsfTrackProducer|FTD") <<"track done2\n";
   
   statCount.gsf();
   return true;

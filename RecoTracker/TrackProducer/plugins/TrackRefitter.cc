@@ -44,7 +44,7 @@ TrackRefitter::TrackRefitter(const edm::ParameterSet& iConfig):
 
 void TrackRefitter::produce(edm::Event& theEvent, const edm::EventSetup& setup)
 {
-  LogDebug("TrackRefitter") << "Analyzing event number: " << theEvent.id() << "\n";
+  LogDebug("TrackRefitter|FTD") << "Analyzing event number: " << theEvent.id() << "\n";
   //
   // create empty output collections
   //
@@ -75,14 +75,14 @@ void TrackRefitter::produce(edm::Event& theEvent, const edm::EventSetup& setup)
       edm::Handle<reco::TrackCollection> theTCollection;
       getFromEvt(theEvent,theTCollection,bs);
 
-      LogDebug("TrackRefitter") << "TrackRefitter::produce(none):Number of Trajectories:" << (*theTCollection).size();
+      LogDebug("TrackRefitter|FTD") << "TrackRefitter::produce(none):Number of Trajectories:" << (*theTCollection).size();
 
       if (bs.position()==math::XYZPoint(0.,0.,0.) && bs.type() == reco::BeamSpot::Unknown) {
 	edm::LogError("TrackRefitter") << " BeamSpot is (0,0,0), it is probably because is not valid in the event"; break; }
 
       if (theTCollection.failedToGet()){
 	edm::LogError("TrackRefitter")<<"could not get the reco::TrackCollection."; break;}
-      LogDebug("TrackRefitter") << "run the algorithm" << "\n";
+      LogDebug("TrackRefitter|FTD") << "run the algorithm" << "\n";
 
       try {
 	theAlgo.runWithTrack(theG.product(), theMF.product(), *theTCollection, 
@@ -104,7 +104,7 @@ void TrackRefitter::produce(edm::Event& theEvent, const edm::EventSetup& setup)
       if (theTCollectionWithConstraint.failedToGet()){
 	//edm::LogError("TrackRefitter")<<"could not get TrackMomConstraintAssociationCollection product.";
 	break;}
-      LogDebug("TrackRefitter") << "run the algorithm" << "\n";
+      LogDebug("TrackRefitter|FTD") << "run the algorithm" << "\n";
       try {
 	theAlgo.runWithMomentum(theG.product(), theMF.product(), *theTCollectionWithConstraint, 
 				theFitter.product(), thePropagator.product(), theBuilder.product(), bs, algoResults);
@@ -121,7 +121,7 @@ void TrackRefitter::produce(edm::Event& theEvent, const edm::EventSetup& setup)
       bs = *recoBeamSpotHandle;      
       if (theTCollectionWithConstraint.failedToGet()){
 	edm::LogError("TrackRefitter")<<"could not get TrackVtxConstraintAssociationCollection product."; break;}
-      LogDebug("TrackRefitter") << "run the algorithm" << "\n";
+      LogDebug("TrackRefitter|FTD") << "run the algorithm" << "\n";
       try {
       theAlgo.runWithVertex(theG.product(), theMF.product(), *theTCollectionWithConstraint, 
 			    theFitter.product(), thePropagator.product(), theBuilder.product(), bs, algoResults);      
@@ -138,7 +138,7 @@ void TrackRefitter::produce(edm::Event& theEvent, const edm::EventSetup& setup)
       if (theTCollectionWithConstraint.failedToGet()){
 	//edm::LogError("TrackRefitter")<<"could not get TrackParamConstraintAssociationCollection product.";
 	break;}
-      LogDebug("TrackRefitter") << "run the algorithm" << "\n";
+      LogDebug("TrackRefitter|FTD") << "run the algorithm" << "\n";
       try {
       theAlgo.runWithTrackParameters(theG.product(), theMF.product(), *theTCollectionWithConstraint, 
 				     theFitter.product(), thePropagator.product(), theBuilder.product(), bs, algoResults);      
@@ -150,6 +150,6 @@ void TrackRefitter::produce(edm::Event& theEvent, const edm::EventSetup& setup)
   
   //put everything in th event
   putInEvt(theEvent, thePropagator.product(), theMeasTk.product(), outputRHColl, outputTColl, outputTEColl, outputTrajectoryColl, algoResults,theBuilder.product());
-  LogDebug("TrackRefitter") << "end" << "\n";
+  LogDebug("TrackRefitter|FTD") << "end" << "\n";
 }
 

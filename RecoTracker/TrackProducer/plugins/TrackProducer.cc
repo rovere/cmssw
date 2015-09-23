@@ -40,7 +40,7 @@ TrackProducer::TrackProducer(const edm::ParameterSet& iConfig):
 
 void TrackProducer::produce(edm::Event& theEvent, const edm::EventSetup& setup)
 {
-  LogDebug("TrackProducer") << "Analyzing event number: " << theEvent.id() << "\n";
+  LogDebug("TrackProducer|FTD") << "Analyzing event number: " << theEvent.id() << "\n";
   //
   // create empty output collections
   //
@@ -71,7 +71,7 @@ void TrackProducer::produce(edm::Event& theEvent, const edm::EventSetup& setup)
   if (theTCCollection.failedToGet()){
     edm::LogError("TrackProducer") <<"could not get the TrackCandidateCollection.";} 
   else{
-    LogDebug("TrackProducer") << "run the algorithm" << "\n";
+    LogDebug("TrackProducer|FTD") << "run the algorithm" << "\n";
     try{  
       theAlgo.runWithCandidate(theG.product(), theMF.product(), *theTCCollection, 
 			       theFitter.product(), thePropagator.product(), theBuilder.product(), bs, algoResults);
@@ -80,13 +80,13 @@ void TrackProducer::produce(edm::Event& theEvent, const edm::EventSetup& setup)
   
   //put everything in the event
   putInEvt(theEvent, thePropagator.product(),theMeasTk.product(), outputRHColl, outputTColl, outputTEColl, outputTrajectoryColl, algoResults, theBuilder.product());
-  LogDebug("TrackProducer") << "end" << "\n";
+  LogDebug("TrackProducer|FTD") << "end" << "\n";
 }
 
 
 std::vector<reco::TransientTrack> TrackProducer::getTransient(edm::Event& theEvent, const edm::EventSetup& setup)
 {
-  LogDebug("TrackProducer") << "Analyzing event number: " << theEvent.id() << "\n";
+  LogDebug("TrackProducer|FTD") << "Analyzing event number: " << theEvent.id() << "\n";
   //
   // create empty output collections
   //
@@ -114,7 +114,7 @@ std::vector<reco::TransientTrack> TrackProducer::getTransient(edm::Event& theEve
   if (theTCCollection.failedToGet()){
     edm::LogError("TrackProducer") <<"could not get the TrackCandidateCollection.";}
   else{
-    LogDebug("TrackProducer") << "run the algorithm" << "\n";
+    LogDebug("TrackProducer|FTD") << "run the algorithm" << "\n";
     try{  
       theAlgo.runWithCandidate(theG.product(), theMF.product(), *theTCCollection, 
 			       theFitter.product(), thePropagator.product(), theBuilder.product(), bs, algoResults);
@@ -126,7 +126,7 @@ std::vector<reco::TransientTrack> TrackProducer::getTransient(edm::Event& theEve
     ttks.push_back( reco::TransientTrack(*((*prod).second.first),thePropagator.product()->magneticField() ));
   }
 
-  LogDebug("TrackProducer") << "end" << "\n";
+  LogDebug("TrackProducer|FTD") << "end" << "\n";
 
   return ttks;
 }

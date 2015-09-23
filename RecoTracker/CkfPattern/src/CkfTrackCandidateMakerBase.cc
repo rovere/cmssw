@@ -258,12 +258,12 @@ namespace cms{
         std::vector<Trajectory> theTmpTrajectories;
 
 
-	LogDebug("CkfPattern") << "======== Begin to look for trajectories from seed " << j << " ========"<<endl;
+	LogDebug("CkfPattern|FTD") << "======== Begin to look for trajectories from seed " << j << " ========"<<endl;
 	
         { Lock lock(theMutex); 
 	// Check if seed hits already used by another track
 	if (theSeedCleaner && !theSeedCleaner->good( &((*collseed)[j])) ) {
-          LogDebug("CkfTrackCandidateMakerBase")<<" Seed cleaning kills seed "<<j;
+          LogDebug("CkfTrackCandidateMakerBase|FTD")<<" Seed cleaning kills seed "<<j;
           return;  // from the lambda! 
         }}
 
@@ -272,7 +272,7 @@ namespace cms{
 	auto const & startTraj = theTrajectoryBuilder->buildTrajectories( (*collseed)[j], theTmpTrajectories, nullptr );
 	
        
-	LogDebug("CkfPattern") << "======== In-out trajectory building found " << theTmpTrajectories.size()
+	LogDebug("CkfPattern|FTD") << "======== In-out trajectory building found " << theTmpTrajectories.size()
 			            << " trajectories from seed " << j << " ========"<<endl
 			       <<PrintoutHelper::dumpCandidates(theTmpTrajectories);
 	
@@ -281,7 +281,7 @@ namespace cms{
 	  // Select the best trajectory from this seed (declare others invalid)
   	  theTrajectoryCleaner->clean(theTmpTrajectories);
 
-  	  LogDebug("CkfPattern") << "======== In-out trajectory cleaning gave the following valid trajectories from seed " 
+  	  LogDebug("CkfPattern|FTD") << "======== In-out trajectory cleaning gave the following valid trajectories from seed " 
                                  << j << " ========"<<endl
 				 << PrintoutHelper::dumpCandidates(theTmpTrajectories);
         }
@@ -292,7 +292,7 @@ namespace cms{
 	if (doSeedingRegionRebuilding) {
 	  theTrajectoryBuilder->rebuildTrajectories(startTraj,(*collseed)[j],theTmpTrajectories);      
 
-  	  LogDebug("CkfPattern") << "======== Out-in trajectory building found " << theTmpTrajectories.size()
+  	  LogDebug("CkfPattern|FTD") << "======== Out-in trajectory building found " << theTmpTrajectories.size()
   			              << " valid/invalid trajectories from seed " << j << " ========"<<endl
 				 <<PrintoutHelper::dumpCandidates(theTmpTrajectories);
         }
@@ -301,7 +301,7 @@ namespace cms{
         // Select the best trajectory from this seed (after seed region rebuilding, can be more than one)
 	theTrajectoryCleaner->clean(theTmpTrajectories);
 
-        LogDebug("CkfPattern") << "======== Trajectory cleaning gave the following valid trajectories from seed " 
+        LogDebug("CkfPattern|FTD") << "======== Trajectory cleaning gave the following valid trajectories from seed " 
                                << j << " ========"<<endl
 			       <<PrintoutHelper::dumpCandidates(theTmpTrajectories);
 
@@ -321,7 +321,7 @@ namespace cms{
 
         theTmpTrajectories.clear();
         
-	LogDebug("CkfPattern") << "rawResult trajectories found so far = " << rawResult.size();
+	LogDebug("CkfPattern|FTD") << "rawResult trajectories found so far = " << rawResult.size();
 
         { Lock lock(theMutex);
 	if ( maxSeedsBeforeCleaning_ >0 && rawResult.size() > maxSeedsBeforeCleaning_+lastCleanResult) {
@@ -357,11 +357,11 @@ namespace cms{
       // Rejected ones just flagged as invalid.
       theTrajectoryCleaner->clean(rawResult);
 
-      LogDebug("CkfPattern") << "======== Final cleaning of entire event found " << rawResult.size() 
-                             << " valid/invalid trajectories ======="<<endl
-			     <<PrintoutHelper::dumpCandidates(rawResult);
+      LogDebug("CkfPattern|FTD") << "======== Final cleaning of entire event found " << rawResult.size() 
+                                 << " valid/invalid trajectories =======\n"<< std::endl
+                                 <<PrintoutHelper::dumpCandidates(rawResult);
 
-      LogDebug("CkfPattern") << "removing invalid trajectories.";
+      LogDebug("CkfPattern|FTD") << "removing invalid trajectories.";
 
       vector<Trajectory> & unsmoothedResult(rawResult);
       unsmoothedResult.erase(std::remove_if(unsmoothedResult.begin(),unsmoothedResult.end(),
@@ -416,14 +416,14 @@ namespace cms{
        for (vector<Trajectory>::const_iterator it = unsmoothedResult.begin();
 	    it != unsmoothedResult.end(); ++it) {
 	
-	 LogDebug("CkfPattern") << "copying "<<(useSplitting?"splitted":"un-splitted")<<" hits from trajectory";
+	 LogDebug("CkfPattern") << "copying "<<(useSplitting?"splitted":"un-splitted|FTD")<<" hits from trajectory";
 	 edm::OwnVector<TrackingRecHit> recHits;
-         if(it->direction() != alongMomentum) LogDebug("CkfPattern") << "not along momentum... " << std::endl;
+         if(it->direction() != alongMomentum) LogDebug("CkfPattern|FTD") << "not along momentum... " << std::endl;
          t2t(*it,recHits,useSplitting);
 
          viTotHits+=recHits.size();        
 
-	 LogDebug("CkfPattern") << "getting initial state.";
+	 LogDebug("CkfPattern|FTD") << "getting initial state.";
 	 const bool doBackFit = (!doSeedingRegionRebuilding) & (!reverseTrajectories);
 	 std::pair<TrajectoryStateOnSurface, const GeomDet*> && initState = theInitialState->innerState( *it , doBackFit);
 
@@ -435,7 +435,7 @@ namespace cms{
 	 
 	 PTrajectoryStateOnDet state;
 	 if(useSplitting && (initState.second != recHits.front().det()) && recHits.front().det() ){	 
-	   LogDebug("CkfPattern") << "propagating to hit front in case of splitting.";
+	   LogDebug("CkfPattern|FTD") << "propagating to hit front in case of splitting.";
 	   TrajectoryStateOnSurface && propagated = thePropagator->propagate(initState.first,recHits.front().det()->surface());
 	   if (!propagated.isValid()) continue;
 	   state = trajectoryStateTransform::persistentState(propagated,
@@ -443,16 +443,16 @@ namespace cms{
 	 }
 	 else state = trajectoryStateTransform::persistentState( initState.first,
 							         initState.second->geographicalId().rawId());
-	 LogDebug("CkfPattern") << "pushing a TrackCandidate.";
+	 LogDebug("CkfPattern|FTD") << "pushing a TrackCandidate.";
 	 output->emplace_back(recHits,it->seed(),state,it->seedRef(),it->nLoops());
        }
       }//output trackcandidates
 
       edm::ESHandle<TrackerGeometry> tracker;
       es.get<TrackerDigiGeometryRecord>().get(tracker);            
-      LogTrace("CkfPattern|TrackingRegressionTest") << "========== CkfTrackCandidateMaker Info =========="
-						    << "number of Seed: " << collseed->size()<<endl
-      						    <<PrintoutHelper::regressionTest(*tracker,unsmoothedResult);
+      LogTrace("CkfPattern|TrackingRegressionTest|FTD") << "========== CkfTrackCandidateMaker Info ==========\n"
+                                                        << "number of Seed: " << collseed->size() << "\n" << std::endl
+                                                        << PrintoutHelper::regressionTest(*tracker,unsmoothedResult);
 
       assert(viTotHits>=0); // just to use it...
       // std::cout << "VICkfPattern result " << output->size() << " " << viTotHits << std::endl;

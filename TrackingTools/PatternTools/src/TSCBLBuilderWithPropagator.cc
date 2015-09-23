@@ -23,12 +23,15 @@ TSCBLBuilderWithPropagator::operator()
 
   GlobalPoint bspos(beamSpot.position().x(), beamSpot.position().y(), beamSpot.position().z());
   GlobalVector bsvec(beamSpot.dxdz(), beamSpot.dydz(), 1.);
+  LogTrace("TSCBLBuilderWithPropagator|FTD") << "bspos: "<< bspos << std::endl;
+  LogTrace("TSCBLBuilderWithPropagator|FTD") << "bsvec: "<< bsvec << std::endl;
   Line bsline(bspos,bsvec);
 
   TrajectoryExtrapolatorToLine tetl;
 
   TrajectoryStateOnSurface tsosfinal = tetl.extrapolate(originalFTS,bsline,*thePropagator);
-
+  LogTrace("TSCBLBuilderWithPropagator|FTD") << " tsosfinal: " << tsosfinal << std::endl;
+  LogTrace("TSCBLBuilderWithPropagator|FTD") << " tsosfinal.isValid(): " << tsosfinal.isValid() << std::endl;
   if (!tsosfinal.isValid())
     return TrajectoryStateClosestToBeamLine();
 

@@ -276,6 +276,8 @@ void MultiTrackSelector::run( edm::Event& evt, const edm::EventSetup& es ) const
   std::vector<float> mvaVals_(srcTracks.size(),-99.f);
   processMVA(evt,es, mvaVals_);
 
+  LogDebug("TrackSelection|FTD") << "ready to check select tracks."<< std::endl;
+
   for (unsigned int i=0; i<qualityToSet_.size(); i++) {  
     std::vector<int> selTracks(trkSize,0);
     auto_ptr<edm::ValueMap<int> > selTracksValueMap = auto_ptr<edm::ValueMap<int> >(new edm::ValueMap<int>);
@@ -291,7 +293,7 @@ void MultiTrackSelector::run( edm::Event& evt, const edm::EventSetup& es ) const
       const Track & trk = * it;
       // Check if this track passes cuts
 
-      LogTrace("TrackSelection") << "ready to check track with pt="<< trk.pt() ;
+      LogTrace("TrackSelection|FTD") << "ready to check track with pt="<< trk.pt() ;
 
       //already removed
       bool ok=true;
@@ -306,14 +308,14 @@ void MultiTrackSelector::run( edm::Event& evt, const edm::EventSetup& es ) const
 	if(useAnyMVA_) mvaVal = mvaVals_[current];
 	ok = select(i,vertexBeamSpot, srcHits, trk, points, vterr, vzerr,mvaVal);
 	if (!ok) { 
-	  LogTrace("TrackSelection") << "track with pt="<< trk.pt() << " NOT selected";
+	  LogTrace("TrackSelection|FTD") << "track with pt="<< trk.pt() << " NOT selected";
 	  if (!keepAllTracks_[i]) { 
 	    selTracks[current]=-1;
 	    continue;
 	  }
 	}
 	else
-	  LogTrace("TrackSelection") << "track with pt="<< trk.pt() << " selected";
+	  LogTrace("TrackSelection|FTD") << "track with pt="<< trk.pt() << " selected";
       }
 
       if (preFilter_[i]<i ) {
@@ -393,7 +395,7 @@ void MultiTrackSelector::run( edm::Event& evt, const edm::EventSetup& es ) const
   if (nlayers < min_layers_[tsNum]) return false;
   if (nlayers3D < min_3Dlayers_[tsNum]) return false;
   if (nlayersLost > max_lostLayers_[tsNum]) return false;
-  LogTrace("TrackSelection") << "cuts on nlayers passed";
+  LogTrace("TrackSelection|FTD") << "cuts on nlayers passed";
 
   float chi2n =  tk.normalizedChi2();
   float chi2n_no1Dmod = chi2n;
@@ -462,7 +464,7 @@ void MultiTrackSelector::run( edm::Event& evt, const edm::EventSetup& es ) const
 
   int iv=0;
   for (std::vector<Point>::const_iterator point = points.begin(), end = points.end(); point != end; ++point) {
-    LogTrace("TrackSelection") << "Test track w.r.t. vertex with z position " << point->z();
+    LogTrace("TrackSelection|FTD") << "Test track w.r.t. vertex with z position " << point->z();
     if(primaryVertexZCompatibility && primaryVertexD0Compatibility) break;
     float dzPV = tk.dz(*point); //re-evaluate the dz with respect to the vertex position
     float d0PV = tk.dxy(*point); //re-evaluate the dxy with respect to the vertex position
@@ -480,7 +482,7 @@ void MultiTrackSelector::run( edm::Event& evt, const edm::EventSetup& es ) const
        if (abs(dzPV) < dzCut)  primaryVertexZCompatibility = true;
        if (abs(d0PV) < d0Cut) primaryVertexD0Compatibility = true;     
     }
-    LogTrace("TrackSelection") << "distances " << dzPV << " " << d0PV << " vs " << dzCut << " " << d0Cut;
+    LogTrace("TrackSelection|FTD") << "distances " << dzPV << " " << d0PV << " vs " << dzCut << " " << d0Cut;
   }
 
   if (points.empty() && applyAbsCutsIfNoPV_[tsNum]) {
@@ -489,12 +491,12 @@ void MultiTrackSelector::run( edm::Event& evt, const edm::EventSetup& es ) const
     // Absolute cuts on all tracks impact parameters with respect to beam-spot.
     // If BS is not compatible, verify if at least the reco-vertex is compatible (useful for incorrect BS settings)
     if (abs(d0) > max_d0_[tsNum] && !primaryVertexD0Compatibility) return false;
-    LogTrace("TrackSelection") << "absolute cuts on d0 passed";
+    LogTrace("TrackSelection|FTD") << "absolute cuts on d0 passed";
     if (abs(dz) > max_z0_[tsNum] && !primaryVertexZCompatibility) return false;
-    LogTrace("TrackSelection") << "absolute cuts on dz passed";
+    LogTrace("TrackSelection|FTD") << "absolute cuts on dz passed";
   }
 
-  LogTrace("TrackSelection") << "cuts on PV: apply adapted PV cuts? " << applyAdaptedPVCuts_[tsNum] 
+  LogTrace("TrackSelection|FTD") << "cuts on PV: apply adapted PV cuts? " << applyAdaptedPVCuts_[tsNum] 
 			     << " d0 compatibility? " << primaryVertexD0Compatibility  
 			     << " z compatibility? " << primaryVertexZCompatibility ;
 
@@ -524,7 +526,7 @@ void MultiTrackSelector::run( edm::Event& evt, const edm::EventSetup& es ) const
       points.push_back(it->position()); 
       vterr.push_back(sqrt(it->yError()*it->xError()));
       vzerr.push_back(it->zError());
-      LogTrace("SelectVertex") << " SELECTED vertex with z position " << it->z();
+      LogTrace("SelectVertex|FTD") << " SELECTED vertex with z position " << it->z();
       toTake--; if (toTake == 0) break;
     }
   }

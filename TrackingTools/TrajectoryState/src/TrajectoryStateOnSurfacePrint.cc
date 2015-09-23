@@ -7,6 +7,8 @@ ostream& operator<<(std::ostream& os, const TrajectoryStateOnSurface& tsos) {
   os << "global parameters" << endl;
   {
     const AlgebraicVector6 &v = tsos.globalParameters().vector();
+    os << "eta/phi = (" << tsos.globalPosition().eta()
+       << "/" <<  tsos.globalPosition().phi() << ")" << std::endl;
     os << "x = ";
     {
       for (int i = 0; i < 3; i++) {

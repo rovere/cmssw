@@ -53,13 +53,13 @@ KFTrajectorySmoother::trajectory(const Trajectory& aTraj) const {
   
   
 #ifdef EDM_ML_DEBUG
-  LogDebug("TrackFitters") << "KFTrajectorySmoother::trajectories starting with " << avtm.size() << " HITS\n";
+  LogDebug("TrackFitters|FTD") << "KFTrajectorySmoother::trajectories starting with " << avtm.size() << " HITS\n";
   for (unsigned int j=0;j<avtm.size();j++) { 
     if (avtm[j].recHit()->det()) 
-      LogTrace("TrackFitters") << "hit #:" << j+1 << " rawId=" << avtm[j].recHit()->det()->geographicalId().rawId() 
+      LogTrace("TrackFitters|FTD") << "hit #:" << j+1 << " rawId=" << avtm[j].recHit()->det()->geographicalId().rawId() 
 			       << " validity=" << avtm[j].recHit()->isValid();
     else
-      LogTrace("TrackFitters") << "hit #:" << j+1 << " Hit with no Det information";
+      LogTrace("TrackFitters|FTD") << "hit #:" << j+1 << " Hit with no Det information";
   }
 #endif // EDM_ML_DEBUG
   
@@ -78,7 +78,7 @@ KFTrajectorySmoother::trajectory(const Trajectory& aTraj) const {
     //check surface just for safety: should never be ==0 because they are skipped in the fitter 
     // if unlikely(hit->det() == nullptr) continue;
     if unlikely( hit->surface()==nullptr ) {
-	LogDebug("TrackFitters") << " Error: invalid hit with no GeomDet attached .... skipping";
+	LogDebug("TrackFitters|FTD") << " Error: invalid hit with no GeomDet attached .... skipping";
 	continue;
       }
 
@@ -88,11 +88,11 @@ KFTrajectorySmoother::trajectory(const Trajectory& aTraj) const {
       predTsos = usePropagator->propagate( currTsos, *(hit->surface()) );
 
     if unlikely(!predTsos.isValid()) {
-	LogDebug("TrackFitters") << "KFTrajectorySmoother: predicted tsos not valid!";
+	LogDebug("TrackFitters|FTD") << "KFTrajectorySmoother: predicted tsos not valid!";
 	if( myTraj.foundHits() >= minHits_ ) {
-	  LogDebug("TrackFitters") << " breaking trajectory" << "\n";
+	  LogDebug("TrackFitters|FTD") << " breaking trajectory" << "\n";
 	} else {        
-	  LogDebug("TrackFitters") << " killing trajectory" << "\n";      
+	  LogDebug("TrackFitters|FTD") << " killing trajectory" << "\n";      
 	  return Trajectory();
 	}
 	break;      
@@ -101,7 +101,7 @@ KFTrajectorySmoother::trajectory(const Trajectory& aTraj) const {
     if(hit->isValid()) {
  
 #ifdef EDM_ML_DEBUG
-      LogDebug("TrackFitters")
+      LogDebug("TrackFitters|FTD")
 	<< "----------------- HIT #" << hitcounter << " (VALID)-----------------------\n"
 	<< "HIT IS AT R   " << hit->globalPosition().perp() << "\n"
 	<< "HIT IS AT Z   " << hit->globalPosition().z() << "\n"
@@ -117,32 +117,32 @@ KFTrajectorySmoother::trajectory(const Trajectory& aTraj) const {
       
       if(hitId.det() == DetId::Tracker) {
 	if (hitId.subdetId() == StripSubdetector::TIB )  
-	  LogTrace("TrackFitters") << " I am TIB " << TIBDetId(hitId).layer();
+	  LogTrace("TrackFitters|FTD") << " I am TIB " << TIBDetId(hitId).layer();
 	else if (hitId.subdetId() == StripSubdetector::TOB ) 
-	  LogTrace("TrackFitters") << " I am TOB " << TOBDetId(hitId).layer();
+	  LogTrace("TrackFitters|FTD") << " I am TOB " << TOBDetId(hitId).layer();
 	else if (hitId.subdetId() == StripSubdetector::TEC ) 
-	  LogTrace("TrackFitters") << " I am TEC " << TECDetId(hitId).wheel();
+	  LogTrace("TrackFitters|FTD") << " I am TEC " << TECDetId(hitId).wheel();
 	else if (hitId.subdetId() == StripSubdetector::TID ) 
-	  LogTrace("TrackFitters") << " I am TID " << TIDDetId(hitId).wheel();
+	  LogTrace("TrackFitters|FTD") << " I am TID " << TIDDetId(hitId).wheel();
 	else if (hitId.subdetId() == (int) PixelSubdetector::PixelBarrel ) 
-	  LogTrace("TrackFitters") << " I am PixBar " << PXBDetId(hitId).layer();
+	  LogTrace("TrackFitters|FTD") << " I am PixBar " << PXBDetId(hitId).layer();
 	else if (hitId.subdetId() == (int) PixelSubdetector::PixelEndcap )
-	  LogTrace("TrackFitters") << " I am PixFwd " << PXFDetId(hitId).disk();
+	  LogTrace("TrackFitters|FTD") << " I am PixFwd " << PXFDetId(hitId).disk();
 	else 
-	  LogTrace("TrackFitters") << " UNKNOWN TRACKER HIT TYPE ";
+	  LogTrace("TrackFitters|FTD") << " UNKNOWN TRACKER HIT TYPE ";
       }
       else if(hitId.det() == DetId::Muon) {
 	if(hitId.subdetId() == MuonSubdetId::DT)
-	  LogTrace("TrackFitters") << " I am DT " << DTWireId(hitId);
+	  LogTrace("TrackFitters|FTD") << " I am DT " << DTWireId(hitId);
 	else if (hitId.subdetId() == MuonSubdetId::CSC )
-	  LogTrace("TrackFitters") << " I am CSC " << CSCDetId(hitId);
+	  LogTrace("TrackFitters|FTD") << " I am CSC " << CSCDetId(hitId);
 	else if (hitId.subdetId() == MuonSubdetId::RPC )
-	  LogTrace("TrackFitters") << " I am RPC " << RPCDetId(hitId);
+	  LogTrace("TrackFitters|FTD") << " I am RPC " << RPCDetId(hitId);
 	else 
-	  LogTrace("TrackFitters") << " UNKNOWN MUON HIT TYPE ";
+	  LogTrace("TrackFitters|FTD") << " UNKNOWN MUON HIT TYPE ";
       }
       else
-	LogTrace("TrackFitters") << " UNKNOWN HIT TYPE ";
+	LogTrace("TrackFitters|FTD") << " UNKNOWN HIT TYPE ";
 #endif //EDM_ML_DEBUG
       
       
@@ -163,15 +163,15 @@ KFTrajectorySmoother::trajectory(const Trajectory& aTraj) const {
       else combTsos = combiner(predTsos, itm->forwardPredictedState());
       
       if unlikely(!combTsos.isValid()) {
-	  LogDebug("TrackFitters") << 
+	  LogDebug("TrackFitters|FTD") << 
 	    "KFTrajectorySmoother: combined tsos not valid!\n" <<
 	    "pred Tsos pos: " << predTsos.globalPosition() << "\n" <<
 	    "pred Tsos mom: " << predTsos.globalMomentum() << "\n" <<
 	    "TrackingRecHit: " << hit->surface()->toGlobal(hit->localPosition()) << "\n" ;
 	  if( myTraj.foundHits() >= minHits_ ) {
-	    LogDebug("TrackFitters") << " breaking trajectory" << "\n";
+	    LogDebug("TrackFitters|FTD") << " breaking trajectory" << "\n";
 	  } else {        
-	    LogDebug("TrackFitters") << " killing trajectory" << "\n";       
+	    LogDebug("TrackFitters|FTD") << " killing trajectory" << "\n";       
 	    return Trajectory();
 	  }
 	  break;      
@@ -187,11 +187,11 @@ KFTrajectorySmoother::trajectory(const Trajectory& aTraj) const {
        	assert(preciseHit->surface()!=nullptr);
 
       if unlikely(!preciseHit->isValid()){
-	  LogTrace("TrackFitters") << "THE Precise HIT IS NOT VALID: using currTsos = predTsos" << "\n";
+	  LogTrace("TrackFitters|FTD") << "THE Precise HIT IS NOT VALID: using currTsos = predTsos" << "\n";
 	  currTsos = predTsos;
 	  myTraj.push(TM(predTsos, hit, 0, theGeometry->idToLayer(hit->geographicalId()) ));
 	}else{
-	LogTrace("TrackFitters") << "THE Precise HIT IS VALID: updating currTsos" << "\n";
+	LogTrace("TrackFitters|FTD") << "THE Precise HIT IS VALID: updating currTsos" << "\n";
 	
 	//update backward predicted tsos with the hit
 	currTsos = updator()->update(predTsos, *preciseHit);
@@ -213,11 +213,11 @@ KFTrajectorySmoother::trajectory(const Trajectory& aTraj) const {
 	else smooTsos = combiner(itm->forwardPredictedState(), currTsos); 
 	
 	if unlikely(!smooTsos.isValid()) {
-	    LogDebug("TrackFitters") << "KFTrajectorySmoother: smoothed tsos not valid!";
+	    LogDebug("TrackFitters|FTD") << "KFTrajectorySmoother: smoothed tsos not valid!";
 	    if( myTraj.foundHits() >= minHits_ ) {
-	      LogDebug("TrackFitters") << " breaking trajectory" << "\n";
+	      LogDebug("TrackFitters|FTD") << " breaking trajectory" << "\n";
 	    } else {        
-	      LogDebug("TrackFitters") << " killing trajectory" << "\n";       
+	      LogDebug("TrackFitters|FTD") << " killing trajectory" << "\n";       
 	      return Trajectory();  
 	    }
 	    break;
@@ -227,7 +227,7 @@ KFTrajectorySmoother::trajectory(const Trajectory& aTraj) const {
 	if (hitcounter != avtm.size()) estimate = estimator()->estimate(combTsos, *preciseHit ).second;//correct?
 	else estimate = itm->estimate();
 	
-	LogTrace("TrackFitters")
+	LogTrace("TrackFitters|FTD")
 	  << "predTsos !" << "\n"
 	  << predTsos << "\n"
 	  << "currTsos !" << "\n"
@@ -254,7 +254,7 @@ KFTrajectorySmoother::trajectory(const Trajectory& aTraj) const {
 	//itm->estimate());
       }
     } else {
-      LogDebug("TrackFitters") 
+      LogDebug("TrackFitters|FTD") 
 	<< "----------------- HIT #" << hitcounter << " (INVALID)-----------------------";      
       
       //no update
@@ -265,7 +265,7 @@ KFTrajectorySmoother::trajectory(const Trajectory& aTraj) const {
       else combTsos = combiner(predTsos, itm->forwardPredictedState());
       
       if unlikely(!combTsos.isValid()) {
-    	LogDebug("TrackFitters") << 
+    	LogDebug("TrackFitters|FTD") << 
     	  "KFTrajectorySmoother: combined tsos not valid!";
         return Trajectory();
 	}

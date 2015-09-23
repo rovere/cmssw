@@ -73,7 +73,7 @@ void GsfTrackProducer::produce(edm::Event& theEvent, const edm::EventSetup& setu
     //
     //run the algorithm  
     //
-    LogDebug("GsfTrackProducer") << "run the algorithm" << "\n";
+    LogDebug("GsfTrackProducer|FTD") << "run the algorithm" << "\n";
     theAlgo.runWithCandidate(theG.product(), theMF.product(), *theTCCollection, 
 			     theFitter.product(), thePropagator.product(), theBuilder.product(), bs, algoResults);
   } catch (cms::Exception &e){ edm::LogInfo("GsfTrackProducer") << "cms::Exception caught!!!" << "\n" << e << "\n"; throw; }
@@ -81,7 +81,7 @@ void GsfTrackProducer::produce(edm::Event& theEvent, const edm::EventSetup& setu
   //put everything in the event
   putInEvt(theEvent, thePropagator.product(), theMeasTk.product(), outputRHColl, outputTColl, outputTEColl, outputGsfTEColl,
 	   outputTrajectoryColl, algoResults, theBuilder.product(), bs);
-  LogDebug("GsfTrackProducer") << "end" << "\n";
+  LogDebug("GsfTrackProducer|FTD") << "end" << "\n";
 }
 
 void GsfTrackProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
