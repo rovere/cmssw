@@ -54,8 +54,8 @@ private:
   float pTChargeCutThreshold2_;
 
   bool checkClusterCharge(DetId id, SiStripCluster const & cluster, const TrajectoryStateOnSurface& ts) const {
-    return siStripClusterTools::chargePerCM(id, cluster, ts.localParameters() ) >  minGoodStripCharge_;
-
+    return siStripClusterTools::chargePerCM(id, cluster, ts.localParameters() ) >
+        (id.subdetId() > 4 ? 0.85*minGoodStripCharge_ : minGoodStripCharge_);
   }
 
 
