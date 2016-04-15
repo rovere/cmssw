@@ -131,6 +131,7 @@ bool TempTrajectory::badForCCC(const TrajectoryMeasurement &tm) {
   if (trackerHitRTTI::isUndef(*tm.recHit())) return false;
   auto const * thit = static_cast<const BaseTrackerRecHit*>( tm.recHit()->hit() );
   if (thit->isPixel()) return false;
+  if (!tm.updatedState().isValid()) return false;
   return siStripClusterTools::chargePerCM(thit->rawId(),
                                           thit->firstClusterRef().stripCluster(),
                                           tm.updatedState().localParameters()) < theCCCThreshold_;
