@@ -69,7 +69,7 @@ import RecoTracker.MeasurementDet.Chi2ChargeMeasurementEstimator_cfi
 initialStepChi2Est = RecoTracker.MeasurementDet.Chi2ChargeMeasurementEstimator_cfi.Chi2ChargeMeasurementEstimator.clone(
     ComponentName = cms.string('initialStepChi2Est'),
     nSigma = cms.double(3.0),
-    MaxChi2 = cms.double(30.0),
+    MaxChi2 = cms.double(20.0),
     clusterChargeCut = cms.PSet(refToPSet_ = cms.string('SiStripClusterChargeCutTiny')),
     pTChargeCutThreshold = cms.double(15.)
 )
