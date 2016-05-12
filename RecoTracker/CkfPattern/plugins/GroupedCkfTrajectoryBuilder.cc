@@ -131,6 +131,8 @@ GroupedCkfTrajectoryBuilder::GroupedCkfTrajectoryBuilder(const edm::ParameterSet
   // fill data members from parameters (eventually data members could be dropped)
   //
   theMaxCand                  = conf.getParameter<int>("maxCand");
+  theMaxCandHitThreshold      = conf.getParameter<int>("maxCandHitThreshold");
+  theMaxCandMaxHitThreshold   = conf.getParameter<int>("maxCandMaxHitThreshold");
   theLostHitPenalty           = conf.getParameter<double>("lostHitPenalty");
   theFoundHitBonus            = conf.getParameter<double>("foundHitBonus");
   theIntermediateCleaning     = conf.getParameter<bool>("intermediateCleaning");
@@ -344,27 +346,40 @@ GroupedCkfTrajectoryBuilder::groupedLimitedCandidates (const TrajectorySeed& see
   TempTrajectoryContainer candidates;
   TempTrajectoryContainer newCand;
   candidates.push_back( startingTraj);
+  int currentMaxCandidates = theMaxCand;
+  int max_hits = 0;
 
   while ( !candidates.empty()) {
-
     newCand.clear();
+    max_hits = 0;
     for (TempTrajectoryContainer::iterator traj=candidates.begin();
 	 traj!=candidates.end(); traj++) {
       if ( !advanceOneLayer(seed, *traj, regionalCondition, propagator, inOut, newCand, result) ) {
 	LogDebug("CkfPattern")<< "GCTB: terminating after advanceOneLayer==false";
  	continue;
       }
-
-      LogDebug("CkfPattern")<<"newCand(1): after advanced one layer:\n"<<PrintoutHelper::dumpCandidates(newCand);
-
-      if ((int)newCand.size() > theMaxCand) {
-	//ShowCand()(newCand);
-
- 	std::nth_element( newCand.begin(), newCand.begin()+theMaxCand, newCand.end(), GroupedTrajCandLess(theLostHitPenalty,theFoundHitBonus));
- 	newCand.erase( newCand.begin()+theMaxCand, newCand.end());
-      }
-      LogDebug("CkfPattern")<<"newCand(2): after removing extra candidates.\n"<<PrintoutHelper::dumpCandidates(newCand);
+      if (traj->foundHits() > max_hits)
+        max_hits = traj->foundHits();
     }
+
+    currentMaxCandidates = theMaxCand;
+    if (theMaxCandHitThreshold > 0 && max_hits > theMaxCandHitThreshold)
+      currentMaxCandidates = std::max(theMaxCand + theMaxCandHitThreshold - max_hits, 2);
+    if (theMaxCandMaxHitThreshold > 0 && max_hits >= theMaxCandMaxHitThreshold)
+      currentMaxCandidates = 1;
+
+    if (theMaxCandHitThreshold < -1)
+      LogTrace("CkfPattern::MaxCandHitThreshold") << max_hits << "\t" << newCand.size();
+
+    LogDebug("CkfPattern")<<"newCand(1): after advanced one layer:\n"<<PrintoutHelper::dumpCandidates(newCand);
+
+    if ((int)newCand.size() > currentMaxCandidates) {
+      //ShowCand()(newCand);
+      std::nth_element( newCand.begin(), newCand.begin()+currentMaxCandidates,
+                        newCand.end(), GroupedTrajCandLess(theLostHitPenalty,theFoundHitBonus));
+      newCand.erase( newCand.begin()+currentMaxCandidates, newCand.end());
+    }
+    LogDebug("CkfPattern")<<"newCand(2): after removing extra candidates.\n"<<PrintoutHelper::dumpCandidates(newCand);
 
     LogDebug("CkfPattern") << "newCand.size() at end = " << newCand.size();
 /*

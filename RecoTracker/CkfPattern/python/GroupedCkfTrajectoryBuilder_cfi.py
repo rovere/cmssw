@@ -16,6 +16,8 @@ GroupedCkfTrajectoryBuilder = cms.PSet(
     # Maximum number of track candidates followed at each step of
     # track building
     maxCand = cms.int32(5),
+    maxCandHitThreshold = cms.int32(-1),
+    maxCandMaxHitThreshold = cms.int32(-1),
     intermediateCleaning = cms.bool(True),
     # Chi2 added to track candidate if no hit found in layer
     lostHitPenalty = cms.double(30.0),

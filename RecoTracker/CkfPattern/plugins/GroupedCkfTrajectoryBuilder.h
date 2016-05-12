@@ -176,6 +176,30 @@ private:
 
   int theMaxCand;               /**< Maximum number of trajectory candidates 
 		                     to propagate to the next layer. */
+
+  int theMaxCandHitThreshold;   //**< Number of valid hits associated
+                                //**  to a trajectory after which the
+                                //**  value of theMaxCand parameter is
+                                //**  reduced by one unit for every
+                                //**  additional hit (exclusive,
+                                //**  i.e. a value of X will start
+                                //**  decreasing theMaxCand when X+1
+                                //**  valid hits are found). The
+                                //**  minimum allowed value of
+                                //**  theMaxCand is fixed at 2. A
+                                //**  negative value disables this
+                                //**  feature.*/
+
+  int theMaxCandMaxHitThreshold; //**< Number of valid hits associated
+                                 //**  to a trajectory after which
+                                 //**  only 1 candidate is considered,
+                                 //**  i.e. theMaxCand is set to 1
+                                 //**  (inclusive, i.e. a value of X
+                                 //**  will take effect as soon as the
+                                 //**  trajectory has X valid hits). A
+                                 //**  negative value disables this
+                                 //**  feature. */
+
   float theLostHitPenalty;      /**< Chi**2 Penalty for each lost hit. */
   float theFoundHitBonus;       /**< Chi**2 bonus for each found hit (favours candidates with
 				     more measurements) */
