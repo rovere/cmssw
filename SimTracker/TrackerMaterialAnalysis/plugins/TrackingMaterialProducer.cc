@@ -153,6 +153,7 @@ void TrackingMaterialProducer::update(const G4Step* step)
   double radiationLengths = length / X0;               //
   double energyLoss       = length * Xi / 1000.;       // GeV
   //double energyLoss = step->GetDeltaEnergy()/MeV;  should we use this??
+  std::cout << "Material info:\n" << material << std::endl;
 
   G4ThreeVector globalPosPre  = step->GetPreStepPoint()->GetPosition();
   G4ThreeVector globalPosPost = step->GetPostStepPoint()->GetPosition();
