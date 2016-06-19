@@ -1,7 +1,5 @@
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/TrackReco/interface/Track.h"
-#include "DataFormats/VertexReco/interface/VertexFwd.h"
-#include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
 #include "DataFormats/DetId/interface/DetId.h"
 #include "DataFormats/SiStripDetId/interface/TIBDetId.h"
@@ -43,7 +41,6 @@ class TrackingRecoMaterialAnalyser : public DQMEDAnalyzer {
     bool isDoubleSided(DetId, const TrackerTopology &);
     TrackTransformer refitter_;
     const edm::EDGetTokenT<reco::TrackCollection>  tracksToken_;
-    const edm::EDGetTokenT<reco::VertexCollection> offlinePrimaryVerticesToken_;
     std::unordered_map<std::string, MonitorElement *> histosOriEta_;
     std::unordered_map<std::string, MonitorElement *> histosEta_;
     MonitorElement * histo_RZ_;
@@ -54,7 +51,6 @@ class TrackingRecoMaterialAnalyser : public DQMEDAnalyzer {
 TrackingRecoMaterialAnalyser::TrackingRecoMaterialAnalyser(const edm::ParameterSet& iPSet):
   refitter_(iPSet),
   tracksToken_(consumes<reco::TrackCollection>(iPSet.getParameter<edm::InputTag>("tracks"))),
-  offlinePrimaryVerticesToken_(consumes<reco::VertexCollection>(iPSet.getParameter<edm::InputTag>("vertices"))),
   histo_RZ_(0)
 {
 }
@@ -86,10 +82,10 @@ void TrackingRecoMaterialAnalyser::bookHistograms(DQMStore::IBooker & ibook,
       snprintf(title, sizeof(title), "Original_RadLen_vs_Eta_%s%d", sDETS[det].data(), sub_det);
       snprintf(key, sizeof(key), "%s%d", sDETS[det].data(), sub_det);
       histosOriEta_.insert(make_pair<string, MonitorElement*>(key,
-        ibook.bookProfile(title, title, 125, -2.5, 2.5, 0., 1.)));
+        ibook.bookProfile(title, title, 250, -5.0, 5.0, 0., 1.)));
       snprintf(title, sizeof(title), "RadLen_vs_Eta_%s%d", sDETS[det].data(), sub_det);
       histosEta_.insert(make_pair<string, MonitorElement*>(key,
-        ibook.bookProfile(title, title, 125, -2.5, 2.5, 0., 1.)));
+        ibook.bookProfile(title, title, 250, -5.0, 5.0, 0., 1.)));
     }
   }
 }
@@ -113,31 +109,18 @@ void TrackingRecoMaterialAnalyser::analyze(const edm::Event& event,
   refitter_.setServices(setup);
 
   Handle<TrackCollection> tracks;
-  Handle<VertexCollection> vertices;
   ESHandle<TrackerTopology> trk_topology;
 
   // Get the TrackerTopology
   setup.get<TrackerTopologyRcd>().get(trk_topology);
-
-  event.getByToken(offlinePrimaryVerticesToken_, vertices);
-  if (!vertices.isValid() || vertices->size() == 0) {
-    cout << "Invalid or empty vertex collection" << endl;
-    return;
-  }
-  auto const &primaryVertex = vertices->at(0);
-  // Quit if no real PV was reconstructed
-  if (primaryVertex.ndof() < 4 || primaryVertex.isFake())
-    return;
 
   event.getByToken(tracksToken_, tracks);
   if (!tracks.isValid() || tracks->size() == 0) {
     cout << "Invalid or empty track collection" << endl;
     return;
   }
-  // Select only tracks from PV with at least 1 GeV pt
   auto selector = [&](const Track &track) -> bool {
     return (track.pt() > 1.
-            && abs( track.dxy(primaryVertex.position()) ) < 5*track.dxyError()
             && track.quality(track.qualityByName("highPurity")));
   };
 
@@ -160,7 +143,7 @@ void TrackingRecoMaterialAnalyser::analyze(const edm::Event& event,
   TrajectoryStateOnSurface current_tsos;
   DetId current_det;
   for (auto const track : *tracks) {
-    if (!selector(track))
+    if (!selector(track)  and false)
       continue;
     vector<Trajectory> traj  = refitter_.transform(track);
     if (traj.size() > 1 || traj.size() == 0)
@@ -194,8 +177,11 @@ void TrackingRecoMaterialAnalyser::analyze(const edm::Event& event,
         // components, so that on each single layer will receive half of the
         // correct radLen. For this reason, only for the double-sided
         // components, we rescale the obtained radLen by 2.
-        // TODO(rovere): verify this statement in the code
-        // TODO(rovere): is this really the optimal approach?
+        // In particular see code here: http://cmslxr.fnal.gov/dxr/CMSSW_8_0_5/source/Geometry/TrackerGeometryBuilder/src/TrackerGeomBuilderFromGeometricDet.cc#213
+        // where, in the SiStrip Tracker, if the module has a partner
+        // (i.e. it's a glued detector) the plane is built with a scaling of
+        // 0.5. The actual plane is built few lines below:
+        // http://cmslxr.fnal.gov/dxr/CMSSW_8_0_5/source/Geometry/TrackerGeometryBuilder/src/TrackerGeomBuilderFromGeometricDet.cc#287
 
         if (isDoubleSided(current_det, *trk_topology)) {
           LogTrace("TrackingRecoMaterialAnalyser") <<  "Eta: " << track.eta() << " "
@@ -206,8 +192,8 @@ void TrackingRecoMaterialAnalyser::analyze(const edm::Event& event,
           radLen *= 2.;
         }
 
-        histosOriEta_[sDETS[current_det.subdetId()]+sLAYS[trk_topology->layer(current_det)]]->Fill(track.eta(), ori_radLen);
-        histosEta_[sDETS[current_det.subdetId()]+sLAYS[trk_topology->layer(current_det)]]->Fill(track.eta(), radLen);
+        histosOriEta_[sDETS[current_det.subdetId()]+sLAYS[trk_topology->layer(current_det)]]->Fill(current_tsos.globalPosition().eta(), ori_radLen);
+        histosEta_[sDETS[current_det.subdetId()]+sLAYS[trk_topology->layer(current_det)]]->Fill(current_tsos.globalPosition().eta(), radLen);
         histo_RZ_Ori_->Fill(current_tsos.globalPosition().z(), current_tsos.globalPosition().perp(), ori_radLen);
         histo_RZ_->Fill(current_tsos.globalPosition().z(), current_tsos.globalPosition().perp(), radLen);
         LogInfo("TrackingRecoMaterialAnalyser") <<  "Eta: " << track.eta() << " "
