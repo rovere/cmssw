@@ -29,6 +29,7 @@ MaterialAccountingGroup::MaterialAccountingGroup( const std::string & name, cons
   m_counted( false ),
   m_file( 0 )
 {
+  std::cout << "**** Looking for " << name << std::endl;
   // retrieve the elements from DDD
   DDFilteredView fv( geometry );
   DDSpecificsFilter filter;
@@ -38,6 +39,9 @@ MaterialAccountingGroup::MaterialAccountingGroup( const std::string & name, cons
     // DD3Vector and DDTranslation are the same type as math::XYZVector
     math::XYZVector position = fv.translation() / 10.;  // mm -> cm
     m_elements.push_back( GlobalPoint(position.x(), position.y(), position.z()) );
+//    std::cout << " Settings for: " << fv.logicalPart().toString()
+//              << "R: " << m_elements.back().perp()
+//              << " Z: " << m_elements.back().z() << std::endl;
   }
 
   // grow the bounding box
@@ -45,6 +49,10 @@ MaterialAccountingGroup::MaterialAccountingGroup( const std::string & name, cons
     m_boundingbox.grow(m_elements[i].perp(), m_elements[i].z());
   }
   m_boundingbox.grow(s_tolerance);
+//  std::cout << "Final bounding-box for " << name
+//            << " (r_min, r_max): " << m_boundingbox.range_r().first << ", " << m_boundingbox.range_r().second
+//            << " (z_min, z_max): " << m_boundingbox.range_z().first << ", " << m_boundingbox.range_z().second << std::endl;
+
 
   // initialize the histograms 
   m_dedx_spectrum   = new TH1F((m_name + "_dedx_spectrum").c_str(),     "Energy loss spectrum",       1000,    0,   1);

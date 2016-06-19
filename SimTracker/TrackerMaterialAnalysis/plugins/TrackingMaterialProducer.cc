@@ -88,6 +88,9 @@ TrackingMaterialProducer::TrackingMaterialProducer(const edm::ParameterSet& iPSe
   m_tracks              = 0;
 
   produces< std::vector<MaterialAccountingTrack> >();
+  output_file_ = new TFile("radLen_vs_eta_fromProducer.root", "RECREATE");
+  output_file_->cd();
+  radLen_vs_eta_ = new TProfile("radLen", "radLen", 250., -5., 5., 0, 10.);
 }
 
 //-------------------------------------------------------------------------
@@ -95,6 +98,13 @@ TrackingMaterialProducer::~TrackingMaterialProducer(void)
 {
 }
 
+//-------------------------------------------------------------------------
+void TrackingMaterialProducer::update(const EndOfJob* event)
+{
+  std::cout << "AZZ" << std::endl;
+  radLen_vs_eta_->Write();
+  output_file_->Close();
+}
 //-------------------------------------------------------------------------
 void TrackingMaterialProducer::update(const BeginOfJob* event)
 {
@@ -128,17 +138,31 @@ void TrackingMaterialProducer::update(const BeginOfTrack* event)
 
   // prevent secondary tracks from propagating
   G4Track* track = const_cast<G4Track*>((*event)());
+  std::cout << "Got a Track with eta: " << track->GetMomentum().eta() 
+            << " and PDGID: " << track->GetDefinition()->GetPDGEncoding() << std::endl;
   if (m_primaryTracks and track->GetParentID() != 0) {
     track->SetTrackStatus(fStopAndKill);
   }
 }
 
+bool TrackingMaterialProducer::isSelectedFast(const G4TouchableHistory* touchable) {
+  for (int d = touchable->GetHistoryDepth() -1; d >=0;  --d) {
+      if (
+           std::find(
+                     m_selectedNames.begin(), 
+                     m_selectedNames.end(), 
+                     touchable->GetVolume(d)->GetName()) 
+        != m_selectedNames.end())
+        return true;
+    }
+  return false;
+}
 
 //-------------------------------------------------------------------------
 void TrackingMaterialProducer::update(const G4Step* step)
 {
   const G4TouchableHistory* touchable = (G4TouchableHistory*)(step->GetTrack()->GetTouchable());
-  if (not isSelected( touchable )) {
+  if (not isSelectedFast( touchable )) {
     LogDebug("TrackingMaterialProducer") << "TrackingMaterialProducer:\t[...] skipping "
                                          << touchable->GetVolume()->GetName() << std::endl;
     return;
@@ -153,13 +177,16 @@ void TrackingMaterialProducer::update(const G4Step* step)
   double radiationLengths = length / X0;               //
   double energyLoss       = length * Xi / 1000.;       // GeV
   //double energyLoss = step->GetDeltaEnergy()/MeV;  should we use this??
-  std::cout << "Material info:\n" << material << std::endl;
 
   G4ThreeVector globalPosPre  = step->GetPreStepPoint()->GetPosition();
   G4ThreeVector globalPosPost = step->GetPostStepPoint()->GetPosition();
   GlobalPoint globalPositionIn(  globalPosPre.x()  / cm, globalPosPre.y()  / cm, globalPosPre.z() / cm );    // mm -> cm
   GlobalPoint globalPositionOut( globalPosPost.x() / cm, globalPosPost.y() / cm, globalPosPost.z() / cm );   // mm -> cm
 
+//  std::cout << "GlobalPosPre(m_in):   " << globalPositionIn 
+//            << " eta: " << globalPositionIn.eta() <<  std::endl;
+//  std::cout << "GlobalPosPost(m_out): " << globalPositionOut 
+//            << " eta: " << globalPositionOut.eta() << std::endl;
   // check for a sensitive detector
   bool enter_sensitive = false;
   bool leave_sensitive = false;
@@ -232,6 +259,9 @@ void TrackingMaterialProducer::update(const EndOfTrack* event)
   if (m_primaryTracks and track->GetParentID() != 0)
     return;
 
+  radLen_vs_eta_->Fill(track->GetMomentum().eta(), m_track.summary().radiationLengths());
+  std::cout << "Track at eta: " << track->GetMomentum().eta()
+            << " radLen: " << m_track.summary().radiationLengths() << std::endl;
   m_tracks->push_back(m_track);
 
   // LogDebug
