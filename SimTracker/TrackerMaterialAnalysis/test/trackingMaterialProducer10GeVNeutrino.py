@@ -23,7 +23,8 @@ process.load("SimTracker.TrackerMaterialAnalysis.single10GeVNeutrino_cfi")
 # gaussian Vertex Smearing
 #process.load('IOMC.EventVertexGenerators.VtxSmearedGauss_cfi')
 from Configuration.StandardSequences.VtxSmeared import VtxSmeared
-process.load(VtxSmeared['Gauss'])
+#process.load(VtxSmeared['Gauss'])
+process.load(VtxSmeared['NoSmear'])
 
 # detector simulation (Geant4-based) with tracking material accounting 
 process.load("SimTracker.TrackerMaterialAnalysis.trackingMaterialProducer_cff")
@@ -34,7 +35,7 @@ from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_mc', '')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(100000)
+    input = cms.untracked.int32(1000000)
 )
 
 # Input source
@@ -47,7 +48,7 @@ process.out = cms.OutputModule("PoolOutputModule",
     fileName = cms.untracked.string('file:material.root')
 )
 
-process.path = cms.Path(process.generator*process.VtxSmeared*process.trackingMaterialProducer)
+process.path = cms.Path(process.generator*process.VtxSmeared*process.generatorSmeared*process.trackingMaterialProducer)
 process.outpath = cms.EndPath(process.out)
 
 def customizeMessageLogger(process):
