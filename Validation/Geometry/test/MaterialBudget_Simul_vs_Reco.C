@@ -203,10 +203,10 @@ void MaterialBudget_Simul_vs_Reco(const char * reco_file, const char * label="")
 }
 
 void createPlotsReco(const char * reco_file, const char * label, TH1D ** cumulative_matbdg) {
-  std::vector<std::string> sDETS = {"PXB", "PXF", "TIB", "TOB", "TEC", "TID" };
-  std::vector<unsigned int> sLAYS = {3, 2, 4, 6, 9, 3};
+  std::vector<std::string> sDETS = {"PXB", "PXF", "TIB", "TID", "TOB", "TEC"};
+  std::vector<unsigned int> sLAYS = {3, 2, 4, 3, 6, 9};
   std::vector<std::string> sPREF = {"Original_RadLen_vs_Eta_", "RadLen_vs_Eta_"};
-  std::vector<int> sCOLORS = {kRed, kBlue, kGreen, kOrange, kPink, kYellow};
+  std::vector<int> sCOLORS = {kRed, kBlue, kGreen, kYellow, kOrange, kPink};
   std::vector<TProfile*> profs;
   std::vector<TH1D*> histos;
   std::vector<TH1D*> diffs;

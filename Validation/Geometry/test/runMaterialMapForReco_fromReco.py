@@ -10,6 +10,11 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 from Configuration.StandardSequences.Eras import eras
 
 options = VarParsing ('analysis')
+options.register('inputFile',
+                 None,
+                 VarParsing.multiplicity.singleton,
+                 VarParsing.varType.string,
+                 "Input file to use.")
 options.register('fromLocalXML',                   # name
                 False,                             # default value
                 VarParsing.multiplicity.singleton, # kind of option, if single or multiple
@@ -35,7 +40,10 @@ if options.fromLocalXML == True:
 if options.sample == 'SingleMuPt10':
   input_file = '/store/relval/CMSSW_8_1_0_pre6/RelValSingleMuPt10_UP15/GEN-SIM-DIGI-RAW-HLTDEBUG/80X_mcRun2_asymptotic_v14-v1/00000/0263098F-092A-E611-AC04-0CC47A745250.root'
 
-process = cms.Process('RECO',eras.Run2_2016)
+if options.inputFile is not None:
+  input_file = options.inputFile
+
+process = cms.Process('MATERIAL',eras.Run2_2016)
 
 # import of standard configurations
 process.load('Configuration.StandardSequences.Services_cff')
