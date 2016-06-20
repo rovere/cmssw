@@ -179,12 +179,13 @@ void TrackingMaterialAnalyser::split( MaterialAccountingTrack & track )
     group[i] = findLayer( track.detectors()[i] );
 
   for (unsigned int i = 0; i < group.size(); ++i)
-    std::cout << "For detector i: " << i << " index: "
-              << group[i] << " R-ranges: "
-              << m_groups[group[i]-1]->getBoundingR().first << ", " << m_groups[group[i]-1]->getBoundingR().second
-              << group[i] << " Z-ranges: "
-              << m_groups[group[i]-1]->getBoundingZ().first << ", " << m_groups[group[i]-1]->getBoundingZ().second
-              << std::endl;
+    if (group[i] > 0)
+      std::cout << "For detector i: " << i << " index: "
+                << group[i] << " R-ranges: "
+                << m_groups[group[i]-1]->getBoundingR().first << ", " << m_groups[group[i]-1]->getBoundingR().second
+                << group[i] << " Z-ranges: "
+                << m_groups[group[i]-1]->getBoundingZ().first << ", " << m_groups[group[i]-1]->getBoundingZ().second
+                << std::endl;
 
   unsigned int detectors = track.detectors().size();
   if (detectors == 0) {
