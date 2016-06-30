@@ -287,11 +287,16 @@ PlaneBuilderFromGeometricDet::ResultType
 TrackerGeomBuilderFromGeometricDet::buildPlaneWithMaterial(const GeometricDet* gd,
 							   double scale) const
 {
+  using namespace std;
   PlaneBuilderFromGeometricDet planeBuilder;
   PlaneBuilderFromGeometricDet::ResultType plane = planeBuilder.plane(gd);  
   //
   // set medium properties (if defined)
   //
+  std::cout << "Setting properties: " 
+            << gd->radLength() << ", "
+            << gd->xi() << " with scale: " << scale
+            << " for " << gd->name() << endl;
   plane->setMediumProperties(MediumProperties(gd->radLength()*scale,gd->xi()*scale));
 
   return plane;
