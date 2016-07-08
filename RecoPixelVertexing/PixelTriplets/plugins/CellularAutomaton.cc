@@ -41,6 +41,22 @@ void CellularAutomaton<numberOfLayers>::create_and_connect_cells(
     }
     layerPairId++;
   }
+  dump("create_and_connect_cells");
+}
+
+template <unsigned int numberOfLayers>
+void CellularAutomaton<numberOfLayers>::dump(const char * label) {
+  int num_layer = 0;
+  for (auto layer : theFoundCellsPerLayer) {
+    std::cout << label << ": Layer " << num_layer << " has size: " << layer.size() << std::endl;
+    for (auto const & cell : layer) {
+      std::cout << label << ": Layer: " << num_layer << " cell: " << cell.get_cell_id()
+                << "( " << cell.get_inner_hit_id() << ", " << cell.get_outer_hit_id()
+                << " ) ";
+      cell.dump();
+    }
+    num_layer++;
+  }
 }
 
 template <unsigned int numberOfLayers>
@@ -64,7 +80,7 @@ void CellularAutomaton<numberOfLayers>::evolve() {
     }
   }
 
-  // last iteration
+  //last iteration
   numberOfCellsFound = theFoundCellsPerLayer[0].size();
 
   for (unsigned int cellId = 0; cellId < numberOfCellsFound; ++cellId) {
@@ -77,6 +93,7 @@ void CellularAutomaton<numberOfLayers>::evolve() {
       theRootCells.push_back(&cell);
     }
   }
+  dump("evolve");
 }
 
 template <unsigned int numberOfLayers>
@@ -90,6 +107,17 @@ void CellularAutomaton<numberOfLayers>::find_ntuplets(
     tmpNtuplet.clear();
     tmpNtuplet.push_back(root_cell);
     root_cell->find_ntuplets(foundNtuplets, tmpNtuplet, minHitsPerNtuplet);
+  }
+
+  int v_num = 0;
+  for (auto const & v: foundNtuplets) {
+    int vv_num = 0;
+    for (auto const & vv : v) {
+      std::cout << "find_ntuplets: " << v_num << ", " << vv_num;
+      vv->dump();
+      vv_num++;
+    }
+    v_num++;
   }
 }
 

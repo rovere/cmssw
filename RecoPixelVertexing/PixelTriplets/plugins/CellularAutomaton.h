@@ -17,6 +17,7 @@ class CellularAutomaton {
                                 const float, const float);
   void evolve();
   void find_ntuplets(std::vector<CACell::CAntuplet>&, const unsigned int);
+  void dump(const char *);
 
  private:
   //for each hit in each layer, store the pointers of the Cells of which it is outerHit
