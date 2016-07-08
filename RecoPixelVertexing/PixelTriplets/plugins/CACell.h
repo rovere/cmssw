@@ -22,7 +22,7 @@ public:
     }
 
     unsigned int get_cell_id() const {
-        return theCellId;
+        return theDoubletId;
     }
 
     Hit const & get_inner_hit() const {
@@ -96,6 +96,17 @@ public:
             }
         }
 
+    }
+
+    void dump() const {
+      std::cout << "\nInner cells: ";
+      for (auto const & ic : theInnerNeighbors)
+        std::cout << "[" << ic->get_inner_hit_id() << ", " << ic->get_outer_hit_id() << "]";
+      std::cout << std::endl;
+      std::cout << "Outer cells: ";
+      for (auto const & oc : theOuterNeighbors)
+        std::cout << "[" << oc->get_inner_hit_id() << ", " << oc->get_outer_hit_id() << "]";
+      std::cout << std::endl;
     }
 
     void check_alignment_and_tag(CACell* innerCell, const float ptmin, const float region_origin_x, const float region_origin_y, const float region_origin_radius, const float thetaCut, const float phiCut) {
@@ -206,8 +217,8 @@ public:
             }
         }
     }
-    
-    
+
+
 private:
     std::vector<CACell*> theInnerNeighbors;
     std::vector<CACell*> theOuterNeighbors;
