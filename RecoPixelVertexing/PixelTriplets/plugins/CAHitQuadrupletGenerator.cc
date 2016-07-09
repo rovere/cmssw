@@ -87,12 +87,17 @@ void CAHitQuadrupletGenerator::hitQuadruplets(const TrackingRegion& region,
           layer_unique_counter++;
       }
       auto layersPair = inner.name() + '+' + outer.name();
-      auto it = layersSet.find(layersPair);
-      if (it == layersSet.end())
+      bool new_element = false;
+      std::tie(std::ignore, new_element) = layersSet.insert(layersPair);
+      if (new_element) {
+        std::cout << "Considering: " << layersPair
+                  << " as pair: " << layerNumbers[inner.name()]
+                  << ", " << layerNumbers[outer.name()] << std::endl;
         layersMap.insert(std::make_pair(
             std::make_pair(layerNumbers[inner.name()],
                            layerNumbers[outer.name()]),
             thePairGenerator.doublets(region, ev, es, inner, outer)));
+      }
     }
   }
   findQuadruplets(region, result, ev, es, hits_on_layers, layersMap);
