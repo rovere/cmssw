@@ -16,6 +16,9 @@ void CellularAutomaton<numberOfLayers>::create_and_connect_cells(
   // for (auto const & lh : hits_on_layer)
   //   std::cout << "Layer: " << lh.first << " has hits: " << lh.second << std::endl;
   for (auto const & aDoublet : layersMap) {
+    std::cout << "CA_layerPairId: " << layerPairId
+              << " assigned to: " << aDoublet.first.first << " , "
+              << aDoublet.first.second << std::endl;
     std::tie(innerLayerId, outerLayerId) = aDoublet.first;
     auto numberOfDoublets = aDoublet.second.size();
     auto const & doublets = aDoublet.second;
@@ -61,12 +64,13 @@ void CellularAutomaton<numberOfLayers>::dump(const char * label) {
 
 template <unsigned int numberOfLayers>
 void CellularAutomaton<numberOfLayers>::evolve() {
-  constexpr unsigned int numberOfIterations = numberOfLayers - 2;
+  constexpr unsigned int numberOfIterations = numberOfLayers - 1;
   unsigned int numberOfCellsFound;
   for (unsigned int iteration = 0; iteration < numberOfIterations - 1;
        ++iteration) {
     for (unsigned int innerLayerId = 0;
          innerLayerId < numberOfIterations - iteration; ++innerLayerId) {
+      std::cout << "Evolving cells of CA_layerPairId: " << innerLayerId << std::endl;
       for (auto& cell : theFoundCellsPerLayer[innerLayerId]) {
         cell.evolve();
       }
@@ -74,6 +78,7 @@ void CellularAutomaton<numberOfLayers>::evolve() {
 
     for (unsigned int innerLayerId = 0;
          innerLayerId < numberOfLayers - iteration - 2; ++innerLayerId) {
+      std::cout << "Updating status of cells of CA_layerPairId: " << innerLayerId << std::endl;
       for (auto& cell : theFoundCellsPerLayer[innerLayerId]) {
         cell.update_state();
       }
@@ -83,16 +88,22 @@ void CellularAutomaton<numberOfLayers>::evolve() {
   //last iteration
   numberOfCellsFound = theFoundCellsPerLayer[0].size();
 
+  std::cout << "Number of found cells before last iteration: " << numberOfCellsFound << std::endl;
   for (unsigned int cellId = 0; cellId < numberOfCellsFound; ++cellId) {
     theFoundCellsPerLayer[0][cellId].evolve();
   }
 
   for (auto& cell : theFoundCellsPerLayer[0]) {
     cell.update_state();
-    if (cell.is_root_cell(numberOfLayers - 2)) {
+    std::cout << "Target[2]; comparing cell: " << cell.get_cell_id()
+              << " with state:  " << cell.get_CA_state() << std::endl;
+
+    if (cell.is_root_cell(2)) {
       theRootCells.push_back(&cell);
     }
   }
+  std::cout << "I have found " << theRootCells.size()
+            << " final cells!" << std::endl;
   dump("evolve");
 }
 
