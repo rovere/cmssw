@@ -90,15 +90,18 @@ void CAHitQuadrupletGenerator::hitQuadruplets(const TrackingRegion& region,
       bool new_element = false;
       std::tie(std::ignore, new_element) = layersSet.insert(layersPair);
       if (new_element) {
-        std::cout << "Considering: " << layersPair
-                  << " as pair: " << layerNumbers[inner.name()]
-                  << ", " << layerNumbers[outer.name()] << std::endl;
+//        std::cout << "Considering: " << layersPair
+//                  << " as pair: " << layerNumbers[inner.name()]
+//                  << ", " << layerNumbers[outer.name()] << std::endl;
         layersMap.insert(std::make_pair(
             std::make_pair(layerNumbers[inner.name()],
                            layerNumbers[outer.name()]),
             thePairGenerator.doublets(region, ev, es, inner, outer)));
       }
     }
+//    for (auto const & it: layers[j]) {
+//      std::cout << "Analysing: " << it.name() << std::endl;
+//    }
   }
   findQuadruplets(region, result, ev, es, hits_on_layers, layersMap);
 
@@ -121,7 +124,7 @@ void CAHitQuadrupletGenerator::findQuadruplets(
                               region, CAThetaCut, CAPhiCut);
   ca.evolve();
 
-  ca.find_ntuplets(foundQuadruplets, 13);
+  ca.find_ntuplets(foundQuadruplets, 4);
 
   const QuantityDependsPtEval maxChi2Eval = maxChi2.evaluator(es);
 

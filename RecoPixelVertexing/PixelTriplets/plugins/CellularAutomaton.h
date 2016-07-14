@@ -6,6 +6,13 @@
 #include "TrackingTools/TransientTrackingRecHit/interface/SeedingLayerSetsHits.h"
 #include "RecoTracker/TkTrackingRegions/interface/TrackingRegion.h"
 
+typedef struct logic {
+  logic(int layer, int inner, int outer): layer_index(layer), inner_index(inner), outer_index(outer){}
+  int layer_index;
+  int inner_index;
+  int outer_index;
+} CAConnections;
+
 template<unsigned int theNumberOfLayers>
 class CellularAutomaton {
  public:
@@ -26,6 +33,7 @@ class CellularAutomaton {
   std::vector<CACell*> theRootCells;
   std::vector<std::vector<CACell*> > theNtuplets;
   std::array<std::string, theNumberOfLayers> layers_;
+  std::vector<CAConnections> ca_connetions_;
 };
 
 
