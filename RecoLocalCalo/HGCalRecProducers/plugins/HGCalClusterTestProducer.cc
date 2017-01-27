@@ -62,6 +62,14 @@ HGCalClusterTestProducer::HGCalClusterTestProducer(const edm::ParameterSet &ps) 
   double kappa = ps.getParameter<double>("kappa");
   double multicluster_radius = ps.getParameter<double>("multiclusterRadius");
   double minClusters = ps.getParameter<unsigned>("minClusters");
+  bool realSpaceCone = ps.getParameter<bool>("realSpaceCone");
+  std::vector<double> dEdXweights = ps.getParameter<std::vector<double> >("dEdXweights");
+  std::vector<double> thicknessCorrection = ps.getParameter<std::vector<double> >("thicknessCorrection");
+  std::vector<double> fcPerMip = ps.getParameter<std::vector<double> >("fcPerMip");
+  double fcPerEle = ps.getParameter<double>("fcPerEle");
+  std::vector<double> nonAgedNoises = ps.getParameter<std::vector<double> >("nonAgedNoises");
+  double noiseMip = ps.getParameter<double>("noiseMip");
+  bool dependSensor = ps.getParameter<bool>("dependSensor");
   
   
   if(detector=="all") {
@@ -83,14 +91,14 @@ HGCalClusterTestProducer::HGCalClusterTestProducer(const edm::ParameterSet &ps) 
 
   if(doSharing){
     double showerSigma =  ps.getParameter<double>("showerSigma");
-    algo = std::make_unique<HGCalImagingAlgo>(delta_c, kappa, ecut, showerSigma, algoId, verbosity);
+    algo = std::make_unique<HGCalImagingAlgo>(delta_c, kappa, ecut, showerSigma, algoId, dependSensor, dEdXweights, thicknessCorrection, fcPerMip, fcPerEle, nonAgedNoises, noiseMip, verbosity);
   }else{
-    algo = std::make_unique<HGCalImagingAlgo>(delta_c, kappa, ecut, algoId, verbosity);
+    algo = std::make_unique<HGCalImagingAlgo>(delta_c, kappa, ecut, algoId, dependSensor, dEdXweights, thicknessCorrection, fcPerMip, fcPerEle, nonAgedNoises, noiseMip, verbosity);
   }
 
   auto sumes = consumesCollector();
 
-  multicluster_algo = std::make_unique<HGCalDepthPreClusterer>(ps, sumes, multicluster_radius, minClusters);
+  multicluster_algo = std::make_unique<HGCalDepthPreClusterer>(ps, sumes, multicluster_radius, minClusters, realSpaceCone);
 
   // hydraTokens[0] = consumes<std::vector<reco::PFCluster> >( edm::InputTag("FakeClusterGen") );
   // hydraTokens[1] = consumes<std::vector<reco::PFCluster> >( edm::InputTag("FakeClusterCaloFace") );
