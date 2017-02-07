@@ -17,9 +17,14 @@ namespace {
     return idx;
   } 
 
-  float dist(const edm::Ptr<reco::BasicCluster> &a, 
+  float dist2(const edm::Ptr<reco::BasicCluster> &a, 
+	      const edm::Ptr<reco::BasicCluster> &b) {
+    return reco::deltaR2(*a,*b);
+  }  
+
+  float distReal2(const edm::Ptr<reco::BasicCluster> &a, 
              const edm::Ptr<reco::BasicCluster> &b) {
-    return reco::deltaR(*a,*b);
+    return (a->x()-b->x())*(a->x()-b->x()) + (a->y()-b->y())*(a->y()-b->y());
   }
 }
 
@@ -29,6 +34,8 @@ std::vector<reco::HGCalMultiCluster> HGCalDepthPreClusterer::makePreClusters(con
   std::vector<size_t> es = sorted_indices(thecls);
   std::vector<int> vused(es.size(),0);
   unsigned int used = 0;
+  const float radius2 = radius*radius;
+
   for(unsigned int i = 0; i < es.size(); ++i) {
     if(vused[i]==0) {
       reco::HGCalMultiCluster temp;      
@@ -37,7 +44,10 @@ std::vector<reco::HGCalMultiCluster> HGCalDepthPreClusterer::makePreClusters(con
       ++used;
       for(unsigned int j = i+1; j < es.size(); ++j) {
 	if(vused[j]==0) {
-	  if( dist(thecls[es[i]],thecls[es[j]])<radius && int(thecls[es[i]]->z()*vused[i])>0 ) {
+          float distanceCheck = 9999.;
+          if( realSpaceCone ) distanceCheck = distReal2(thecls[es[i]],thecls[es[j]]);
+          else distanceCheck = dist2(thecls[es[i]],thecls[es[j]]);
+	  if( distanceCheck<radius2 && int(thecls[es[i]]->z()*vused[i])>0 ) {
 	    temp.push_back(thecls[es[j]]);
 	    vused[j]=vused[i];
 	    ++used;

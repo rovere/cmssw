@@ -37,10 +37,24 @@ void HGCalImagingAlgo::makeClusters(const HGCRecHitCollection& hits)
   //loop over all hits and create the Hexel structure, skip energies below ecut
   for (unsigned int i=0;i<hits.size();++i) {
     const HGCRecHit& hgrh = hits[i];
-    if(hgrh.energy() < ecut) continue; 
     DetId detid = hgrh.detid();
+    int layer = rhtools_.getLayerWithOffset(detid);
+    float thickness = -9999.;
+    unsigned thickIndex = -1;
+    if( layer <= 40 ) {
+      thickness = rhtools_.getSiThickness(detid);
+      if( thickness>99. && thickness<101.) thickIndex=0;
+      else if( thickness>199. && thickness<201. ) thickIndex=1;
+      else if( thickness>299. && thickness<301. ) thickIndex=2;
+      else assert( thickIndex>0 && "ERROR - silicon thickness has a nonsensical value" );
+    }
+    float sigmaNoise = -9999.;
+    if( layer <= 40 ) sigmaNoise = 0.001 * fcPerEle * nonAgedNoises[thickIndex] * dEdXweights[layer] / (fcPerMip[thickIndex] * thicknessCorrection[thickIndex]);
+    else if( layer <=52 ) sigmaNoise = 0.001 * noiseMip * dEdXweights[layer];
+    if(!dependSensor && hgrh.energy() < ecut) continue; 
+    if(dependSensor && hgrh.energy() < ecut*sigmaNoise) continue; //this sets the ZS threshold at ecut times the sigma noise for the sensor
 
-    int layer = rhtools_.getLayerWithOffset(detid)+int(HGCalDetId(detid).zside()>0)*(maxlayer+1);
+    layer += int(HGCalDetId(detid).zside()>0)*(maxlayer+1);
     
     // determine whether this is a half-hexagon
     bool isHalf = rhtools_.isHalfCell(detid);    
@@ -172,9 +186,13 @@ math::XYZPoint HGCalImagingAlgo::calculatePosition(std::vector<KDNode> &v){
 } 
 
 double HGCalImagingAlgo::distance(const Hexel &pt1, const Hexel &pt2){
+  return std::sqrt(distance2(pt1,pt2));
+}
+
+double HGCalImagingAlgo::distance2(const Hexel &pt1, const Hexel &pt2){
   const double dx = pt1.x - pt2.x;
   const double dy = pt1.y - pt2.y;
-  return std::sqrt(dx*dx + dy*dy);
+  return (dx*dx + dy*dy);
 }
 
 
@@ -209,23 +227,23 @@ double HGCalImagingAlgo::calculateDistanceToHigher(std::vector<KDNode> &nd, KDTr
     maxdensity = nd[rs[0]].data.rho;
   else
     return maxdensity; // there are no hits
-  double dist = 50.0;
+  double dist2 = 2500.0;
   //start by setting delta for the highest density hit to 
   //the most distant hit - this is a convention
 
   for(unsigned int j = 0; j < nd.size(); j++){
-    double tmp = distance(nd[rs[0]].data, nd[j].data);
-    dist = tmp > dist ? tmp : dist;
+    double tmp = distance2(nd[rs[0]].data, nd[j].data);
+    dist2 = tmp > dist2 ? tmp : dist2;
   }
-  nd[rs[0]].data.delta = dist;
+  nd[rs[0]].data.delta = std::sqrt(dist2);
   nd[rs[0]].data.nearestHigher = nearestHigher;
 
   //now we save the largest distance as a starting point
   
-  double max_dist = dist;
+  const double max_dist2 = dist2;
   
   for(unsigned int oi = 1; oi < nd.size(); ++oi){ // start from second-highest density
-    dist = max_dist;
+    dist2 = max_dist2;
     unsigned int i = rs[oi];
     // we only need to check up to oi since hits 
     // are ordered by decreasing density
@@ -233,13 +251,13 @@ double HGCalImagingAlgo::calculateDistanceToHigher(std::vector<KDNode> &nd, KDTr
     // and the ones AFTER to have lower rho
     for(unsigned int oj = 0; oj < oi; oj++){ 
       unsigned int j = rs[oj];
-      double tmp = distance(nd[i].data, nd[j].data);
-      if(tmp <= dist){ //this "<=" instead of "<" addresses the (rare) case when there are only two hits
-	dist = tmp;
+      double tmp = distance2(nd[i].data, nd[j].data);
+      if(tmp <= dist2){ //this "<=" instead of "<" addresses the (rare) case when there are only two hits
+	dist2 = tmp;
 	nearestHigher = j;
       }
     }
-    nd[i].data.delta = dist;
+    nd[i].data.delta = std::sqrt(dist2);
     nd[i].data.nearestHigher = nearestHigher; //this uses the original unsorted hitlist 
   }
   return maxdensity;
@@ -261,8 +279,22 @@ int HGCalImagingAlgo::findAndAssignClusters(std::vector<KDNode> &nd,KDTree &lp, 
 
     //    std::cout << " delta " << lp[ds[i]].delta << " rho " << lp[ds[i]].rho << std::endl;
     if(nd[ds[i]].data.delta < delta_c) break; // no more cluster centers to be looked at 
-    if(nd[ds[i]].data.rho < maxdensity/kappa  /* || lp[ds[i]].rho<0.001*/) continue; 
+    unsigned layer = rhtools_.getLayerWithOffset(nd[ds[i]].data.detid);
+    float thickness  = -9999.;
+    unsigned thickIndex = -1;
+    if( layer <= 40 ) {
+      thickness = rhtools_.getSiThickness(nd[ds[i]].data.detid);
+      if( thickness>99. && thickness<101.) thickIndex=0;
+      else if( thickness>199. && thickness<201. ) thickIndex=1;
+      else if( thickness>299. && thickness<301. ) thickIndex=2;
+      else assert( thickIndex>0 && "ERROR - silicon thickness has a nonsensical value" );
+    }
+    float sigmaNoise = -9999.;
+    if( layer <= 40 ) sigmaNoise = 0.001 * fcPerEle * nonAgedNoises[thickIndex] * dEdXweights[layer] / (fcPerMip[thickIndex] * thicknessCorrection[thickIndex]);
+    else if( layer <=52 ) sigmaNoise = 0.001 * noiseMip * dEdXweights[layer];
     //skip this as a potential cluster center because it fails the density cut
+    if(!dependSensor && nd[ds[i]].data.rho < maxdensity/kappa  /* || lp[ds[i]].rho<0.001*/) continue; 
+    if(dependSensor && nd[ds[i]].data.rho < kappa*sigmaNoise ) continue; // set equal to kappa times noise threshold
 
     nd[ds[i]].data.clusterIndex = clusterIndex;
     if (verbosity < pINFO)
