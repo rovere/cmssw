@@ -47,13 +47,13 @@ class HGCalImagingAlgo
   
   enum VerbosityLevel { pDEBUG = 0, pWARNING = 1, pINFO = 2, pERROR = 3 }; 
   
- HGCalImagingAlgo() : delta_c(0.), kappa(1.), ecut(0.), cluster_offset(0),
+ HGCalImagingAlgo() : vecDeltas(), kappa(1.), ecut(0.), cluster_offset(0),
 		      sigma2(1.0),
 		      algoId(reco::CaloCluster::undefined),
 		      verbosity(pERROR){
  }
 
-  HGCalImagingAlgo(float delta_c_in, double kappa_in, double ecut_in,
+  HGCalImagingAlgo(std::vector<double> vecDeltas_in, double kappa_in, double ecut_in,
 		   //		   const CaloSubdetectorTopology *thetopology_p,
 		   reco::CaloCluster::AlgoId algoId_in,
                    bool dependSensor_in,
@@ -63,7 +63,7 @@ class HGCalImagingAlgo
                    double fcPerEle_in,
                    std::vector<double> nonAgedNoises_in,
                    double noiseMip_in,
-		   VerbosityLevel the_verbosity = pERROR) : delta_c(delta_c_in), kappa(kappa_in), 
+		   VerbosityLevel the_verbosity = pERROR) : vecDeltas(vecDeltas_in), kappa(kappa_in), 
 							    ecut(ecut_in),    
 							    cluster_offset(0),
 							    sigma2(1.0),
@@ -78,7 +78,7 @@ class HGCalImagingAlgo
 							    verbosity(the_verbosity){
   }
 
-  HGCalImagingAlgo(float delta_c_in, double kappa_in, double ecut_in,
+  HGCalImagingAlgo(std::vector<double> vecDeltas_in, double kappa_in, double ecut_in,
 		   double showerSigma, 
 		   //		   const CaloSubdetectorTopology *thetopology_p,
 		   reco::CaloCluster::AlgoId algoId_in,
@@ -89,7 +89,7 @@ class HGCalImagingAlgo
                    double fcPerEle_in,
                    std::vector<double> nonAgedNoises_in,
                    double noiseMip_in,
-		   VerbosityLevel the_verbosity = pERROR) : delta_c(delta_c_in), kappa(kappa_in), 
+		   VerbosityLevel the_verbosity = pERROR) : vecDeltas(vecDeltas_in), kappa(kappa_in), 
 							    ecut(ecut_in),    
 							    cluster_offset(0),
 							    sigma2(std::pow(showerSigma,2.0)),
@@ -135,7 +135,7 @@ class HGCalImagingAlgo
   static const unsigned int maxlayer = 52;
 
   // The two parameters used to identify clusters
-  float delta_c;
+  std::vector<double> vecDeltas;
   double kappa;
 
   // The hit energy cutoff
@@ -233,9 +233,9 @@ class HGCalImagingAlgo
   //these functions should be in a helper class.
   double distance2(const Hexel &pt1, const Hexel &pt2); //distance squared
   double distance(const Hexel &pt1, const Hexel &pt2); //2-d distance on the layer (x-y)
-  double calculateLocalDensity(std::vector<KDNode> &, KDTree &); //return max density
+  double calculateLocalDensity(std::vector<KDNode> &, KDTree &, const int); //return max density
   double calculateDistanceToHigher(std::vector<KDNode> &, KDTree &);
-  int findAndAssignClusters(std::vector<KDNode> &, KDTree &, double, KDTreeBox &);
+  int findAndAssignClusters(std::vector<KDNode> &, KDTree &, double, KDTreeBox &, const int);
   math::XYZPoint calculatePosition(std::vector<KDNode> &);
 
   // attempt to find subclusters within a given set of hexels

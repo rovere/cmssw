@@ -24,12 +24,13 @@ void HGCalImagingAlgo::makeClusters(const HGCRecHitCollection& hits)
   //  std::vector<std::vector<Hexel> > points(2*(maxlayer+1)); //a vector of vectors of hexels, one for each layer
   //@@EM todo: the number of layers should be obtained programmatically - the range is 1-n instead of 0-n-1...
 
+  const int actualLayer = rhtools_.getLayerWithOffset(hits[0].detid());
 
   if (verbosity < pINFO)
     {
       std::cout << "-------------------------------------------------------------" << std::endl;
       std::cout << "HGC Imaging algorithm invoked for " << std::endl;
-      std::cout << "delta_c " << delta_c << " kappa " << kappa;
+      std::cout << "delta_c for EE, FH and BH: " << vecDeltas[0] << ", " << vecDeltas[1] << ", " << vecDeltas[2] << " and kappa " << kappa;
       //      if( doSharing ) std::cout << " showerSigma " << std::sqrt(sigma2);
       std::cout << std::endl;
     }
@@ -80,11 +81,11 @@ void HGCalImagingAlgo::makeClusters(const HGCRecHitCollection& hits)
 
     hit_kdtree[i].build(points[i],bounds);
 
-    double maxdensity = calculateLocalDensity(points[i],hit_kdtree[i]);
+    double maxdensity = calculateLocalDensity(points[i],hit_kdtree[i], actualLayer);
     // std::cout << "layer " << i << " max density " << maxdensity 
     // 	      << " total hits " << points[i].size() << std::endl;
     calculateDistanceToHigher(points[i],hit_kdtree[i]);
-    findAndAssignClusters(points[i],hit_kdtree[i],maxdensity,bounds);
+    findAndAssignClusters(points[i],hit_kdtree[i],maxdensity,bounds,actualLayer);
     //    std::cout << "found " << nclusters << " clusters" << std::endl;
   }
   //make the cluster vector
@@ -196,8 +197,12 @@ double HGCalImagingAlgo::distance2(const Hexel &pt1, const Hexel &pt2){
 }
 
 
-double HGCalImagingAlgo::calculateLocalDensity(std::vector<KDNode> &nd, KDTree &lp){
+double HGCalImagingAlgo::calculateLocalDensity(std::vector<KDNode> &nd, KDTree &lp, const int layer){
   double maxdensity = 0.;
+  float delta_c = 9999.;
+  if( layer<=28 ) delta_c = vecDeltas[0];
+  else if( layer<=40 ) delta_c = vecDeltas[1];
+  else delta_c = vecDeltas[2];
   for(unsigned int i = 0; i < nd.size(); ++i){
     KDTreeBox search_box(nd[i].dims[0]-delta_c,nd[i].dims[0]+delta_c,
 			 nd[i].dims[1]-delta_c,nd[i].dims[1]+delta_c);
@@ -263,13 +268,17 @@ double HGCalImagingAlgo::calculateDistanceToHigher(std::vector<KDNode> &nd, KDTr
   return maxdensity;
 }
 
-int HGCalImagingAlgo::findAndAssignClusters(std::vector<KDNode> &nd,KDTree &lp, double maxdensity, KDTreeBox &bounds){
+int HGCalImagingAlgo::findAndAssignClusters(std::vector<KDNode> &nd,KDTree &lp, double maxdensity, KDTreeBox &bounds, const int layer){
 
   //this is called once per layer...
   //so when filling the cluster temporary vector of Hexels we resize each time by the number 
   //of clusters found. This is always equal to the number of cluster centers...
 
   unsigned int clusterIndex = 0;
+  float delta_c = 9999.;
+  if( layer<=28 ) delta_c = vecDeltas[0];
+  else if( layer<=40 ) delta_c = vecDeltas[1];
+  else delta_c = vecDeltas[2];
 
   std::vector<size_t> rs = sorted_indices(nd); // indices sorted by decreasing rho
   std::vector<size_t> ds = sort_by_delta(nd); // sort in decreasing distance to higher
@@ -394,6 +403,7 @@ int HGCalImagingAlgo::findAndAssignClusters(std::vector<KDNode> &nd,KDTree &lp, 
 std::vector<unsigned> HGCalImagingAlgo::findLocalMaximaInCluster(const std::vector<KDNode>& cluster) {
   std::vector<unsigned> result;
   std::vector<bool> seed(cluster.size(),true);
+  float delta_c = 2.;
  
   for( unsigned i = 0; i < cluster.size(); ++i ) {    
     for( unsigned j = 0; j < cluster.size(); ++j ) {
