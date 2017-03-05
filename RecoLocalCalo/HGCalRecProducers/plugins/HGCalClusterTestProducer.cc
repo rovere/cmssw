@@ -58,10 +58,18 @@ HGCalClusterTestProducer::HGCalClusterTestProducer(const edm::ParameterSet &ps) 
   detector(ps.getParameter<std::string >("detector")),              //one of EE, EF or "both"
   verbosity((HGCalImagingAlgo::VerbosityLevel)ps.getUntrackedParameter<unsigned int>("verbosity",3)){
   double ecut = ps.getParameter<double>("ecut");
-  double delta_c = ps.getParameter<double>("deltac");
+  std::vector<double> vecDeltas = ps.getParameter<std::vector<double> >("deltac");
   double kappa = ps.getParameter<double>("kappa");
-  double multicluster_radius = ps.getParameter<double>("multiclusterRadius");
+  std::vector<double> multicluster_radii = ps.getParameter<std::vector<double> >("multiclusterRadii");
   double minClusters = ps.getParameter<unsigned>("minClusters");
+  bool realSpaceCone = ps.getParameter<bool>("realSpaceCone");
+  std::vector<double> dEdXweights = ps.getParameter<std::vector<double> >("dEdXweights");
+  std::vector<double> thicknessCorrection = ps.getParameter<std::vector<double> >("thicknessCorrection");
+  std::vector<double> fcPerMip = ps.getParameter<std::vector<double> >("fcPerMip");
+  double fcPerEle = ps.getParameter<double>("fcPerEle");
+  std::vector<double> nonAgedNoises = ps.getParameter<std::vector<double> >("nonAgedNoises");
+  double noiseMip = ps.getParameter<double>("noiseMip");
+  bool dependSensor = ps.getParameter<bool>("dependSensor");
   
   
   if(detector=="all") {
@@ -83,14 +91,14 @@ HGCalClusterTestProducer::HGCalClusterTestProducer(const edm::ParameterSet &ps) 
 
   if(doSharing){
     double showerSigma =  ps.getParameter<double>("showerSigma");
-    algo = std::make_unique<HGCalImagingAlgo>(delta_c, kappa, ecut, showerSigma, algoId, verbosity);
+    algo = std::make_unique<HGCalImagingAlgo>(vecDeltas, kappa, ecut, showerSigma, algoId, dependSensor, dEdXweights, thicknessCorrection, fcPerMip, fcPerEle, nonAgedNoises, noiseMip, verbosity);
   }else{
-    algo = std::make_unique<HGCalImagingAlgo>(delta_c, kappa, ecut, algoId, verbosity);
+    algo = std::make_unique<HGCalImagingAlgo>(vecDeltas, kappa, ecut, algoId, dependSensor, dEdXweights, thicknessCorrection, fcPerMip, fcPerEle, nonAgedNoises, noiseMip, verbosity);
   }
 
   auto sumes = consumesCollector();
 
-  multicluster_algo = std::make_unique<HGCalDepthPreClusterer>(ps, sumes, multicluster_radius, minClusters);
+  multicluster_algo = std::make_unique<HGCalDepthPreClusterer>(ps, sumes, multicluster_radii, minClusters, realSpaceCone);
 
   // hydraTokens[0] = consumes<std::vector<reco::PFCluster> >( edm::InputTag("FakeClusterGen") );
   // hydraTokens[1] = consumes<std::vector<reco::PFCluster> >( edm::InputTag("FakeClusterCaloFace") );
