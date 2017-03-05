@@ -60,7 +60,7 @@ HGCalClusterTestProducer::HGCalClusterTestProducer(const edm::ParameterSet &ps) 
   double ecut = ps.getParameter<double>("ecut");
   std::vector<double> vecDeltas = ps.getParameter<std::vector<double> >("deltac");
   double kappa = ps.getParameter<double>("kappa");
-  double multicluster_radius = ps.getParameter<double>("multiclusterRadius");
+  std::vector<double> multicluster_radii = ps.getParameter<std::vector<double> >("multiclusterRadii");
   double minClusters = ps.getParameter<unsigned>("minClusters");
   bool realSpaceCone = ps.getParameter<bool>("realSpaceCone");
   std::vector<double> dEdXweights = ps.getParameter<std::vector<double> >("dEdXweights");
@@ -98,7 +98,7 @@ HGCalClusterTestProducer::HGCalClusterTestProducer(const edm::ParameterSet &ps) 
 
   auto sumes = consumesCollector();
 
-  multicluster_algo = std::make_unique<HGCalDepthPreClusterer>(ps, sumes, multicluster_radius, minClusters, realSpaceCone);
+  multicluster_algo = std::make_unique<HGCalDepthPreClusterer>(ps, sumes, multicluster_radii, minClusters, realSpaceCone);
 
   // hydraTokens[0] = consumes<std::vector<reco::PFCluster> >( edm::InputTag("FakeClusterGen") );
   // hydraTokens[1] = consumes<std::vector<reco::PFCluster> >( edm::InputTag("FakeClusterCaloFace") );
