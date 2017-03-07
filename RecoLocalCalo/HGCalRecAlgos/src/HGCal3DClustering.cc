@@ -89,14 +89,12 @@ std::vector<reco::HGCalMultiCluster> HGCal3DClustering::makeClusters(const reco:
 	}
 	std::array<double,3> to{ {0.,0.,zees[j]} };
 	layerIntersection(to,from);
-        int layer = int(abs(i-(maxlayer+1)));
+        int layer = int(abs(j-(maxlayer+1)));
         float radius = 9999.;
-        std::cout << "layer is " << layer << std::endl;
         if(layer <= 28) radius = radii[0];
         else if(layer <= 40) radius = radii[1];
         else if(layer <= 52) radius = radii[2];
         else assert(radius<100. && "nonsense layer value - cannot assign multicluster radius");
-        std::cout << "radius is " << radius << std::endl;
         float radius2 = radius*radius;
 	KDTreeBox search_box(float(to[0])-radius,float(to[0])+radius,
 			     float(to[1])-radius,float(to[1])+radius);
