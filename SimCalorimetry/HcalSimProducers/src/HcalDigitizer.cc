@@ -29,7 +29,7 @@
 #include "DataFormats/HcalDetId/interface/HcalZDCDetId.h"
 #include <boost/foreach.hpp>
 #include "Geometry/CaloTopology/interface/HcalTopology.h"
-#include "SimDataFormats/CaloTest/interface/HcalTestNumbering.h"
+#include "DataFormats/HcalDetId/interface/HcalTestNumbering.h"
 #include "DataFormats/HcalDetId/interface/HcalSubdetector.h"
 #include "DataFormats/HcalDigi/interface/HcalQIENum.h"
 
@@ -41,9 +41,9 @@ HcalDigitizer::HcalDigitizer(const edm::ParameterSet& ps, edm::ConsumesCollector
   theParameterMap(new HcalSimParameterMap(ps)),
   theShapes(new HcalShapes()),
   theHBHEResponse(new CaloHitResponse(theParameterMap, theShapes)),
-  theHBHESiPMResponse(new HcalSiPMHitResponse(theParameterMap, theShapes, ps.getParameter<bool>("HcalPreMixStage1"))),
+  theHBHESiPMResponse(new HcalSiPMHitResponse(theParameterMap, theShapes, ps.getParameter<bool>("HcalPreMixStage1"), true)),
   theHOResponse(new CaloHitResponse(theParameterMap, theShapes)),   
-  theHOSiPMResponse(new HcalSiPMHitResponse(theParameterMap, theShapes)),
+  theHOSiPMResponse(new HcalSiPMHitResponse(theParameterMap, theShapes, ps.getParameter<bool>("HcalPreMixStage1"), false)),
   theHFResponse(new CaloHitResponse(theParameterMap, theShapes)),
   theHFQIE10Response(new CaloHitResponse(theParameterMap, theShapes)),
   theZDCResponse(new CaloHitResponse(theParameterMap, theShapes)),
@@ -141,7 +141,6 @@ HcalDigitizer::HcalDigitizer(const edm::ParameterSet& ps, edm::ConsumesCollector
     theHODigitizer = new HODigitizer(theHOResponse, theHOElectronicsSim, doEmpty);
   }
   if(doHOSiPM) {
-    theHOSiPMResponse = new HcalSiPMHitResponse(theParameterMap, theShapes);
     theHOSiPMResponse->setHitFilter(&theHOSiPMHitFilter);
     theHOSiPMDigitizer = new HODigitizer(theHOSiPMResponse, theHOElectronicsSim, doEmpty);
   }
@@ -177,7 +176,7 @@ HcalDigitizer::HcalDigitizer(const edm::ParameterSet& ps, edm::ConsumesCollector
 
   testNumbering_ = ps.getParameter<bool>("TestNumbering");
 //  std::cout << "Flag to see if Hit Relabeller to be initiated " << testNumbering_ << std::endl;
-  if (testNumbering_) theRelabeller=new HcalHitRelabeller(ps);
+  if (testNumbering_) theRelabeller=new HcalHitRelabeller(ps.getParameter<bool>("doNeutralDensityFilter"));
 
   if(ps.getParameter<bool>("doIonFeedback") && theHBHEResponse) {
     theIonFeedback = new HPDIonFeedbackSim(ps, theShapes);
@@ -244,6 +243,8 @@ HcalDigitizer::~HcalDigitizer() {
   delete theHBHEQIE11Amplifier;
   delete theCoderFactory;
   if (theRelabeller)           delete theRelabeller;
+  if(theTimeSlewSim) delete theTimeSlewSim;
+  if(theIonFeedback) delete theIonFeedback;
 }
 
 
@@ -449,7 +450,8 @@ void HcalDigitizer::finalizeEvent(edm::Event& e, const edm::EventSetup& eventSet
   std::unique_ptr<QIE11DigiCollection> hbheQIE11Result(
     new QIE11DigiCollection(
       theHBHEQIE11DetIds.size()>0 ? 
-      theParameterMap->simParameters(theHBHEQIE11DetIds[0]).readoutFrameSize() : 
+      ((HcalSiPMHitResponse *)theHBHESiPMResponse)->getReadoutFrameSize(theHBHEQIE11DetIds[0]) :
+//      theParameterMap->simParameters(theHBHEQIE11DetIds[0]).readoutFrameSize() : 
       QIE11DigiCollection::MAXSAMPLES
     )
   );
@@ -557,7 +559,7 @@ void  HcalDigitizer::updateGeometry(const edm::EventSetup & eventSetup) {
   theHFResponse->setGeometry(theGeometry);
   theHFQIE10Response->setGeometry(theGeometry);
   theZDCResponse->setGeometry(theGeometry);
-  if(theRelabeller) theRelabeller->setGeometry(theGeometry,theRecNumber);
+  if(theRelabeller) theRelabeller->setGeometry(theRecNumber);
 
   const std::vector<DetId>& hbCells = theGeometry->getValidDetIds(DetId::Hcal, HcalBarrel);
   const std::vector<DetId>& heCells = theGeometry->getValidDetIds(DetId::Hcal, HcalEndcap);
