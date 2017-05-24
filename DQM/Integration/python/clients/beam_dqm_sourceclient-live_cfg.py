@@ -13,10 +13,10 @@ runFirstStepTrk = False
 # Common part for PP and H.I Running
 #-----------------------------
 # for live online DQM in P5
-process.load("DQM.Integration.config.inputsource_cfi")
+#process.load("DQM.Integration.config.inputsource_cfi")
 
 # for testing in lxplus
-#process.load("DQM.Integration.config.fileinputsource_cfi")
+process.load("DQM.Integration.config.fileinputsource_cfi")
 
 #--------------------------
 # HLT Filter
@@ -80,9 +80,10 @@ if process.dqmRunConfig.type.value() is "playback":
   process.dqmBeamMonitor.BeamFitter.DIPFileName = '/nfshome0/dqmdev/BeamMonitorDQM/BeamFitResults.txt'
 else:
   process.dqmBeamMonitor.BeamFitter.WriteAscii = True
-  process.dqmBeamMonitor.BeamFitter.AsciiFileName = '/nfshome0/yumiceva/BeamMonitorDQM/BeamFitResults.txt'
+  process.dqmBeamMonitor.BeamFitter.AsciiFileName = './BeamFitResults.txt'
   process.dqmBeamMonitor.BeamFitter.WriteDIPAscii = True
-  process.dqmBeamMonitor.BeamFitter.DIPFileName = '/nfshome0/dqmpro/BeamMonitorDQM/BeamFitResults.txt'
+  process.dqmBeamMonitor.BeamFitter.DIPFileName = './DIPBeamFitResults.txt'
+  process.dqmBeamMonitor.BeamFitter.Debug = True
   #process.dqmBeamMonitor.BeamFitter.SaveFitResults = False
   #process.dqmBeamMonitor.BeamFitter.OutputFileName = '/nfshome0/yumiceva/BeamMonitorDQM/BeamFitResults.root'
   #process.dqmBeamMonitorBx.BeamFitter.WriteAscii = False

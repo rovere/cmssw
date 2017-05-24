@@ -8,9 +8,9 @@ process = cms.Process("BeamPixel", eras.Run2_2017)
 # Common for PP and HI running
 #----------------------------
 # Use this to run locally (for testing purposes)
-#process.load("DQM.Integration.config.fileinputsource_cfi")
+process.load("DQM.Integration.config.fileinputsource_cfi")
 # Otherwise use this
-process.load("DQM.Integration.config.inputsource_cfi")
+#process.load("DQM.Integration.config.inputsource_cfi")
 
 
 #----------------------------
@@ -116,11 +116,11 @@ if (process.runType.getRunType() == process.runType.pp_run or process.runType.ge
                                             VxErrCorr          = cms.double(1.2), # Keep checking this with later release
                                             minVxDoF           = cms.double(10.0),
                                             minVxWgt           = cms.double(0.5),
-                                            fileName           = cms.string("/nfshome0/dqmdev/BeamMonitorDQM/BeamPixelResults.txt"))
+                                            fileName           = cms.string("./BeamPixelResults.txt"))
     if process.dqmSaver.producer.value() is "Playback":
         process.pixelVertexDQM.fileName = cms.string("/nfshome0/dqmdev/BeamMonitorDQM/BeamPixelResults.txt")
     else:
-        process.pixelVertexDQM.fileName = cms.string("/nfshome0/dqmpro/BeamMonitorDQM/BeamPixelResults.txt")
+        process.pixelVertexDQM.fileName = cms.string("./BeamPixelResults.txt")
     print "[beampixel_dqm_sourceclient-live_cfg]::saving DIP file into " + str(process.pixelVertexDQM.fileName)
 
 
