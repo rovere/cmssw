@@ -130,9 +130,7 @@ void HGCalHitCalibration::fillWithRecHits(
     const unsigned int hitlayer, const float fraction, int& seedDet,
     float& seedEnergy) {
   if (hitmap.find(hitid) == hitmap.end()) {
-    std::cout << "Problem with hitid: " << hitid.rawId()
-              << " layer: " << recHitTools_.getLayerWithOffset(hitid)
-              << " fraction " << fraction << std::endl;
+    // Hit was not reconstructed
     return;
   }
   unsigned int layer = recHitTools_.getLayerWithOffset(hitid);
