@@ -419,8 +419,8 @@ void ListGroups::produceAndSaveSummaryPlot(const edm::EventSetup &setup) {
   canvas->Clear();
   gStyle->SetPalette( m_gradient.size(), & m_gradient.front() );
   gStyle->SetNumberContours( m_gradient.size() );
-  radlen_diff->SetMinimum(-100);
-  radlen_diff->SetMaximum(100);
+  radlen_diff->SetMinimum(-30);
+  radlen_diff->SetMaximum(30);
   radlen_diff->Draw("COLZ");
   for (auto line : lines) {
     line.first->SetLineWidth(5);
@@ -430,8 +430,8 @@ void ListGroups::produceAndSaveSummaryPlot(const edm::EventSetup &setup) {
   canvas->SaveAs("RadLenChanges.png");
 
   canvas->Clear();
-  eneloss_diff->SetMinimum(-100);
-  eneloss_diff->SetMaximum(100);
+  eneloss_diff->SetMinimum(-30);
+  eneloss_diff->SetMaximum(30);
   eneloss_diff->Draw("COLZ");
   for (auto line : lines) {
     line.first->SetLineWidth(5);
