@@ -66,6 +66,10 @@ pixelTracksTripletSeedLayers = highPtTripletStepSeedLayers.clone(
     FPix = dict(skipClusters = cms.InputTag('pixelTracksTripletClusters'), HitProducer = "siPixelRecHitsPreSplitting")
 )
 
+import re
+layersNoBPix1 = [l for l in pixelTracksTripletSeedLayers.layerList if not re.match('BPix1', l)]
+pixelTracksTripletSeedLayers.layerList = layersNoBPix1
+
 pixelTracksTripletClusters = highPtTripletStepClusters.clone(
     trackClassifier = cms.InputTag( '','QualityMasks' ),
     maxChi2 = cms.double( 3000.0 ),
