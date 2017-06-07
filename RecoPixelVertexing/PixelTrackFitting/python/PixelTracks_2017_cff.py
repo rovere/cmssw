@@ -69,7 +69,7 @@ delattr(pixelTracksTripletSeedLayers.BPix, 'skipClusters')
 delattr(pixelTracksTripletSeedLayers.FPix, 'skipClusters')
 
 import re
-layersNoBPix1 = [l for l in pixelTracksTripletSeedLayers.layerList if not re.match('BPix1', l)]
+layersNoBPix1 = [l for l in pixelTracksTripletSeedLayers.layerList if re.match('BPix1', l)]
 pixelTracksTripletSeedLayers.layerList = layersNoBPix1
 
 pixelTracksTripletClusters = highPtTripletStepClusters.clone(
