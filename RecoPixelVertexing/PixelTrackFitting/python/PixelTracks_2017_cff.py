@@ -62,9 +62,11 @@ pixelTracksQuadSequence = cms.Sequence(
 
 # Pixel Triplets Tracking
 pixelTracksTripletSeedLayers = highPtTripletStepSeedLayers.clone(
-    BPix = dict(skipClusters = cms.InputTag('pixelTracksTripletClusters'), HitProducer = "siPixelRecHitsPreSplitting"),
-    FPix = dict(skipClusters = cms.InputTag('pixelTracksTripletClusters'), HitProducer = "siPixelRecHitsPreSplitting")
+    BPix = dict(HitProducer = "siPixelRecHitsPreSplitting"),
+    FPix = dict(HitProducer = "siPixelRecHitsPreSplitting")
 )
+delattr(pixelTracksTripletSeedLayers.BPix, 'skipClusters')
+delattr(pixelTracksTripletSeedLayers.FPix, 'skipClusters')
 
 import re
 layersNoBPix1 = [l for l in pixelTracksTripletSeedLayers.layerList if not re.match('BPix1', l)]
@@ -89,50 +91,50 @@ pixelTracksTripletHitTriplets = highPtTripletStepHitTriplets.clone(
     SeedComparitorPSet = dict(clusterShapeCacheSrc = 'siPixelClusterShapeCachePreSplitting')
 )
 
-pixelTracksTriplet = _pixelTracks.clone(
+pixelTracks = _pixelTracks.clone(
     SeedingHitSets = "pixelTracksTripletHitTriplets"
 )
 
 pixelTracksTripletSequence = cms.Sequence(
-    pixelTracksTripletClusters +
+#    pixelTracksTripletClusters +
     pixelTracksTripletSeedLayers +
     pixelTracksTripletHitDoublets +
     pixelTracksTripletHitTriplets +
-    pixelTracksTriplet
+    pixelTracks
 )
 
 
 
-pixelTracks = cms.EDProducer( "TrackListMerger",
-                              ShareFrac = cms.double( 0.19 ),
-                              writeOnlyTrkQuals = cms.bool( False ),
-                              MinPT = cms.double( 0.05 ),
-                              allowFirstHitShare = cms.bool( True ),
-                              copyExtras = cms.untracked.bool( True ),
-                              Epsilon = cms.double( -0.001 ),
-                              selectedTrackQuals = cms.VInputTag( 'pixelTracksTriplet','pixelTracksQuad' ),
-                              indivShareFrac = cms.vdouble( 1.0, 1.0 ),
-                              MaxNormalizedChisq = cms.double( 1000.0 ),
-                              copyMVA = cms.bool( False ),
-                              FoundHitBonus = cms.double( 5.0 ),
-                              setsToMerge = cms.VPSet(
-                                  cms.PSet(  pQual = cms.bool( False ),
-                                             tLists = cms.vint32( 0, 1 )
-                                  )
-                              ),
-                              MinFound = cms.int32( 3 ),
-                              hasSelector = cms.vint32( 0, 0 ),
-                              TrackProducers = cms.VInputTag( 'pixelTracksTriplet','pixelTracksQuad' ),
-                              LostHitPenalty = cms.double( 20.0 ),
-                              newQuality = cms.string( "confirmed" ),
-                              trackAlgoPriorityOrder = cms.string("trackAlgoPriorityOrder")
+pixelTracks_full = cms.EDProducer( "TrackListMerger",
+                                   ShareFrac = cms.double( 0.19 ),
+                                   writeOnlyTrkQuals = cms.bool( False ),
+                                   MinPT = cms.double( 0.05 ),
+                                   allowFirstHitShare = cms.bool( True ),
+                                   copyExtras = cms.untracked.bool( True ),
+                                   Epsilon = cms.double( -0.001 ),
+                                   selectedTrackQuals = cms.VInputTag( 'pixelTracksTriplet','pixelTracksQuad' ),
+                                   indivShareFrac = cms.vdouble( 1.0, 1.0 ),
+                                   MaxNormalizedChisq = cms.double( 1000.0 ),
+                                   copyMVA = cms.bool( False ),
+                                   FoundHitBonus = cms.double( 5.0 ),
+                                   setsToMerge = cms.VPSet(
+                                       cms.PSet(  pQual = cms.bool( False ),
+                                                  tLists = cms.vint32( 0, 1 )
+                                       )
+                                   ),
+                                   MinFound = cms.int32( 3 ),
+                                   hasSelector = cms.vint32( 0, 0 ),
+                                   TrackProducers = cms.VInputTag( 'pixelTracksTriplet','pixelTracksQuad' ),
+                                   LostHitPenalty = cms.double( 20.0 ),
+                                   newQuality = cms.string( "confirmed" ),
+                                   trackAlgoPriorityOrder = cms.string("trackAlgoPriorityOrder")
 )
 
 pixelTracksSequence = cms.Sequence(
     pixelTracksTrackingRegions +
     pixelFitterByHelixProjections +
     pixelTrackFilterByKinematics +
-    pixelTracksQuadSequence +
-    pixelTracksTripletSequence +
-    pixelTracks
+#    pixelTracksQuadSequence +
+    pixelTracksTripletSequence
+#    pixelTracks
 )
