@@ -102,12 +102,12 @@ std::unique_ptr<reco::Track> PixelFitterByHelixProjections::run(
   int nhits = hits.size();
   if (nhits <2) return ret;
 
-  declareDynArray(GlobalPoint,nhits, points);
-  declareDynArray(GlobalError,nhits, errors);
-  declareDynArray(bool,nhits, isBarrel);
+  declareDynArray(GlobalPoint,3, points);
+  declareDynArray(GlobalError,3, errors);
+  declareDynArray(bool,3, isBarrel);
 
-  for ( int i=0; i!=nhits; ++i) {
-    auto const & recHit = hits[i];
+  for ( int i=0; i!=3; ++i) {
+    auto const & recHit = hits[i + (nhits == 4)];
     points[i]  = GlobalPoint( recHit->globalPosition().basicVector()-region.origin().basicVector()); 
     errors[i] = recHit->globalPositionError();
     isBarrel[i] = recHit->detUnit()->type().isBarrel();
