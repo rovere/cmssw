@@ -209,7 +209,7 @@ void PVFitter::setTree(TTree* tree){
 bool PVFitter::runBXFitter() {
 
   using namespace ROOT::Minuit2;
-  edm::LogInfo("PVFitter") << " Number of bunch crossings: " << bxMap_.size() << std::endl;
+  std::cout << "PVFitter " << " Number of bunch crossings: " << bxMap_.size() << std::endl;
 
   bool fit_ok = true;
 
@@ -220,16 +220,16 @@ bool PVFitter::runBXFitter() {
     // fit fails
     fbspotMap[pvStore->first] = reco::BeamSpot();
 
-    edm::LogInfo("PVFitter") << " Number of PVs collected for PVFitter: " << (pvStore->second).size() << " in bx: " << pvStore->first << std::endl;
+    std::cout << "PVFitter " << " Number of PVs collected for PVFitter: " << (pvStore->second).size() << " in bx: " << pvStore->first << std::endl;
 
     if ( (pvStore->second).size() <= minNrVertices_ ) {
-        edm::LogWarning("PVFitter") << " not enough PVs, continue" << std::endl;
+        std::cout << "PVFitter " << " not enough PVs, continue" << std::endl;
 	fit_ok = false;
       continue;
     }
 
     //bool fit_ok = false;
-    edm::LogInfo("PVFitter") << "Calculating beam spot with PVs ..." << std::endl;
+    std::cout << "PVFitter " << "Calculating beam spot with PVs ..." << std::endl;
 
     //
     // LL function and fitter
@@ -261,7 +261,7 @@ bool PVFitter::runBXFitter() {
     upar.Fix(9);
     FunctionMinimum ierr = migrad(0,1.);
     if ( !ierr.IsValid() ) {
-        edm::LogInfo("PVFitter") << "3D beam spot fit failed in 1st iteration" << std::endl;
+        std::cout << "PVFitter " << "3D beam spot fit failed in 1st iteration" << std::endl;
 	fit_ok = false;
       continue;
     }
@@ -276,7 +276,7 @@ bool PVFitter::runBXFitter() {
 		   upar.Value(2)+sigmaCut_*upar.Value(8));
     ierr = migrad(0,1.);
     if ( !ierr.IsValid() ) {
-      edm::LogInfo("PVFitter") << "3D beam spot fit failed in 2nd iteration" << std::endl;
+      std::cout << "PVFitter " << "3D beam spot fit failed in 2nd iteration" << std::endl;
       fit_ok = false;
       continue;
     }
@@ -288,7 +288,7 @@ bool PVFitter::runBXFitter() {
     upar.Release(7);
     ierr = migrad(0,1.);
     if ( !ierr.IsValid() ) {
-        edm::LogInfo("PVFitter") << "3D beam spot fit failed in 3rd iteration" << std::endl;
+        std::cout << "PVFitter " << "3D beam spot fit failed in 3rd iteration" << std::endl;
 	fit_ok = false;
       continue;
     }
@@ -327,7 +327,7 @@ bool PVFitter::runBXFitter() {
     fbeamspot.setType( reco::BeamSpot::Tracker );
 
     fbspotMap[pvStore->first] = fbeamspot;
-    edm::LogInfo("PVFitter") << "3D PV fit done for this bunch crossing."<<std::endl;
+    std::cout << "PVFitter " << "3D PV fit done for this bunch crossing."<<std::endl;
     //delete fcn;
     fit_ok = fit_ok & true;
   }
@@ -339,7 +339,7 @@ bool PVFitter::runBXFitter() {
 bool PVFitter::runFitter() {
 
     using namespace ROOT::Minuit2;
-    edm::LogInfo("PVFitter") << " Number of PVs collected for PVFitter: " << pvStore_.size() << std::endl;
+    std::cout << "PVFitter " << " Number of PVs collected for PVFitter: " << pvStore_.size() << std::endl;
 
     if ( pvStore_.size() <= minNrVertices_ ) return false;
 
@@ -422,7 +422,7 @@ bool PVFitter::runFitter() {
       migrad.Fix(9);
       FunctionMinimum ierr = migrad(0,1.);
       if ( !ierr.IsValid() ) {
-          edm::LogWarning("PVFitter") << "3D beam spot fit failed in 1st iteration" << std::endl;
+          std::cout << "PVFitter " << "3D beam spot fit failed in 1st iteration" << std::endl;
           return false;
       }
       //
@@ -434,6 +434,22 @@ bool PVFitter::runFitter() {
       results = ierr.UserParameters().Params() ;					       \
       errors  = ierr.UserParameters().Errors() ;					       \
       
+      std::cout << "PVFitter " << "Setting limits [x,y,z] "
+		<< results[0]-sigmaCut_*results[3] << " " 
+		<< results[0]+sigmaCut_*results[3] << " "
+		<< results[1]-sigmaCut_*results[5] << " "
+		<< results[1]+sigmaCut_*results[5] << " "
+		<< results[2]-sigmaCut_*results[8] << " "
+		<< results[2]+sigmaCut_*results[8]
+		<< " using sigmaCut_ " << sigmaCut_
+		<< " and results "
+		<< results[0] << " "
+		<< results[1] << " "
+		<< results[2] << " "
+		<< results[3] << " "
+		<< results[5] << " "
+		<< results[8]
+		<< std::endl;
       fcn->setLimits(results[0]-sigmaCut_*results[3],
                      results[0]+sigmaCut_*results[3],
                      results[1]-sigmaCut_*results[5],
@@ -442,7 +458,7 @@ bool PVFitter::runFitter() {
                      results[2]+sigmaCut_*results[8]);
       ierr = migrad(0,1.);
       if ( !ierr.IsValid() ) {
-          edm::LogWarning("PVFitter") << "3D beam spot fit failed in 2nd iteration" << std::endl;
+          std::cout << "PVFitter " << "3D beam spot fit failed in 2nd iteration" << std::endl;
           return false;
       }
       //
@@ -453,7 +469,7 @@ bool PVFitter::runFitter() {
       migrad.Release(7);
       ierr = migrad(0,1.);
       if ( !ierr.IsValid() ) {
-          edm::LogWarning("PVFitter") << "3D beam spot fit failed in 3rd iteration" << std::endl;
+          std::cout << "PVFitter " << "3D beam spot fit failed in 3rd iteration" << std::endl;
           return false;
       }
       // refit with floating scale factor
@@ -474,7 +490,7 @@ bool PVFitter::runFitter() {
 
       // check errors on widths and sigmaZ for nan
       if ( edm::isNotFinite(fwidthXerr) || edm::isNotFinite(fwidthYerr) || edm::isNotFinite(fwidthZerr) ) {
-          edm::LogWarning("PVFitter") << "3D beam spot fit returns nan in 3rd iteration" << std::endl;
+          std::cout << "PVFitter " << "3D beam spot fit returns nan in 3rd iteration" << std::endl;
           return false;
       }
 
@@ -569,7 +585,7 @@ PVFitter::compressStore ()
     ++iwrite;
   }
   pvStore_.resize(iwrite);
-  edm::LogInfo("PVFitter") << "Reduced primary vertex store size to "
+  std::cout << "PVFitter " << "Reduced primary vertex store size to "
                            << pvStore_.size() << " ; new dynamic quality cut = "
                            << dynamicQualityCut_ << std::endl;
 

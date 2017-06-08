@@ -219,7 +219,7 @@ reco::BeamSpot BSFitter::Fit(double *inipar = 0) {
                 reco::BeamSpot tmp_lh = Fit_d_z_likelihood(tmp_par,tmp_error_par);
 
                 if (edm::isNotFinite(ff_minimum)) {
-                    edm::LogWarning("BSFitter") << "BSFitter: Result is non physical. Log-Likelihood fit to extract beam width did not converge." << std::endl;
+                    std::cout << "BSFitter " << "BSFitter: Result is non physical. Log-Likelihood fit to extract beam width did not converge." << std::endl;
                     tmp_lh.setType(reco::BeamSpot::Unknown);
                     return tmp_lh;
                 }
@@ -227,7 +227,7 @@ reco::BeamSpot BSFitter::Fit(double *inipar = 0) {
 
 			} else {
 
-                edm::LogInfo("BSFitter") << "default track-based fit does not extract beam width." << std::endl;
+                std::cout << "BSFitter " << "default track-based fit does not extract beam width." << std::endl;
 				return spot;
             }
 
@@ -254,7 +254,7 @@ reco::BeamSpot BSFitter::Fit(double *inipar = 0) {
 
 			if (edm::isNotFinite(ff_minimum)) {
 
-                edm::LogWarning("BSFitter") << "Result is non physical. Log-Likelihood fit did not converge." << std::endl;
+                std::cout << "BSFitter " << "Result is non physical. Log-Likelihood fit did not converge." << std::endl;
 				tmp_lh.setType(reco::BeamSpot::Unknown);
 				return tmp_lh;
 			}
@@ -401,12 +401,12 @@ reco::BeamSpot BSFitter::Fit_z_chi2(double *inipar) {
 reco::BeamSpot BSFitter::Fit_ited0phi() {
 
 	this->d0phi_Init();
-    edm::LogInfo("BSFitter") << "number of total input tracks: " << fBSvector.size() << std::endl;
+    std::cout << "BSFitter " << "number of total input tracks: " << fBSvector.size() << std::endl;
 
 	reco::BeamSpot theanswer;
 
 	if ( (int)fBSvector.size() <= fminNtrks ) {
-        edm::LogWarning("BSFitter") << "need at least " << fminNtrks << " tracks to run beamline fitter." << std::endl;
+        std::cout << "BSFitter " << "need at least " << fminNtrks << " tracks to run beamline fitter." << std::endl;
 		fbeamtype = reco::BeamSpot::Fake;
 		theanswer.setType(fbeamtype);
 		return theanswer;
@@ -439,13 +439,13 @@ reco::BeamSpot BSFitter::Fit_ited0phi() {
 	//std::cout << "Use previous results from iteration #" << ( fnthite > 0 ? fnthite-1 : 0 ) << std::endl;
 	//if ( fnthite > 1 ) std::cout << theanswer << std::endl;
 
-    edm::LogInfo("BSFitter") << "Total number of successful iterations = " << ( goodfit ? (fnthite+1) : fnthite ) << std::endl;
+    std::cout << "BSFitter " << "Total number of successful iterations = " << ( goodfit ? (fnthite+1) : fnthite ) << std::endl;
     if (goodfit) {
         fbeamtype = reco::BeamSpot::Tracker;
         theanswer.setType(fbeamtype);
     }
     else {
-        edm::LogWarning("BSFitter") << "Fit doesn't converge!!!" << std::endl;
+        std::cout << "BSFitter " << "Fit doesn't converge!!!" << std::endl;
         fbeamtype = reco::BeamSpot::Unknown;
         theanswer.setType(fbeamtype);
     }
@@ -457,7 +457,7 @@ reco::BeamSpot BSFitter::Fit_ited0phi() {
 reco::BeamSpot BSFitter::Fit_d0phi() {
 
 	//LogDebug ("BSFitter") << " we will use " << fBSvector.size() << " tracks.";
-    if (fnthite > 0) edm::LogInfo("BSFitter") << " number of tracks used: " << ftmprow << std::endl;
+    if (fnthite > 0) std::cout << "BSFitter " << " number of tracks used: " << ftmprow << std::endl;
 	//std::cout << " ftmp = matrix("<<ftmp.GetNrows()<<","<<ftmp.GetNcols()<<")"<<std::endl;
 	//std::cout << " ftmp(0,0)="<<ftmp(0,0)<<std::endl;
 	//std::cout << " ftmp(1,0)="<<ftmp(1,0)<<std::endl;
@@ -510,7 +510,7 @@ reco::BeamSpot BSFitter::Fit_d0phi() {
 		double sigmabeam2 = 0.006 * 0.006;
 		if (finputBeamWidth > 0 ) sigmabeam2 = finputBeamWidth * finputBeamWidth;
         else {
-	      //edm::LogWarning("BSFitter") << "using in fit beam width = " << sqrt(sigmabeam2) << std::endl;
+	      //std::cout << "BSFitter " << "using in fit beam width = " << sqrt(sigmabeam2) << std::endl;
 	     }
 
 		//double sigma2 = sigmabeam2 +  (iparam->sigd0())* (iparam->sigd0()) / iparam->weight2;
@@ -557,7 +557,7 @@ reco::BeamSpot BSFitter::Fit_d0phi() {
 	bk.SetTol(1e-11); //FIXME: find a better way to solve x_result
 	if (!bk.Decompose()) {
 	  goodfit = false;
-      edm::LogWarning("BSFitter")
+      std::cout << "BSFitter "
           << "Decomposition failed, matrix singular ?" << std::endl
           << "condition number = " << bk.Condition() << std::endl;
 	}
@@ -587,7 +587,7 @@ reco::BeamSpot BSFitter::Fit_d0phi() {
 
 	//std::cout << "got function" << std::endl;
 	if (status){
-	  //edm::LogError("NoBeamSpotFit")<<"gaussian fit failed. no BS d0 fit";
+	  std::cout << "NoBeamSpotFit " << "gaussian fit failed. no BS d0 fit";
 
 	  return reco::BeamSpot();
 	}
@@ -770,7 +770,7 @@ for( iparam = fBSvector.begin(); iparam != fBSvector.end(); ++iparam)
    else{
 
        if(option==1){
-           edm::LogWarning("BSFitter")
+           std::cout << "BSFitter "
                <<"scanPDF:====>>>> WARNING***: The initial guess value of Beam width is negative!!!!!!"<<std::endl
                <<"scanPDF:====>>>> Assigning beam width a starting value of "<<init_bw<<"  cm"<<std::endl;
            init_bw=0.0200;
@@ -837,12 +837,12 @@ reco::BeamSpot BSFitter::Fit_d_z_likelihood(double *inipar, double *error_par) {
         //Print WARNINGS if minimum did not converged
         if( ! testing )
         {
-            edm::LogWarning("BSFitter") <<"===========>>>>>** WARNING: MINUIT DID NOT CONVERGES PROPERLY !!!!!!"<<std::endl;
-            if(ff_nfcn) edm::LogWarning("BSFitter") <<"===========>>>>>** WARNING: No. of Calls Exhausted"<<std::endl;
-            if(!ff_cov) edm::LogWarning("BSFitter") <<"===========>>>>>** WARNING: Covariance did not found"<<std::endl;
+            std::cout << "BSFitter " <<"===========>>>>>** WARNING: MINUIT DID NOT CONVERGES PROPERLY !!!!!!"<<std::endl;
+            if(ff_nfcn) std::cout << "BSFitter " <<"===========>>>>>** WARNING: No. of Calls Exhausted"<<std::endl;
+            if(!ff_cov) std::cout << "BSFitter " <<"===========>>>>>** WARNING: Covariance did not found"<<std::endl;
         }
 
-        edm::LogInfo("BSFitter") <<"The Total # Tracks used for beam width fit = "<<(fBSvectorBW.size())<<std::endl;
+        std::cout << "BSFitter " <<"The Total # Tracks used for beam width fit = "<<(fBSvectorBW.size())<<std::endl;
 
 
     //Checks after fit is performed
@@ -857,7 +857,7 @@ reco::BeamSpot BSFitter::Fit_d_z_likelihood(double *inipar, double *error_par) {
     /* double lastIter_scan= */ scanPDF(lastIter_pars,tracksFailed,2);
 
 
-    edm::LogWarning("BSFitter") <<"WARNING: # of tracks which have very low pdf value (pdf_d < 1.0e-05) are  = "<<tracksFailed<<std::endl;
+    std::cout << "BSFitter " <<"WARNING: # of tracks which have very low pdf value (pdf_d < 1.0e-05) are  = "<<tracksFailed<<std::endl;
 
 
 

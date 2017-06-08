@@ -304,7 +304,7 @@ void BeamFitter::readEvent(const edm::Event& iEvent)
       if (quality_.size()!=0) {
           fquality = false;
           for (unsigned int i = 0; i<quality_.size();++i) {
-              if(debug_) edm::LogInfo("BeamFitter") << "quality_[" << i << "] = " << track->qualityName(quality_[i]) << std::endl;
+              if(debug_) std::cout << "BeamFitter " << "quality_[" << i << "] = " << track->qualityName(quality_[i]) << std::endl;
               if (track->quality(quality_[i])) {
                   fquality = true;
                   break;
@@ -357,7 +357,7 @@ void BeamFitter::readEvent(const edm::Event& iEvent)
 			//&& fpvValid
 			) {
 		      if (debug_) {
-                  edm::LogInfo("BeamFitter") << "Selected track quality = " << track->qualityMask()
+                  std::cout << "BeamFitter " << "Selected track quality = " << track->qualityMask()
                                              << "; track algorithm = " << track->algoName() << "= TrackAlgorithm: " << track->algo() << std::endl;
 		      }
 		      BSTrkParameters BSTrk(fz0,fsigmaz0,fd0,fsigmad0,fphi0,fpt,0.,0.);
@@ -403,10 +403,10 @@ bool BeamFitter::runPVandTrkFitter() {
 
     // First run PV fitter
     if ( MyPVFitter->IsFitPerBunchCrossing() ){
-      edm::LogInfo("BeamFitter") << " [BeamFitterBxDebugTime] freftime[0] = " << freftime[0]
+      std::cout << "BeamFitter " << " [BeamFitterBxDebugTime] freftime[0] = " << freftime[0]
 				 << "; address =  " << &freftime[0]
 				 << " = " << fbeginTimeOfFit << std::endl;
-      edm::LogInfo("BeamFitter") << " [BeamFitterBxDebugTime] freftime[1] = " << freftime[1]
+      std::cout << "BeamFitter " << " [BeamFitterBxDebugTime] freftime[1] = " << freftime[1]
 				 << "; address =  " << &freftime[1]
 				 << " = " << fendTimeOfFit << std::endl;
 
@@ -497,10 +497,10 @@ bool BeamFitter::runPVandTrkFitter() {
 }
 
 bool BeamFitter::runFitterNoTxt() {
-  edm::LogInfo("BeamFitter") << " [BeamFitterDebugTime] freftime[0] = " << freftime[0]
+  std::cout << "BeamFitter " << " [BeamFitterDebugTime] freftime[0] = " << freftime[0]
 			     << "; address =  " << &freftime[0]
 			     << " = " << fbeginTimeOfFit << std::endl;
-  edm::LogInfo("BeamFitter") << " [BeamFitterDebugTime] freftime[1] = " << freftime[1]
+  std::cout << "BeamFitter " << " [BeamFitterDebugTime] freftime[1] = " << freftime[1]
 			     << "; address =  " << &freftime[1]
 			     << " = " << fendTimeOfFit << std::endl;
 
@@ -513,7 +513,7 @@ bool BeamFitter::runFitterNoTxt() {
   // default fit to extract beam spot info
   if(fBSvector.size() > 1 ){
 
-      edm::LogInfo("BeamFitter") << "Calculating beam spot..." << std::endl
+      std::cout << "BeamFitter " << "Calculating beam spot..." << std::endl
                                  << "We will use " << fBSvector.size() << " good tracks out of " << ftotal_tracks << std::endl;
 
     BSFitter *myalgo = new BSFitter( fBSvector );
@@ -556,7 +556,7 @@ bool BeamFitter::runFitterNoTxt() {
     reco::BeamSpot tmpbs;
     fbeamspot = tmpbs;
     fbeamspot.setType(reco::BeamSpot::Fake);
-    edm::LogInfo("BeamFitter") << "Not enough good tracks selected! No beam fit!" << std::endl;
+    std::cout << "BeamFitter " << "Not enough good tracks selected! No beam fit!" << std::endl;
 
   }
   fitted_ = true;
@@ -580,7 +580,7 @@ bool BeamFitter::runBeamWidthFitter() {
   // default fit to extract beam spot info
   if(fBSvector.size() > 1 ){
 
-      edm::LogInfo("BeamFitter") << "Calculating beam spot positions('d0-phi0' method) and width using llh Fit"<< std::endl
+      std::cout << "BeamFitter " << "Calculating beam spot positions('d0-phi0' method) and width using llh Fit"<< std::endl
                                  << "We will use " << fBSvector.size() << " good tracks out of " << ftotal_tracks << std::endl;
 
         BSFitter *myalgo = new BSFitter( fBSvector );
