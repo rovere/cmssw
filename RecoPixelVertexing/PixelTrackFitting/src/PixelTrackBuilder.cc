@@ -186,7 +186,8 @@ reco::Track * PixelTrackBuilder::build(
   //checkState(impactPointState,mf);
   LogTrace("")<<"constructed TSOS :\n"<<print(impactPointState);
 
-  int ndof = 2*hits.size()-5;
+  // We only fit 3 hits, even with quadruplets, so scale the ndof properly
+  int ndof = 2*std::min(3, (int)hits.size())-5;
   GlobalPoint vv = impactPointState.globalPosition();
   math::XYZPoint  pos( vv.x(), vv.y(), vv.z() );
   GlobalVector pp = impactPointState.globalMomentum();
