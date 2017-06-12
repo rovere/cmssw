@@ -13,10 +13,10 @@ runFirstStepTrk = False
 # Common part for PP and H.I Running
 #-----------------------------
 # for live online DQM in P5
-process.load("DQM.Integration.config.inputsource_cfi")
+#process.load("DQM.Integration.config.inputsource_cfi")
 
 # for testing in lxplus
-#process.load("DQM.Integration.config.fileinputsource_cfi")
+process.load("DQM.Integration.config.fileinputsource_cfi")
 
 #--------------------------
 # HLT Filter
