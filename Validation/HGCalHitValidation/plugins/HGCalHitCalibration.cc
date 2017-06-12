@@ -222,9 +222,12 @@ void HGCalHitCalibration::analyze(const edm::Event& iEvent,
     const SimClusterRefVector& simClusterRefVector = it_caloPart.simClusters();
     std::cout << "Simclusters linked to a single CaloParticle have size: "
               << simClusterRefVector.size() << std::endl;
-    // Bail out if there are more than one caloParticle and more that one
-    // simCluster
-    if (caloParticles.size() > 1 or simClusterRefVector.size() > 1) return;
+    // Bail out if the number of caloparticles is not equal to the
+    // number of simClusters: that's the case, for example, of a
+    // photon that converted before HGCal.  TODO (rovere): prepare a
+    // 0-material scenarion for the PhaseII, so that these kind of
+    // tricks won't be needed.
+    if (caloParticles.size() != simClusterRefVector.size()) return;
     Energy_layer_calib_.clear();
     Energy_layer_calib_fraction_.clear();
     for (unsigned int ij = 0; ij < 60; ++ij) {
