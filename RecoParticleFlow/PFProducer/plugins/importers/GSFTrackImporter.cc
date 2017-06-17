@@ -39,6 +39,10 @@ importToBlock( const edm::Event& e,
   edm::Handle<reco::GsfPFRecTrackCollection> gsftracks;
   e.getByToken(_src,gsftracks);
   elems.reserve(elems.size() + gsftracks->size());
+  std::cout << "GSFTrackImporter::importToBlock received a gsftrack collection of size "
+	    << gsftracks->size() << std::endl;
+  std::cout << "GSFTrackImporter::importToBlock input elems size "
+	    << elems.size() << std::endl;
   // setup our elements so that all the SCs are grouped together
   auto SCs_end = std::partition(elems.begin(),elems.end(),
 				[](const ElementType& a){
@@ -61,7 +65,7 @@ importToBlock( const edm::Event& e,
 	  seedref->caloCluster().castTo<reco::SuperClusterRef>();
 	if( scref.isNonnull() ) {
 	  // explicitly veto HGCal super clusters
-	  if( scref->seed()->seed().det() == DetId::Forward ) continue;
+	  //	  if( scref->seed()->seed().det() == DetId::Forward ) continue;
 	  PFBlockElementSCEqual myEqual(scref);
 	  auto sc_elem = std::find_if(elems.begin(),SCs_end,myEqual);
 	  if( sc_elem != SCs_end ) {
@@ -122,4 +126,6 @@ importToBlock( const edm::Event& e,
     SCs_end = elems.begin() + SCs_end_position;
   }// loop on gsf tracks
   elems.shrink_to_fit();
+  std::cout << "GSFTrackImporter::importToBlock output elems size "
+	    << elems.size() << std::endl;
 }

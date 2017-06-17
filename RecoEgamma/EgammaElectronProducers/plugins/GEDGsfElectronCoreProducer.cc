@@ -50,18 +50,22 @@ void GEDGsfElectronCoreProducer::produce( edm::Event & event, const edm::EventSe
   for ( unsigned int i=0 ; i<pfCandidateCollection->size() ; ++i )
            produceElectronCore((*pfCandidateCollection)[i],electrons.get()) ;
     
+  std::cout << "GEDGsfElectronCoreProducer::produce size: " << electrons->size() << std::endl;
   event.put(std::move(electrons));
  }
 
 void GEDGsfElectronCoreProducer::produceElectronCore( const reco::PFCandidate & pfCandidate, reco::GsfElectronCoreCollection * electrons )
  {
   const GsfTrackRef gsfTrackRef = pfCandidate.gsfTrackRef();
-  if(gsfTrackRef.isNull()) 
-	return;
-
+  if(gsfTrackRef.isNull()) {
+    std::cout << "GEDGsfElectronCoreProducer::produceElectronCore gsfTrackRef is null" << std::endl;
+    return;
+  }
   reco::PFCandidateEGammaExtraRef extraRef = pfCandidate.egammaExtraRef();
-  if(extraRef.isNull()) 
-	return;
+  if(extraRef.isNull()) {
+    std::cout << "GEDGsfElectronCoreProducer::produceElectronCore egammaExtraRef is null" << std::endl;
+    return;
+  }
 
   GsfElectronCore * eleCore = new GsfElectronCore(gsfTrackRef) ;
 
@@ -85,8 +89,10 @@ void GEDGsfElectronCoreProducer::produceElectronCore( const reco::PFCandidate & 
        electrons->push_back(*eleCore) ;
    }
    else
-   { edm::LogWarning("GEDGsfElectronCoreProducer")<<"Both superClusterRef and superClusterBoxRef of pfCandidate.egammaExtraRef() are Null" ; }
-  
+   {
+     std::cout << "GEDGsfElectronCoreProducer"
+       << "Both superClusterRef and superClusterBoxRef of pfCandidate.egammaExtraRef() are Null" ;
+   }
   delete eleCore ;
  }
 

@@ -54,6 +54,9 @@
 
 #include <string>
 
+
+#define LogDebug(x) std::cout << (x)
+
 using namespace reco ;
 
 ElectronSeedProducer::ElectronSeedProducer( const edm::ParameterSet& iConfig )
@@ -162,7 +165,7 @@ ElectronSeedProducer::~ElectronSeedProducer()
 
 void ElectronSeedProducer::produce(edm::Event& e, const edm::EventSetup& iSetup)
  {
-  LogDebug("ElectronSeedProducer") <<"[ElectronSeedProducer::produce] entering " ;
+  LogDebug("ElectronSeedProducer") <<"[ElectronSeedProducer::produce] entering \n" ;
 
   edm::Handle<reco::BeamSpot> theBeamSpot ;
   e.getByToken(beamSpotTag_,theBeamSpot) ;
@@ -229,7 +232,7 @@ void ElectronSeedProducer::produce(edm::Event& e, const edm::EventSetup& iSetup)
       << (*is).nHits() << " hits"
       << ", charge " << (*is).getCharge()
       << " and cluster energy " << superCluster->energy()
-      << " PID "<<superCluster.id() ;
+      << " PID "<<superCluster.id() << std::endl;
   }
   e.put(std::move(pSeeds));
   if (fromTrackerSeeds_ && prefilteredSeeds_) delete theInitialSeedColl;
@@ -305,7 +308,7 @@ void ElectronSeedProducer::filterClusters
 	if (detector==EcalEndcap) sigmaIEtaIEtaEE_ .push_back(edm::isNotFinite(vCov[0]) ? 0. : sqrt(vCov[0]));
       }
    }
-  LogDebug("ElectronSeedProducer")<<"Filtered out "<<sclRefs.size()<<" superclusters from "<<superClusters->size() ;
+  LogDebug("ElectronSeedProducer")<<"Filtered out "<<sclRefs.size()<<" superclusters from "<<superClusters->size() << std::endl;
  }
 
 void ElectronSeedProducer::filterSeeds
@@ -315,7 +318,7 @@ void ElectronSeedProducer::filterSeeds
   for ( unsigned int i=0 ; i<sclRefs.size() ; ++i )
    {
     seedFilter_->seeds(event,setup,sclRefs[i],theInitialSeedColl) ;
-    LogDebug("ElectronSeedProducer")<<"Number of Seeds: "<<theInitialSeedColl->size() ;
+    LogDebug("ElectronSeedProducer")<<"Number of Seeds: "<<theInitialSeedColl->size() << std::endl;
    }
  }
 

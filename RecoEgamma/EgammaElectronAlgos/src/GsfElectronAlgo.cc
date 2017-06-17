@@ -54,6 +54,10 @@ using namespace std ;
 using namespace reco ;
 
 
+#define LogTrace(x) std::cout << (x)
+#define LogDebug(x) std::cout << (x)
+#define LogWarning(x) std::cout << (x)
+
 //===================================================================
 // GsfElectronAlgo::GeneralData
 //===================================================================
@@ -932,16 +936,16 @@ void GsfElectronAlgo::endEvent()
 
 void GsfElectronAlgo::displayInternalElectrons( const std::string & title ) const
  {
-  LogTrace("GsfElectronAlgo") << "========== " << title << " ==========";
-  LogTrace("GsfElectronAlgo") << "Event: " << eventData_->event->id();
-  LogTrace("GsfElectronAlgo") << "Number of electrons: " << eventData_->electrons->size() ;
+  LogTrace("GsfElectronAlgo") << "========== " << title << " ==========\n";
+  LogTrace("GsfElectronAlgo") << "Event: " << eventData_->event->id() << std::endl;
+  LogTrace("GsfElectronAlgo") << "Number of electrons: " << eventData_->electrons->size() << std::endl;
   GsfElectronPtrCollection::const_iterator it ;
   for ( it = eventData_->electrons->begin(); it != eventData_->electrons->end(); it++ )
    {
     LogTrace("GsfElectronAlgo") << "Electron with charge, pt, eta, phi: "  << (*it)->charge() << " , "
-        << (*it)->pt() << " , " << (*it)->eta() << " , " << (*it)->phi();
+				<< (*it)->pt() << " , " << (*it)->eta() << " , " << (*it)->phi() << std::endl;
    }
-  LogTrace("GsfElectronAlgo") << "=================================================";
+  LogTrace("GsfElectronAlgo") << "=================================================\n";
  }
 
 void GsfElectronAlgo::completeElectrons(const gsfAlgoHelpers::HeavyObjectCache* hoc)
@@ -1038,7 +1042,7 @@ void GsfElectronAlgo::addPflowInfo()
        {
         if (found)
          {
-          edm::LogWarning("GsfElectronProducer")<<"associated pfGsfElectron already found" ;
+          LogWarning("GsfElectronProducer")<<"associated pfGsfElectron already found" ;
          }
         else
          {
@@ -1132,7 +1136,7 @@ void GsfElectronAlgo::removeNotPreselectedElectrons()
   GsfElectronPtrCollection::iterator eitr = eventData_->electrons->begin() ;
   while (eitr!=eventData_->electrons->end())
    {
-    LogTrace("GsfElectronAlgo")<<"========== removed not preselected "<<ei<<"/"<<emax<<"==========" ;
+    LogTrace("GsfElectronAlgo")<<"========== removed not preselected "<<ei<<"/"<<emax<<"==========\n" ;
     if (isPreselected(*eitr))
      { ++eitr ; ++ei ; }
     else
@@ -1158,56 +1162,62 @@ void GsfElectronAlgo::setCutBasedPreselectionFlag( GsfElectron * ele, const reco
   // Et cut
   double etaValue = EleRelPoint(ele->superCluster()->position(),bs.position()).eta() ;
   double etValue = ele->superCluster()->energy()/cosh(etaValue) ;
-  LogTrace("GsfElectronAlgo") << "Et : " << etValue ;
+  LogTrace("GsfElectronAlgo") << "Et : " << etValue << std::endl;
   if (ele->isEB() && (etValue < cfg->minSCEtBarrel)) return ;
   if (ele->isEE() && (etValue < cfg->minSCEtEndcaps)) return ;
-  LogTrace("GsfElectronAlgo") << "Et criteria are satisfied";
+  LogTrace("GsfElectronAlgo") << "Et criteria are satisfied\n";
 
   // E/p cut
   double eopValue = ele->eSuperClusterOverP() ;
-  LogTrace("GsfElectronAlgo") << "E/p : " << eopValue ;
+  LogTrace("GsfElectronAlgo") << "E/p : " << eopValue <<std::endl;;
   if (ele->isEB() && (eopValue > cfg->maxEOverPBarrel)) return ;
   if (ele->isEE() && (eopValue > cfg->maxEOverPEndcaps)) return ;
   if (ele->isEB() && (eopValue < cfg->minEOverPBarrel)) return ;
   if (ele->isEE() && (eopValue < cfg->minEOverPEndcaps)) return ;
-  LogTrace("GsfElectronAlgo") << "E/p criteria are satisfied";
+  LogTrace("GsfElectronAlgo") << "E/p criteria are satisfied\n";
 
   // HoE cuts
-  LogTrace("GsfElectronAlgo") << "HoE1 : " << ele->hcalDepth1OverEcal() << ", HoE2 : " << ele->hcalDepth2OverEcal();
+  LogTrace("GsfElectronAlgo") << "HoE1 : " << ele->hcalDepth1OverEcal() << ", HoE2 : " << ele->hcalDepth2OverEcal() << std::endl;
   double had = ele->hcalOverEcal()*ele->superCluster()->energy() ;
   const reco::CaloCluster & seedCluster = *(ele->superCluster()->seed()) ;
   int detector = seedCluster.hitsAndFractions()[0].first.subdetId() ;
   bool HoEveto = false ;
   if (detector==EcalBarrel && (had<cfg->maxHBarrel || (had/ele->superCluster()->energy())<cfg->maxHOverEBarrel)) HoEveto=true;
-  else if (detector==EcalEndcap && (had<cfg->maxHEndcaps || (had/ele->superCluster()->energy())<cfg->maxHOverEEndcaps)) HoEveto=true;
+  else if ((detector==EcalEndcap || detector==HGCEE) && (had<cfg->maxHEndcaps || (had/ele->superCluster()->energy())<cfg->maxHOverEEndcaps)) HoEveto=true;
+  std::cout << "detector is EcalBarrel? " << (detector==EcalBarrel) << std::endl;
+  std::cout << "detector is EcalEndcap? " << (detector==EcalEndcap) << std::endl;
+  std::cout << "detector is HGCEE? " << (detector==HGCEE) << std::endl;
+  std::cout << "detector is " << detector << std::endl;
+  std::cout << "EcalBarrel, EcalEndcap, HGCEE: " << EcalBarrel
+	    << " " << EcalEndcap << " " << HGCEE << std::endl;
   if ( !HoEveto ) return ;
-  LogTrace("GsfElectronAlgo") << "H/E criteria are satisfied";
+  LogTrace("GsfElectronAlgo") << "H/E criteria are satisfied\n";
 
   // delta eta criteria
   double deta = ele->deltaEtaSuperClusterTrackAtVtx() ;
-  LogTrace("GsfElectronAlgo") << "delta eta : " << deta ;
+  LogTrace("GsfElectronAlgo") << "delta eta : " << deta << std::endl;
   if (ele->isEB() && (std::abs(deta) > cfg->maxDeltaEtaBarrel)) return ;
   if (ele->isEE() && (std::abs(deta) > cfg->maxDeltaEtaEndcaps)) return ;
-  LogTrace("GsfElectronAlgo") << "Delta eta criteria are satisfied";
+  LogTrace("GsfElectronAlgo") << "Delta eta criteria are satisfied\n";
 
   // delta phi criteria
   double dphi = ele->deltaPhiSuperClusterTrackAtVtx();
-  LogTrace("GsfElectronAlgo") << "delta phi : " << dphi;
+  LogTrace("GsfElectronAlgo") << "delta phi : " << dphi << std::endl;
   if (ele->isEB() && (std::abs(dphi) > cfg->maxDeltaPhiBarrel)) return ;
   if (ele->isEE() && (std::abs(dphi) > cfg->maxDeltaPhiEndcaps)) return ;
-  LogTrace("GsfElectronAlgo") << "Delta phi criteria are satisfied";
+  LogTrace("GsfElectronAlgo") << "Delta phi criteria are satisfied\n";
 
   // sigma ieta ieta
-  LogTrace("GsfElectronAlgo") << "sigma ieta ieta : " << ele->sigmaIetaIeta();
+  LogTrace("GsfElectronAlgo") << "sigma ieta ieta : " << ele->sigmaIetaIeta() << std::endl;
   if (ele->isEB() && (ele->sigmaIetaIeta() > cfg->maxSigmaIetaIetaBarrel)) return ;
-  if (ele->isEE() && (ele->sigmaIetaIeta() > cfg->maxSigmaIetaIetaEndcaps)) return ;
-  LogTrace("GsfElectronAlgo") << "Sigma ieta ieta criteria are satisfied";
+  if (detector!=HGCEE && ele->isEE() && (ele->sigmaIetaIeta() > cfg->maxSigmaIetaIetaEndcaps)) return ;
+  LogTrace("GsfElectronAlgo") << "Sigma ieta ieta criteria are satisfied\n";
 
   // fiducial
   if (!ele->isEB() && cfg->isBarrel) return ;
   if (!ele->isEE() && cfg->isEndcaps) return ;
   if (cfg->isFiducial && (ele->isEBEEGap()||ele->isEBEtaGap()||ele->isEBPhiGap()||ele->isEERingGap()||ele->isEEDeeGap())) return ;
-  LogTrace("GsfElectronAlgo") << "Fiducial flags criteria are satisfied";
+  LogTrace("GsfElectronAlgo") << "Fiducial flags criteria are satisfied\n";
 
   // seed in TEC
   edm::RefToBase<TrajectorySeed> seed = ele->gsfTrack()->extra()->seedRef() ;
@@ -1222,9 +1232,9 @@ void GsfElectronAlgo::setCutBasedPreselectionFlag( GsfElectron * ele, const reco
 
   // transverse impact parameter
   if (std::abs(ele->gsfTrack()->dxy(bs.position()))>cfg->maxTIP) return ;
-  LogTrace("GsfElectronAlgo") << "TIP criterion is satisfied" ;
+  LogTrace("GsfElectronAlgo") << "TIP criterion is satisfied\n" ;
 
-  LogTrace("GsfElectronAlgo") << "All cut based criteria are satisfied" ;
+  LogTrace("GsfElectronAlgo") << "All cut based criteria are satisfied\n" ;
   ele->setPassCutBasedPreselection(true) ;
  }
 
@@ -1238,7 +1248,7 @@ void GsfElectronAlgo::setPflowPreselectionFlag( GsfElectron * ele )
    { if (ele->mvaOutput().mva_e_pi>=generalData_->cutsCfgPflow.minMVA) ele->setPassMvaPreselection(true) ; }
 
   if (ele->passingMvaPreselection())
-   { LogTrace("GsfElectronAlgo") << "Main mva criterion is satisfied" ; }
+    { LogTrace("GsfElectronAlgo") << "Main mva criterion is satisfied" << std::endl ; }
 
   ele->setPassPflowPreselection(ele->passingMvaPreselection()) ;
 
@@ -1580,7 +1590,7 @@ void GsfElectronAlgo::createElectron(const gsfAlgoHelpers::HeavyObjectCache* hoc
   //====================================================
   setPixelMatchInfomation(ele) ;
 
-  LogTrace("GsfElectronAlgo")<<"Constructed new electron with energy  "<< ele->p4().e() ;
+  LogTrace("GsfElectronAlgo")<<"Constructed new electron with energy  "<< ele->p4().e() <<std::endl ;
 
   eventData_->electrons->push_back(ele) ;
  }
@@ -1632,7 +1642,7 @@ void GsfElectronAlgo::setAmbiguityData( bool ignoreNotPreselected )
          {
           if (found)
            {
-            edm::LogWarning("GsfElectronAlgo")<<"associated gsfPfRecTrack already found" ;
+            LogWarning("GsfElectronAlgo")<<"associated gsfPfRecTrack already found" ;
            }
           else
            {
@@ -1704,7 +1714,7 @@ void GsfElectronAlgo::setAmbiguityData( bool ignoreNotPreselected )
          }
         else if ((*e1)->gsfTrack()==(*e2)->gsfTrack())
          {
-          edm::LogWarning("GsfElectronAlgo")
+          LogWarning("GsfElectronAlgo")
             << "Forgetting electron with E/P " << (*e2)->eSuperClusterOverP()
             << ", cluster " << scRef2.get()
             << " and track " << (*e2)->gsfTrack().get() ;
@@ -1721,7 +1731,7 @@ void GsfElectronAlgo::removeAmbiguousElectrons()
   GsfElectronPtrCollection::iterator eitr = eventData_->electrons->begin() ;
   while (eitr!=eventData_->electrons->end())
    {
-    LogTrace("GsfElectronAlgo")<<"========== remove ambiguous "<<ei<<"/"<<emax<<"==========" ;
+    LogTrace("GsfElectronAlgo")<<"========== remove ambiguous "<<ei<<"/"<<emax<<"==========\n" ;
     if ((*eitr)->ambiguous())
      { delete (*eitr) ; eitr = eventData_->electrons->erase(eitr) ; ++ei ; }
     else

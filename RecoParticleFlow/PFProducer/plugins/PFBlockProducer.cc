@@ -58,10 +58,10 @@ PFBlockProducer::produce(Event& iEvent,
   
   pfBlockAlgo_.findBlocks();
   
-  if(verbose_) {
+  if(1) {
     ostringstream  str;
     str<<pfBlockAlgo_<<endl;
-    LogInfo("PFBlockProducer") << str.str()<<endl;
+    std::cout << "PFBlockProducer" << str.str() << endl;
   }    
 
   iEvent.put(std::move(pfBlockAlgo_.transferBlocks()));

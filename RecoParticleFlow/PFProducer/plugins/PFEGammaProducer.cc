@@ -27,14 +27,14 @@
 
 #include "TFile.h"
 
-//#define PFLOW_DEBUG
+#define PFLOW_DEBUG
 
 #ifdef PFLOW_DEBUG
 #define docast(x,y) dynamic_cast<x>(y)
-#define LOGVERB(x) edm::LogVerbatim(x)
-#define LOGWARN(x) edm::LogWarning(x)
-#define LOGERR(x) edm::LogError(x)
-#define LOGDRESSED(x)  edm::LogInfo(x)
+#define LOGVERB(x) std::cout << (x)
+#define LOGWARN(x) std::cout << (x)
+#define LOGERR(x) std::cout << (x)
+#define LOGDRESSED(x) std::cout << (x)
 #else
 #define docast(x,y) reinterpret_cast<x>(y)
 #define LOGVERB(x) LogTrace(x)
@@ -323,7 +323,9 @@ PFEGammaProducer::produce(edm::Event& iEvent,
    
     LOGDRESSED("PFEGammaProducer") 
       << "Found " << elements.size() 
-      << " PFBlockElements in block: " << i << std::endl;
+      << " PFBlockElements in block: " << i 
+      << " of type: " 
+      << (elements.size() ? elements[0].type() : -1) << std::endl;
     
     bool singleEcalOrHcal = false;
     if( elements.size() == 1 ){
@@ -336,20 +338,21 @@ PFEGammaProducer::produce(edm::Event& iEvent,
       case reco::PFBlockElement::ECAL:
         ecalBlockRefs.push_back( blockref );
         singleEcalOrHcal = true;
-	break;
+        break;
       case reco::PFBlockElement::HFEM:
       case reco::PFBlockElement::HFHAD:
       case reco::PFBlockElement::HCAL:
         hcalBlockRefs.push_back( blockref );
         singleEcalOrHcal = true;
-	break;
+        break;
       case reco::PFBlockElement::HO:
         // Single HO elements are likely to be noise. Not considered for now.
         hoBlockRefs.push_back( blockref );
         singleEcalOrHcal = true;
-	break;
+        break;
       default:
-	break;
+        LOGDRESSED("PFEGammaProducer") << " Unknow reco::PFBlockElement type: " << elements[0].type() << std::endl;
+        break;
       }
     }
     

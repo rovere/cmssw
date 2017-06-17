@@ -62,11 +62,11 @@ namespace {
 
 
 //for debug only 
-//#define PFLOW_DEBUG
-
+#define PFLOW_DEBUG
+ 
 PFBlockAlgo::PFBlockAlgo() : 
   blocks_( new reco::PFBlockCollection ),  
-  debug_(false),
+  debug_(true),
   elementTypes_( {
         INIT_ENTRY(PFBlockElement::TRACK),
 	INIT_ENTRY(PFBlockElement::PS1),
@@ -201,6 +201,7 @@ void PFBlockAlgo::findBlocks() {
   PFBlockLink::Type linktype = PFBlockLink::NONE;
   PFBlock::LinkTest linktest = PFBlock::LINKTEST_RECHIT;
   for( auto key : keys ) {
+    std::cout << "PFBlockAlgo::findBlocks Adding a block" << std::endl;
     blocks_->push_back( reco::PFBlock() );
     auto range = blocksmap.equal_range(key);
     auto& the_block = blocks_->back();
@@ -333,7 +334,8 @@ void PFBlockAlgo::updateEventSetup(const edm::EventSetup& es) {
 // for the definitions of available block element importers
 // and kdtree preprocessors
 void PFBlockAlgo::buildElements(const edm::Event& evt) {
-  // import block elements as defined in python configuration
+  std::cout << "PFBlockAlgo::buildElements" << std::endl;
+    // import block elements as defined in python configuration
   ranges_.fill(std::make_pair(0,0));
   elements_.clear();
   for( const auto& importer : importers_ ) {
@@ -342,7 +344,8 @@ void PFBlockAlgo::buildElements(const edm::Event& evt) {
 
   std::sort(elements_.begin(),elements_.end(),
             [](const auto& a, const auto& b) { return a->type() < b->type(); } );
-  
+
+  std::cout << "PFBlockAlgo::buildElements found num elements: " << elements_.size() << std::endl;
   bare_elements_.resize(elements_.size());
   for( unsigned i = 0; i < elements_.size(); ++i ) {
     bare_elements_[i] = elements_[i].get();
@@ -377,7 +380,7 @@ void PFBlockAlgo::buildElements(const edm::Event& evt) {
       }
     }    
   }
-  //std::cout << "(new) imported: " << elements_.size() << " elements!" << std::endl;
+  std::cout << "(new) imported: " << elements_.size() << " elements!" << std::endl;
 }
 
 std::ostream& operator<<(std::ostream& out, const PFBlockAlgo& a) {

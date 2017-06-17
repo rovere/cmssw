@@ -23,7 +23,13 @@
 #include <sstream>
 #include <cmath>
 
+
+#define LogInfo(x) std::cout << (x)
+#define LogDebug(x) std::cout << (x)
+#define LogVerbatim(x) std::cout << (x)
+
 using namespace std;
+using namespace edm;
 namespace MK = reco::MustacheKernel;
 
 namespace {
@@ -341,7 +347,7 @@ buildSuperCluster(CalibClusterPtr& seed,
   case PFLayer::ECAL_BARREL:
     IsClusteredWithSeed.phiwidthSuperCluster_ = phiwidthSuperClusterBarrel_;
     IsClusteredWithSeed.etawidthSuperCluster_ = etawidthSuperClusterBarrel_;
-    edm::LogInfo("PFClustering") << "Building SC number "  
+    LogInfo("PFClustering") << "Building SC number "  
 				 << superClustersEB_->size() + 1
 				 << " in the ECAL barrel!";
     break;
@@ -350,7 +356,7 @@ buildSuperCluster(CalibClusterPtr& seed,
   
     IsClusteredWithSeed.phiwidthSuperCluster_ = phiwidthSuperClusterEndcap_; 
     IsClusteredWithSeed.etawidthSuperCluster_ = etawidthSuperClusterEndcap_;
-    edm::LogInfo("PFClustering") << "Building SC number "  
+    LogInfo("PFClustering") << "Building SC number "  
 				 << superClustersEE_->size() + 1
 				 << " in the ECAL endcap!" << std::endl;
     isEE = true;
@@ -373,20 +379,20 @@ buildSuperCluster(CalibClusterPtr& seed,
 					  MatchesSeedByRecHit);
   }
 
-  if(verbose_) {
-    edm::LogInfo("PFClustering") << "Dumping cluster detail";
-    edm::LogVerbatim("PFClustering")
+  if(1) {
+    LogInfo("PFClustering") << "Dumping cluster detail";
+    LogVerbatim("PFClustering")
       << "\tPassed seed: e = " << seed->energy_nocalib() 
       << " eta = " << seed->eta() << " phi = " << seed->phi() 
       << std::endl;  
     for( auto clus = clusters.cbegin(); clus != not_clustered; ++clus ) {
-      edm::LogVerbatim("PFClustering") 
+      LogVerbatim("PFClustering") 
 	<< "\t\tClustered cluster: e = " << (*clus)->energy_nocalib() 
 	<< " eta = " << (*clus)->eta() << " phi = " << (*clus)->phi() 
 	<< std::endl;
     }
     for( auto clus = not_clustered; clus != clusters.end(); ++clus ) {
-      edm::LogVerbatim("PFClustering") 
+      LogVerbatim("PFClustering") 
 	<< "\tNon-Clustered cluster: e = " << (*clus)->energy_nocalib() 
 	<< " eta = " << (*clus)->eta() << " phi = " << (*clus)->phi() 
 	<< std::endl;
@@ -501,6 +507,9 @@ buildSuperCluster(CalibClusterPtr& seed,
     
     auto& hits_and_fractions = clus->the_ptr()->hitsAndFractions();
     for( auto& hit_and_fraction : hits_and_fractions ) {
+      std::cout << "adding " << hit_and_fraction.first.rawId()
+                << " with fraction " << hit_and_fraction.second
+                << " to SC" << std::endl;
       new_sc.addHitAndFraction(hit_and_fraction.first,hit_and_fraction.second);
     }
     if( isEE ) {
@@ -572,6 +581,7 @@ buildSuperCluster(CalibClusterPtr& seed,
 	EcalRecHitCollection::const_iterator seedRecHit = endcapRecHits_->find(seedId);
 	if (!seedRecHit->checkFlag(EcalRecHit::kOutOfTime)) break;
       }
+      std::cout << "Adding final SC" << std::endl;
       superClustersEE_->push_back(new_sc);    
       break;
     default:

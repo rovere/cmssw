@@ -22,7 +22,7 @@ particleFlowBlock = cms.EDProducer(
                   source = cms.InputTag("pfTrackElec") ),
         cms.PSet( importerName = cms.string("SuperClusterImporter"),
                   source_eb = cms.InputTag("particleFlowSuperClusterECAL:particleFlowSuperClusterECALBarrel"),
-                  source_ee = cms.InputTag("particleFlowSuperClusterECAL:particleFlowSuperClusterECALEndcapWithPreshower"),
+                  source_ee = cms.InputTag("particleFlowSuperClusterHGCal"),
                   source_towers = cms.InputTag("towerMaker"),
                   maximumHoverE = cms.double(0.5),
                   minSuperClusterPt = cms.double(10.0),
@@ -155,24 +155,43 @@ phase2_hgcal.toModify(
     particleFlowBlock,
     elementImporters = _insertGeneralTracksImporter
 )
-### for later
-#_phase2_hgcal_Linkers.append( 
-#    cms.PSet( linkerName = cms.string("SCAndHGCalLinker"),
-#              linkType   = cms.string("SC:HGCAL"),
-#              useKDTree  = cms.bool(False),
-#              SuperClusterMatchByRef = cms.bool(True) ) 
-#)
-#_phase2_hgcal_Linkers.append(
-#    cms.PSet( linkerName = cms.string("HGCalAndBREMLinker"),
-#              linkType   = cms.string("HGCAL:BREM"),
-#              useKDTree  = cms.bool(False) )
-#)
-#_phase2_hgcal_Linkers.append(
-#    cms.PSet( linkerName = cms.string("GSFAndHGCalLinker"), 
-#                  linkType   = cms.string("GSF:HGCAL"),
-#                  useKDTree  = cms.bool(False) )
-#)
 
+### for later
+# Importers
+_phase2_hgcal_Importers = particleFlowBlock.elementImporters.copy()
+_phase2_hgcal_Importers[2].source_ee = cms.InputTag('particleFlowSuperClusterHGCal')
+_phase2_hgcal_Importers.append(
+    cms.PSet( importerName = cms.string("HGCalClusterImporter"),
+              source = cms.InputTag("particleFlowClusterHGCal"),
+              BCtoPFCMap = cms.InputTag('particleFlowSuperClusterHGCal:PFClusterAssociationEBEE') ),
+)
+
+# Linkers
+_phase2_hgcal_Linkers = particleFlowBlock.linkDefinitions.copy()
+_phase2_hgcal_Linkers.append( 
+    cms.PSet( linkerName = cms.string("SCAndHGCalLinker"),
+              linkType   = cms.string("SC:HGCAL"),
+              useKDTree  = cms.bool(False),
+              SuperClusterMatchByRef = cms.bool(True) ) 
+)
+_phase2_hgcal_Linkers.append(
+    cms.PSet( linkerName = cms.string("HGCalAndBREMLinker"),
+              linkType   = cms.string("HGCAL:BREM"),
+              useKDTree  = cms.bool(False) )
+)
+_phase2_hgcal_Linkers.append(
+    cms.PSet( linkerName = cms.string("GSFAndHGCalLinker"), 
+              linkType   = cms.string("GSF:HGCAL"),
+              useKDTree  = cms.bool(False),
+              debug      = cms.untracked.bool(True)
+    )
+)
+
+phase2_hgcal.toModify(
+    particleFlowBlock,
+    elementImporters = _phase2_hgcal_Importers,
+    linkDefinitions = _phase2_hgcal_Linkers
+)
 
 from Configuration.Eras.Modifier_phase2_timing_cff import phase2_timing
 _addTiming = {}

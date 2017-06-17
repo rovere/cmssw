@@ -133,6 +133,7 @@ bool ElectronIdMVABased::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
   Handle<reco::GsfElectronCollection> egCollection;
   iEvent.getByToken(electronToken,egCollection);
   const reco::GsfElectronCollection egCandidates = (*egCollection.product());
+  std::cout << "ElectronIdMVABased received a collection of size: " << egCandidates.size() << std::endl;
   for ( reco::GsfElectronCollection::const_iterator egIter = egCandidates.begin(); egIter != egCandidates.end(); ++egIter) {
     double mvaVal = globalCache()->mvaID_->mva( *egIter, nVtx );
     double isoDr03 = egIter->dr03TkSumPt() + egIter->dr03EcalRecHitSumEt() + egIter->dr03HcalTowerSumEt();
@@ -151,6 +152,7 @@ bool ElectronIdMVABased::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
     }
   }
     
+  std::cout << "ElectronIdMVABased produced a collection of size: " << mvaElectrons->size() << std::endl;
   iEvent.put(std::move(mvaElectrons));
   
   return true;

@@ -186,7 +186,8 @@ ostream& reco::operator<<(  ostream& out,
   int iHFHAD = 0;
   int iSC = 0;
   int iHO = 0;
-
+  int iHGCAL = 0;
+  
   // for each element in turn
   std::vector<bool> toPrint(elements.size(),static_cast<bool>(true));
   for(unsigned ie=0; ie<elements.size(); ie++) {
@@ -257,6 +258,9 @@ ostream& reco::operator<<(  ostream& out,
       case PFLayer::HF_HAD:
         iHFHAD++;
         ss << "FH" << iHFHAD;
+	break;
+      case PFLayer::HGCAL:
+	ss << "HG" << ++iHGCAL;
 	break;
       default:
         iel++;   

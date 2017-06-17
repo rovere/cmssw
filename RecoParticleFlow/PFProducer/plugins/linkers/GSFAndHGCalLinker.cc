@@ -42,6 +42,7 @@ double GSFAndHGCalLinker::testLink
   const reco::PFClusterRef& clusterref = hgcalelem->clusterRef();
   const reco::PFTrajectoryPoint& tkAtECAL =
     track.extrapolatedPoint( ECALShowerMax );
+  std::cout << "GSFAndHGCalLinker::testLink track: " << track << std::endl;
   if( tkAtECAL.isValid() ) {
     dist = LinkByRecHit::computeDist( tkAtECAL.positionREP().eta(),
 				      tkAtECAL.positionREP().phi(), 
