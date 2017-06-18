@@ -16,6 +16,12 @@
 #include "RecoEgamma/EgammaPhotonProducers/interface/PhotonCoreProducer.h"
 #include "RecoEgamma/EgammaIsolationAlgos/interface/EgammaTowerIsolation.h"
 
+using namespace edm;
+
+#define LogError(x) std::cout << (x)
+#define LogDebug(x) std::cout << (x)
+#define LogInfo(x) std::cout << (x)
+#define LogWarning(x) std::cout << (x)
 
 PhotonCoreProducer::PhotonCoreProducer(const edm::ParameterSet& config) : 
   conf_(config)
@@ -59,7 +65,7 @@ void PhotonCoreProducer::produce(edm::Event &theEvent, const edm::EventSetup& th
   Handle<reco::SuperClusterCollection> scBarrelHandle;
   theEvent.getByToken(scHybridBarrelProducer_,scBarrelHandle);
   if (!scBarrelHandle.isValid()) {
-    edm::LogError("PhotonCoreProducer") 
+    LogError("PhotonCoreProducer") 
       << "Error! Can't get the scHybridBarrelProducer";
     validBarrelSCHandle=false;
   }
@@ -70,7 +76,7 @@ void PhotonCoreProducer::produce(edm::Event &theEvent, const edm::EventSetup& th
   Handle<reco::SuperClusterCollection> scEndcapHandle;
   theEvent.getByToken(scIslandEndcapProducer_,scEndcapHandle);
   if (!scEndcapHandle.isValid()) {
-    edm::LogError("PhotonCoreProducer") 
+    LogError("PhotonCoreProducer") 
       << "Error! Can't get the scIslandEndcapProducer";
     validEndcapSCHandle=false;
   }
@@ -81,7 +87,7 @@ void PhotonCoreProducer::produce(edm::Event &theEvent, const edm::EventSetup& th
   edm::Handle<reco::ConversionCollection> conversionHandle; 
   theEvent.getByToken(conversionProducer_, conversionHandle);
   if (!conversionHandle.isValid()) {
-    //edm::LogError("PhotonCoreProducer") << "Error! Can't get the product "<< conversionProducer_.label() << "\n" ;
+    //LogError("PhotonCoreProducer") << "Error! Can't get the product "<< conversionProducer_.label() << "\n" ;
     validConversions_=false;
   }
  
@@ -118,7 +124,7 @@ void PhotonCoreProducer::produce(edm::Event &theEvent, const edm::EventSetup& th
 						 iSC);
 
   // put the product in the event
-  edm::LogInfo("PhotonCoreProducer") << " Put in the event " << iSC << " Photon Candidates \n";
+  LogInfo("PhotonCoreProducer") << " Put in the event " << iSC << " Photon Candidates \n";
   outputPhotonCoreCollection_p->assign(outputPhotonCoreCollection.begin(),outputPhotonCoreCollection.end());
   theEvent.put(std::move(outputPhotonCoreCollection_p), PhotonCoreCollection_);
 
@@ -134,7 +140,11 @@ void PhotonCoreProducer::fillPhotonCollection(edm::Event& evt,
 
   
   reco::ElectronSeedCollection::const_iterator pixelSeedItr;
+  std::cout << "PhotonCoreProducer::fillPhotonCollection Received an input SC collection of size "
+	    << scHandle->size() << std::endl;
   for(unsigned int lSC=0; lSC < scHandle->size(); lSC++) {
+    std::cout << "PhotonCoreProducer::fillPhotonCollection Analyzing SC: " << lSC
+	      << std::endl;
     
     // get SuperClusterRef
     reco::SuperClusterRef scRef(reco::SuperClusterRef(scHandle, lSC));
@@ -142,7 +152,11 @@ void PhotonCoreProducer::fillPhotonCollection(edm::Event& evt,
     //const reco::SuperCluster* pClus=&(*scRef);
     
     // SC energy preselection
-    if (scRef->energy()/cosh(scRef->eta()) <= minSCEt_) continue;
+    if (scRef->energy()/cosh(scRef->eta()) <= minSCEt_) {
+      std::cout << "PhotonCoreProducer::fillPhotonCollection failed SC energy preselection"
+		<< std::endl;
+	continue;
+    }
     
     reco::PhotonCore newCandidate(scRef);
     if ( validConversions_) {    

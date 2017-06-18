@@ -43,6 +43,13 @@
 #include "RecoEcal/EgammaCoreTools/plugins/EcalClusterCrackCorrection.h"
 #include "RecoEgamma/EgammaIsolationAlgos/interface/EgammaHadTower.h"
 
+
+#define LogError(x) std::cout << (x)
+#define LogDebug(x) std::cout << (x)
+#define LogWarning(x) std::cout << (x)
+#define LogInfo(x) std::cout << (x)
+
+
 namespace {
   inline double ptFast( const double energy, 
 			const math::XYZPoint& position,
@@ -402,7 +409,7 @@ void GEDPhotonProducer::produce(edm::Event& theEvent, const edm::EventSetup& the
 
 
   // put the product in the event
-  edm::LogInfo("GEDPhotonProducer") << " Put in the event " << iSC << " Photon Candidates \n";
+  LogInfo("GEDPhotonProducer") << " Put in the event " << iSC << " Photon Candidates \n";
   outputPhotonCollection_p->assign(outputPhotonCollection.begin(),outputPhotonCollection.end());
   const edm::OrphanHandle<reco::PhotonCollection> photonOrphHandle = theEvent.put(std::move(outputPhotonCollection_p), photonCollection_);
 
@@ -459,7 +466,8 @@ void GEDPhotonProducer::fillPhotonCollection(edm::Event& evt,
   std::vector<int> flags_, severitiesexcl_;
 
   for(unsigned int lSC=0; lSC < photonCoreHandle->size(); lSC++) {
-
+    std::cout << "GEDPhotonProducer::fillPhotonCollection "
+	      << "looping on PhotonCore: " << lSC << std::endl;
     reco::PhotonCoreRef coreRef(reco::PhotonCoreRef(photonCoreHandle, lSC));
     reco::SuperClusterRef parentSCRef = coreRef->parentSuperCluster();
     reco::SuperClusterRef scRef=coreRef->superCluster();
@@ -482,20 +490,26 @@ void GEDPhotonProducer::fillPhotonCollection(edm::Event& evt,
       flags_ = flagsexclEE_;
       severitiesexcl_ = severitiesexclEE_;
     } else if ( thedet == DetId::Forward )  {
+      std::cout << "GEDPhotonProducer: I'm an HGCal detector SC" << std::endl;
       preselCutValues = preselCutValuesEndcap_;
       hits = nullptr;
       flags_ = flagsexclEE_;
       severitiesexcl_ = severitiesexclEE_;
     } else {
-      edm::LogWarning("")<<"GEDPhotonProducer: do not know if it is a barrel or endcap SuperCluster" << thedet << ' ' << subdet; 
+      LogWarning("")<<"GEDPhotonProducer: do not know if it is a barrel or endcap SuperCluster" << thedet << ' ' << subdet; 
     }
-
-    
-    
 
     // SC energy preselection
     if (parentSCRef.isNonnull() &&
-	ptFast(parentSCRef->energy(),parentSCRef->position(),math::XYZPoint(0,0,0)) <= preselCutValues[0] ) continue;
+	ptFast(parentSCRef->energy(),parentSCRef->position(),math::XYZPoint(0,0,0)) <= preselCutValues[0] ) {
+      std::cout << "GEDPhotonProducer not passing SC energy preselection" << std::endl;
+      continue;
+    }
+    std::cout << "GEDPhotonProducer parentSCRef.energy: "
+	      << parentSCRef->energy()
+	      << " position: "
+	      << parentSCRef->position()
+	      << std::endl;
     // calculate HoE    
 
     const CaloTowerCollection* hcalTowersColl = hcalTowersHandle.product();
@@ -509,8 +523,10 @@ void GEDPhotonProducer::fillPhotonCollection(edm::Event& evt,
     std::vector<CaloTowerDetId> TowersBehindClus =  towerIsoBehindClus.towersOf(*scRef);
     float hcalDepth1OverEcalBc = towerIsoBehindClus.getDepth1HcalESum(TowersBehindClus)/scRef->energy();
     float hcalDepth2OverEcalBc = towerIsoBehindClus.getDepth2HcalESum(TowersBehindClus)/scRef->energy();
-    //    std::cout << " GEDPhotonProducer calculation of HoE with towers in a cone " << HoE1  << "  " << HoE2 << std::endl;
-    //std::cout << " GEDPhotonProducer calcualtion of HoE with towers behind the BCs " << hcalDepth1OverEcalBc  << "  " << hcalDepth2OverEcalBc << std::endl;
+    std::cout << " GEDPhotonProducer calculation of HoE with towers in a cone "
+	      << HoE1  << "  " << HoE2 << std::endl;
+    std::cout << " GEDPhotonProducer calcualtion of HoE with towers behind the BCs "
+	      << hcalDepth1OverEcalBc  << "  " << hcalDepth2OverEcalBc << std::endl;
 
     float maxXtal = ( hits != nullptr ? EcalClusterTools::eMax( *(scRef->seed()), &(*hits) ) : 0.f );
     //AA
@@ -555,8 +571,12 @@ void GEDPhotonProducer::fillPhotonCollection(edm::Event& evt,
     math::XYZTLorentzVectorD p4(momentum.x(), momentum.y(), momentum.z(), photonEnergy );
     reco::Photon newCandidate(p4, caloPosition, coreRef, vtx);
 
-    //std::cout << " standard p4 before " << newCandidate.p4() << " energy " << newCandidate.energy() <<  std::endl;
-    //std::cout << " type " <<newCandidate.getCandidateP4type() <<  " standard p4 after " << newCandidate.p4() << " energy " << newCandidate.energy() << std::endl;
+    std::cout << "L: " << __LINE__ << std::endl;
+    std::cout << " standard p4 before " << newCandidate.p4()
+	      << " energy " << newCandidate.energy() <<  std::endl;
+    std::cout << " type " <<newCandidate.getCandidateP4type()
+	      <<  " standard p4 after " << newCandidate.p4()
+	      << " energy " << newCandidate.energy() << std::endl;
 
     // Calculate fiducial flags and isolation variable. Blocked are filled from the isolationCalculator
     reco::Photon::FiducialFlags fiducialFlags;
@@ -677,13 +697,26 @@ void GEDPhotonProducer::fillPhotonCollection(edm::Event& evt,
 	newCandidate.setP4( newCandidate.p4(reco::Photon::regression2) );
 	newCandidate.setCandidateP4type(reco::Photon::regression2);
       }
+    } else {
+      math::XYZVector corr_momentum = direction.unit() * parentSCRef->energy();
+      math::XYZTLorentzVectorD p4(corr_momentum.x(),
+				  corr_momentum.y(),
+				  corr_momentum.z(),
+				  parentSCRef->energy());
+
+      newCandidate.setP4(p4);
+      newCandidate.setCandidateP4type(reco::Photon::ecal_photons);
     }
 
-    //       std::cout << " final p4 " << newCandidate.p4() << " energy " << newCandidate.energy() <<  std::endl;
-
-
-    // std::cout << " GEDPhotonProducer from candidate HoE with towers in a cone " << newCandidate.hadronicOverEm()  << "  " <<  newCandidate.hadronicDepth1OverEm()  << " " <<  newCandidate.hadronicDepth2OverEm()  << std::endl;
-    //    std::cout << " GEDPhotonProducer from candidate  of HoE with towers behind the BCs " <<  newCandidate.hadTowOverEm()  << "  " << newCandidate.hadTowDepth1OverEm() << " " << newCandidate.hadTowDepth2OverEm() << std::endl;
+    std::cout << " final p4 " << newCandidate.p4() << " energy " << newCandidate.energy() <<  std::endl;
+    std::cout << " GEDPhotonProducer from candidate HoE with towers in a cone "
+	      << newCandidate.hadronicOverEm()  << "  "
+	      <<  newCandidate.hadronicDepth1OverEm()  << " "
+	      <<  newCandidate.hadronicDepth2OverEm()  << std::endl;
+    std::cout << " GEDPhotonProducer from candidate  of HoE with towers behind the BCs "
+	      <<  newCandidate.hadTowOverEm()  << "  "
+	      << newCandidate.hadTowDepth1OverEm() << " "
+	      << newCandidate.hadTowDepth2OverEm() << std::endl;
 
 
   // fill MIP Vairables for Halo: Block for MIP are filled from PhotonMIPHaloTagger
@@ -749,7 +782,7 @@ void GEDPhotonProducer::fillPhotonCollection(edm::Event& evt,
     } else if ( thedet == DetId::Forward || thedet == DetId::Hcal) {
       preselCutValues = preselCutValuesEndcap_;
     } else {
-      edm::LogWarning("")<<"GEDPhotonProducer: do not know if it is a barrel or endcap SuperCluster" << thedet << ' ' << subdet; 
+      LogWarning("")<<"GEDPhotonProducer: do not know if it is a barrel or endcap SuperCluster" << thedet << ' ' << subdet; 
     }
 
 
@@ -776,27 +809,30 @@ void GEDPhotonProducer::fillPhotonCollection(edm::Event& evt,
 
 
     // do the regression
-    thePhotonEnergyCorrector_->calculate(evt, newCandidate, subdet, *vertexHandle, es);
-    if ( candidateP4type_ == "fromEcalEnergy") {
-      newCandidate.setP4( newCandidate.p4(reco::Photon::ecal_photons) );
-      newCandidate.setCandidateP4type(reco::Photon::ecal_photons);
-    } else if ( candidateP4type_ == "fromRegression1") {
-      newCandidate.setP4( newCandidate.p4(reco::Photon::regression1) );
-      newCandidate.setCandidateP4type(reco::Photon::regression1);
-    } else if ( candidateP4type_ == "fromRegression2") {
-      newCandidate.setP4( newCandidate.p4(reco::Photon::regression2) );
-      newCandidate.setCandidateP4type(reco::Photon::regression2);
-    } else if ( candidateP4type_ == "fromRefinedSCRegression" ) {
-      newCandidate.setP4( newCandidate.p4(reco::Photon::regression2) );
-      newCandidate.setCandidateP4type(reco::Photon::regression2);
+    // Only if it's not in HGCAL
+    if (thedet != DetId::Forward) {
+      thePhotonEnergyCorrector_->calculate(evt, newCandidate, subdet, *vertexHandle, es);
+      if ( candidateP4type_ == "fromEcalEnergy") {
+	newCandidate.setP4( newCandidate.p4(reco::Photon::ecal_photons) );
+	newCandidate.setCandidateP4type(reco::Photon::ecal_photons);
+      } else if ( candidateP4type_ == "fromRegression1") {
+	newCandidate.setP4( newCandidate.p4(reco::Photon::regression1) );
+	newCandidate.setCandidateP4type(reco::Photon::regression1);
+      } else if ( candidateP4type_ == "fromRegression2") {
+	newCandidate.setP4( newCandidate.p4(reco::Photon::regression2) );
+	newCandidate.setCandidateP4type(reco::Photon::regression2);
+      } else if ( candidateP4type_ == "fromRefinedSCRegression" ) {
+	newCandidate.setP4( newCandidate.p4(reco::Photon::regression2) );
+	newCandidate.setCandidateP4type(reco::Photon::regression2);
+      }
     }
 
-    //    std::cout << " GEDPhotonProducer  pf based isolation  chargedHadron " << newCandidate.chargedHadronIso() << " neutralHadron " <<  newCandidate.neutralHadronIso() << " Photon " <<  newCandidate.photonIso() << std::endl;
-    //std::cout << " GEDPhotonProducer from candidate HoE with towers in a cone " << newCandidate.hadronicOverEm()  << "  " <<  newCandidate.hadronicDepth1OverEm()  << " " <<  newCandidate.hadronicDepth2OverEm()  << std::endl;
-    //std::cout << " GEDPhotonProducer from candidate  of HoE with towers behind the BCs " <<  newCandidate.hadTowOverEm()  << "  " << newCandidate.hadTowDepth1OverEm() << " " << newCandidate.hadTowDepth2OverEm() << std::endl;
-    //std::cout << " standard p4 before " << newCandidate.p4() << " energy " << newCandidate.energy() <<  std::endl;
-    //std::cout << " type " <<newCandidate.getCandidateP4type() <<  " standard p4 after " << newCandidate.p4() << " energy " << newCandidate.energy() << std::endl;
-    //std::cout << " final p4 " << newCandidate.p4() << " energy " << newCandidate.energy() <<  std::endl;
+    std::cout << " GEDPhotonProducer  pf based isolation  chargedHadron " << newCandidate.chargedHadronIso() << " neutralHadron " <<  newCandidate.neutralHadronIso() << " Photon " <<  newCandidate.photonIso() << std::endl;
+    std::cout << " GEDPhotonProducer from candidate HoE with towers in a cone " << newCandidate.hadronicOverEm()  << "  " <<  newCandidate.hadronicDepth1OverEm()  << " " <<  newCandidate.hadronicDepth2OverEm()  << std::endl;
+    std::cout << " GEDPhotonProducer from candidate  of HoE with towers behind the BCs " <<  newCandidate.hadTowOverEm()  << "  " << newCandidate.hadTowDepth1OverEm() << " " << newCandidate.hadTowDepth2OverEm() << std::endl;
+    std::cout << " standard p4 before " << newCandidate.p4() << " energy " << newCandidate.energy() <<  std::endl;
+    std::cout << " type " <<newCandidate.getCandidateP4type() <<  " standard p4 after " << newCandidate.p4() << " energy " << newCandidate.energy() << std::endl;
+    std::cout << " final p4 " << newCandidate.p4() << " energy " << newCandidate.energy() <<  std::endl;
 
     outputPhotonCollection.push_back(newCandidate);        
     

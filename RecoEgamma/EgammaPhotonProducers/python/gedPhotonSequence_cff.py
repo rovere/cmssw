@@ -25,6 +25,10 @@ gedPhotons.reconstructionStep = cms.string("final")
 gedPhotons.chargedHadronIsolation = cms.InputTag("egmPhotonIsolationCITK:h+-DR030-")
 gedPhotons.neutralHadronIsolation = cms.InputTag("egmPhotonIsolationCITK:h0-DR030-")
 gedPhotons.photonIsolation = cms.InputTag("egmPhotonIsolationCITK:gamma-DR030-")
+
+#from Configuration.Eras.Modifier_phase2_hgcal_cff import phase2_hgcal
+#phase2_hgcal.toModify(gedPhotons, candidateP4type='fromEcalEnergy')
+
 gedPhotonSequence    = cms.Sequence(gedPhotons)
 
 
