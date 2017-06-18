@@ -505,11 +505,18 @@ void GEDPhotonProducer::fillPhotonCollection(edm::Event& evt,
       std::cout << "GEDPhotonProducer not passing SC energy preselection" << std::endl;
       continue;
     }
-    std::cout << "GEDPhotonProducer parentSCRef.energy: "
-	      << parentSCRef->energy()
-	      << " position: "
-	      << parentSCRef->position()
-	      << std::endl;
+    if (parentSCRef.isNonnull())
+      std::cout << "GEDPhotonProducer parentSCRef.energy: "
+		<< parentSCRef->energy()
+		<< " position: "
+		<< parentSCRef->position()
+		<< std::endl;
+    else
+      std::cout << "GEDPhotonProducer SCRef.energy: "
+		<< scRef->energy()
+		<< " position: "
+		<< scRef->position()
+		<< std::endl;
     // calculate HoE    
 
     const CaloTowerCollection* hcalTowersColl = hcalTowersHandle.product();
@@ -698,12 +705,12 @@ void GEDPhotonProducer::fillPhotonCollection(edm::Event& evt,
 	newCandidate.setCandidateP4type(reco::Photon::regression2);
       }
     } else {
-      math::XYZVector corr_momentum = direction.unit() * parentSCRef->energy();
+      float photonEnergy = parentSCRef.isNonnull() ? parentSCRef->energy() : scRef->energy();
+      math::XYZVector corr_momentum = direction.unit() * photonEnergy;
       math::XYZTLorentzVectorD p4(corr_momentum.x(),
 				  corr_momentum.y(),
 				  corr_momentum.z(),
-				  parentSCRef->energy());
-
+				  photonEnergy);
       newCandidate.setP4(p4);
       newCandidate.setCandidateP4type(reco::Photon::ecal_photons);
     }
@@ -810,7 +817,7 @@ void GEDPhotonProducer::fillPhotonCollection(edm::Event& evt,
 
     // do the regression
     // Only if it's not in HGCAL
-    if (thedet != DetId::Forward) {
+    if (thedet != DetId::Forward && thedet != DetId::Hcal) {
       thePhotonEnergyCorrector_->calculate(evt, newCandidate, subdet, *vertexHandle, es);
       if ( candidateP4type_ == "fromEcalEnergy") {
 	newCandidate.setP4( newCandidate.p4(reco::Photon::ecal_photons) );

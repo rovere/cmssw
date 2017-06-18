@@ -97,8 +97,8 @@ void GEDPhotonCoreProducer::produce(edm::Event &theEvent, const edm::EventSetup&
 
     // Retrieve stuff from the pfPhoton
     reco::PFCandidateEGammaExtraRef pfPhoRef =  candRef->egammaExtraRef();
-    reco::SuperClusterRef  refinedSC= pfPhoRef->superClusterRef();
-    reco::SuperClusterRef  boxSC= pfPhoRef->superClusterPFECALRef();
+    reco::SuperClusterRef  refinedSC = pfPhoRef->superClusterRef();
+    reco::SuperClusterRef  boxSC = pfPhoRef->superClusterPFECALRef();
     const reco::ConversionRefVector & doubleLegConv = pfPhoRef->conversionRef();
     const reco::ConversionRefVector & singleLegConv = pfPhoRef->singleLegConversionRef();
     reco::CaloClusterPtr refinedSCPtr= edm::refToPtr(refinedSC);
@@ -126,11 +126,12 @@ void GEDPhotonCoreProducer::produce(edm::Event &theEvent, const edm::EventSetup&
     }     
 
     std::cout << "GEDPhotonCoreProducer::produce newCandidate pf refined SC energy="
-	      << newCandidate.superCluster()->energy()<<std::endl;
-    std::cout << "GEDPhotonCoreProducer::produce newCandidate pf SC energy="
-	      << newCandidate.parentSuperCluster()->energy()<<std::endl;
+	      << newCandidate.superCluster()->energy() << std::endl;
+    if (newCandidate.parentSuperCluster().isNonnull())
+      std::cout << "GEDPhotonCoreProducer::produce newCandidate pf SC energy="
+		<< newCandidate.parentSuperCluster()->energy() << std::endl;
     std::cout << "GEDPhotonCoreProducer::produce newCandidate  nconv2leg="
-	      << newCandidate.conversions().size()<< std::endl;
+	      << newCandidate.conversions().size() << std::endl;
 
     if ( validPixelSeeds_) {
       for( unsigned int icp = 0;  icp < pixelSeedHandle->size(); icp++) {
