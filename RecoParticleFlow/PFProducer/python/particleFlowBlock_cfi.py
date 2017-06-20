@@ -162,7 +162,7 @@ _phase2_hgcal_Importers = particleFlowBlock.elementImporters.copy()
 _phase2_hgcal_Importers[2].source_ee = cms.InputTag('particleFlowSuperClusterHGCal')
 _phase2_hgcal_Importers.append(
     cms.PSet( importerName = cms.string("HGCalClusterImporter"),
-              source = cms.InputTag("particleFlowClusterHGCal"),
+              source = cms.InputTag("particleFlowClusterHGCalFromMC"),
               BCtoPFCMap = cms.InputTag('particleFlowSuperClusterHGCal:PFClusterAssociationEBEE') ),
 )
 

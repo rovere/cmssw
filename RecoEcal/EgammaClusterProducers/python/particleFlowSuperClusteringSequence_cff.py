@@ -16,7 +16,7 @@ _phase2_hgcal_particleFlowSuperClusteringSequence += particleFlowSuperClusterHGC
 from Configuration.Eras.Modifier_phase2_hgcal_cff import phase2_hgcal
 phase2_hgcal.toModify(
     particleFlowSuperClusterHGCal,
-    PFClusters = cms.InputTag('particleFlowClusterHGCal'),
+    PFClusters = cms.InputTag('particleFlowClusterHGCalFromMC'),
     useRegression = cms.bool(False), #no HGCal regression yet
     use_preshower = cms.bool(False),
     PFBasicClusterCollectionEndcap = cms.string(""),   
