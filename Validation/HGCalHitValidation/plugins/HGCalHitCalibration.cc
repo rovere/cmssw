@@ -20,6 +20,9 @@
 #include "DataFormats/HGCRecHit/interface/HGCRecHitCollections.h"
 #include "DataFormats/HcalDetId/interface/HcalDetId.h"
 #include "DataFormats/ParticleFlowReco/interface/PFCluster.h"
+#include "DataFormats/EgammaCandidates/interface/GsfElectron.h"
+#include "DataFormats/EgammaCandidates/interface/Photon.h"
+
 #include "SimDataFormats/CaloAnalysis/interface/CaloParticle.h"
 #include "SimDataFormats/CaloAnalysis/interface/SimCluster.h"
 #include "SimDataFormats/TrackingAnalysis/interface/TrackingParticle.h"
@@ -57,6 +60,8 @@ class HGCalHitCalibration : public DQMEDAnalyzer {
   edm::EDGetTokenT<HGCRecHitCollection> recHitsBH_;
   edm::EDGetTokenT<std::vector<CaloParticle> > caloParticles_;
   edm::EDGetTokenT<std::vector<reco::PFCluster> > hgcalMultiClusters_;
+  edm::EDGetTokenT<std::vector<reco::GsfElectron> > electrons_;
+  edm::EDGetTokenT<std::vector<reco::Photon> > photons_;
 
   std::string detector_;
   int algo_;
@@ -98,6 +103,10 @@ HGCalHitCalibration::HGCalHitCalibration(const edm::ParameterSet& iConfig)
       edm::InputTag("mix", "MergedCaloTruth"));
   hgcalMultiClusters_ = consumes<std::vector<reco::PFCluster> >(
       edm::InputTag("particleFlowClusterHGCalFromMC"));
+  electrons_ = consumes<std::vector<reco::GsfElectron> >(
+							 edm::InputTag("gedGsfElectrons"));
+  photons_ = consumes<std::vector<reco::Photon> >(
+						  edm::InputTag("gedPhotons"));
 }
 
 HGCalHitCalibration::~HGCalHitCalibration() {
@@ -168,6 +177,12 @@ void HGCalHitCalibration::analyze(const edm::Event& iEvent,
   Handle<std::vector<reco::PFCluster> > hgcalMultiClustersHandle;
   iEvent.getByToken(hgcalMultiClusters_, hgcalMultiClustersHandle);
 
+  Handle<std::vector<reco::GsfElectron> > PFElectronHandle;
+  iEvent.getByToken(electrons_, PFElectronHandle);
+
+  Handle<std::vector<reco::Photon> > PFPhotonHandle;
+  iEvent.getByToken(photons_, PFPhotonHandle);
+
   // make a map detid-rechit
   std::map<DetId, const HGCRecHit*> hitmap;
   switch (algo_) {
@@ -227,7 +242,7 @@ void HGCalHitCalibration::analyze(const edm::Event& iEvent,
     // photon that converted before HGCal.  TODO (rovere): prepare a
     // 0-material scenarion for the PhaseII, so that these kind of
     // tricks won't be needed.
-    if (caloParticles.size() != simClusterRefVector.size()) return;
+    //  if (caloParticles.size() != simClusterRefVector.size()) return;
     Energy_layer_calib_.clear();
     Energy_layer_calib_fraction_.clear();
     for (unsigned int ij = 0; ij < 60; ++ij) {
@@ -269,11 +284,8 @@ void HGCalHitCalibration::analyze(const edm::Event& iEvent,
         h_EoP_CPene_calib_fraction_.end())
       h_EoP_CPene_calib_fraction_[seedDet]->Fill(sumCalibRecHitCalib_fraction /
                                                  it_caloPart.energy());
-    // TODO
-    // * Loop over HGCalMultiClusters
-    // * Select only the most energetic one
-    // * Loop over its recHits_fractions
-    // * Make the same plots as before.
+
+    // Loop on reconstructed SC.
     const auto& clusters = *hgcalMultiClustersHandle;
     float total_energy = 0.;
     for (const auto& c : clusters) {
@@ -289,6 +301,19 @@ void HGCalHitCalibration::analyze(const edm::Event& iEvent,
         hgcal_EoP_CPene_calib_fraction_.end())
       hgcal_EoP_CPene_calib_fraction_[seedDet]->Fill(total_energy /
                                                      it_caloPart.energy());
+    // Try electrons and photons
+    if (PFElectronHandle.isValid()) {
+      auto const & ele = (*PFElectronHandle);
+      for (auto const & e : ele) {
+	std::cout << "Electron energy: " << e.energy() << std::endl;
+      }
+    }
+    if (PFPhotonHandle.isValid()) {
+      auto const & ele = (*PFPhotonHandle);
+      for (auto const & e : ele) {
+	std::cout << "Photon energy: " << e.energy() << std::endl;
+      }
+    }
   }  // end caloparticle
 }
 
