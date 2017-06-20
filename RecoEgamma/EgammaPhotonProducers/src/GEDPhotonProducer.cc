@@ -262,7 +262,8 @@ void GEDPhotonProducer::produce(edm::Event& theEvent, const edm::EventSetup& the
     theEvent.getByToken(phoNeutralHadronIsolationToken_CITK,phoNeutralHadronIsolationMap_CITK);
     theEvent.getByToken(phoPhotonIsolationToken_CITK,phoPhotonIsolationMap_CITK);
     if ( photonHandle.isValid()) {
-      validPhotonHandle=true;  
+      validPhotonHandle=true;
+      std::cout << "GEDPhotonProducer input photon collection of size: " << (*photonHandle).size() << std::endl;
     } else {
       throw cms::Exception("GEDPhotonProducer") << "Error! Can't get the product " <<   photonProducer_.label() << "\n";
     }
@@ -271,6 +272,7 @@ void GEDPhotonProducer::produce(edm::Event& theEvent, const edm::EventSetup& the
     theEvent.getByToken(photonCoreProducerT_,photonCoreHandle);
     if (photonCoreHandle.isValid()) {
       validPhotonCoreHandle=true;
+      std::cout << "GEDPhotonProducer input photon collection of size: " << (*photonCoreHandle).size() << std::endl;
     } else {
       throw cms::Exception("GEDPhotonProducer") 
 	<< "Error! Can't get the photonCoreProducer" <<  photonProducer_.label() << "\n";
@@ -409,7 +411,8 @@ void GEDPhotonProducer::produce(edm::Event& theEvent, const edm::EventSetup& the
 
 
   // put the product in the event
-  LogInfo("GEDPhotonProducer") << " Put in the event " << iSC << " Photon Candidates \n";
+  LogInfo("GEDPhotonProducer") << " Put in the event (final?" << (reconstructionStep_ == "final")
+			       << " )" << iSC << " Photon Candidates \n";
   outputPhotonCollection_p->assign(outputPhotonCollection.begin(),outputPhotonCollection.end());
   const edm::OrphanHandle<reco::PhotonCollection> photonOrphHandle = theEvent.put(std::move(outputPhotonCollection_p), photonCollection_);
 
@@ -730,9 +733,8 @@ void GEDPhotonProducer::fillPhotonCollection(edm::Event& evt,
    reco::Photon::MIPVariables mipVar ;
    if(subdet==EcalBarrel && runMIPTagger_ )
     {
-  
      thePhotonMIPHaloTagger_-> MIPcalculate( &newCandidate,evt,es,mipVar);
-    newCandidate.setMIPVariables(mipVar);
+     newCandidate.setMIPVariables(mipVar);
     }
 
 
@@ -750,7 +752,18 @@ void GEDPhotonProducer::fillPhotonCollection(edm::Event& evt,
       if ( newCandidate.sigmaIetaIeta()                    > preselCutValues[10] )                                            isLooseEM=false;
     } 
     
-
+    if (!isLooseEM) {
+      std::cout << "GEDPhotonProducer photon is not LooseEM"
+		<< " HoE " << (newCandidate.hadronicOverEm() >= preselCutValues[1])
+		<< " ecalRecHitSumEtConeDR04 " << ( newCandidate.ecalRecHitSumEtConeDR04()          > preselCutValues[2]+ preselCutValues[3]*newCandidate.pt() )
+		<< " hcalTowerSumEtConeDR04 " << ( newCandidate.hcalTowerSumEtConeDR04()           > preselCutValues[4]+ preselCutValues[5]*newCandidate.pt() )
+		<< " nTrkSolidConeDR04 " << ( newCandidate.nTrkSolidConeDR04()                > int(preselCutValues[6]) )
+		<< " nTrkHollowConeDR04" << ( newCandidate.nTrkHollowConeDR04()               > int(preselCutValues[7]) )
+		<< " trkSumPtSolidConeDR04 " << ( newCandidate.trkSumPtSolidConeDR04()            > preselCutValues[8] )
+		<< " trkSumPtHollowConeDR04 " << ( newCandidate.trkSumPtHollowConeDR04()           > preselCutValues[9] )
+		<< " sigmaIetaIeta" << ( newCandidate.sigmaIetaIeta()                    > preselCutValues[10] )
+		<< std::endl;
+	}
         
     if ( isLooseEM)  
       outputPhotonCollection.push_back(newCandidate);
