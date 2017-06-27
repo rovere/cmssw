@@ -7,6 +7,7 @@
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/TrackerRecHit2D/interface/BaseTrackerRecHit.h"
+#include "DataFormats/TrackerRecHit2D/interface/TrackerSingleRecHit.h"
 
 #include "TrackingTools/TrackRefitter/interface/TrackTransformer.h"
 #include "TrackingTools/PatternTools/interface/Trajectory.h"
@@ -65,6 +66,7 @@ class TrackingRecoMaterialAnalyser : public DQMEDAnalyzer {
     MonitorElement * deltaPl_in_out_vs_eta_;
     MonitorElement * deltaPl_in_out_vs_z_;
     MonitorElement * P_vs_eta_2d_;
+    MonitorElement * pixClSizeY_2d_[4];
 };
 
 //-------------------------------------------------------------------------
@@ -169,6 +171,19 @@ void TrackingRecoMaterialAnalyser::bookHistograms(DQMStore::IBooker & ibook,
   // Histogram to show the distribution of p vs eta for all tracks.
   P_vs_eta_2d_   = ibook.book2D("P_vs_eta_2d", "P_vs_eta_2d",
                                           100, -3.0, 3.0, 100., 0., 5.);
+
+  // Histogram to show the cluster size in Y in the Z-y plane for the pixel Barrel layers
+  pixClSizeY_2d_[0]     = ibook.bookProfile2D("PixelClusterSizeY_1", "PixelClusterSizeY_1",
+					      120, -3., 3, 400, -20., 20., -100., 100.);
+  pixClSizeY_2d_[1]     = ibook.bookProfile2D("PixelClusterSizeY_2", "PixelClusterSizeY_2",
+					      120, -3., 3, 400, -20., 20., -100., 100.);
+  pixClSizeY_2d_[2]     = ibook.bookProfile2D("PixelClusterSizeY_3", "PixelClusterSizeY_3",
+					      120, -3., 3, 400, -20., 20., -100., 100.);
+  pixClSizeY_2d_[3]     = ibook.bookProfile2D("PixelClusterSizeY_4", "PixelClusterSizeY_4",
+					      120, -3., 3, 400, -20., 20., -100., 100.);
+  for (unsigned int j = 0; j < 4; ++j)
+    pixClSizeY_2d_[j]->getTProfile2D()->SetMaximum(20);
+
   char title[50];
   char key[20];
   for (unsigned int det = 1; det < sDETS.size(); ++det ) {
@@ -214,6 +229,7 @@ void TrackingRecoMaterialAnalyser::analyze(const edm::Event& event,
   auto selector = [](const Track &track, const reco::Vertex::Point &pv) -> bool {
     return (track.quality(track.qualityByName("highPurity"))
             && track.dxy(pv) < 0.01
+	    && track.pt() > 1.
             && track.hitPattern().numberOfLostTrackerHits(HitPattern::MISSING_OUTER_HITS) == 0);
   };
 
@@ -285,6 +301,17 @@ void TrackingRecoMaterialAnalyser::analyze(const edm::Event& event,
         auto const & localP = current_tsos.localMomentum();
         current_det = tm.recHit()->geographicalId();
         const Surface& surface = current_tsos.surface();
+	auto const * thit = static_cast<const TrackerSingleRecHit*>( tm.recHit()->hit() );
+	if (thit && thit->isPixel()) {
+	  const auto& cluster = thit->pixelCluster();
+	  if (sDETS[current_det.subdetId()] == "PXB")
+	    pixClSizeY_2d_[trk_topology->layer(current_det)-1]->Fill(current_tsos.globalPosition().eta(),
+								     current_tsos.globalPosition().y(),
+								     cluster.sizeY());
+	  // std::cout << sDETS[current_det.subdetId()] << trk_topology->layer(current_det)
+	  // 	    << " " << inner.eta() << " "
+	  // 	    << cluster.sizeY() << std::endl;
+	}
         assert(tm.recHit()->surface() == &surface);
         if (!surface.mediumProperties().isValid()) {
           LogError("TrackingRecoMaterialAnalyser")
