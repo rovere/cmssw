@@ -20,6 +20,18 @@ _simClusterMapper_HGCal = cms.PSet(
     simClusterSrc = cms.InputTag("mix:MergedCaloTruth")
 )
 
+# initial step clusterizer
+# _simClusterMapper_HGCal = cms.PSet(
+#     algoName = cms.string("RealisticSimClusterMapper"),
+#     exclusiveFraction = cms.double(0.9),
+#     invisibleFraction = cms.double(0.9),
+#     useMCFractionsForExclEnergy = cms.bool(False),    
+#     thresholdsByDetector = cms.VPSet(
+#     ),
+#     simClusterSrc = cms.InputTag("mix:MergedCaloTruth")
+# )
+
+
 #position calculations
 _positionCalcPCA_HGCal = cms.PSet(
         algoName = cms.string("Cluster3DPCACalculator"),
