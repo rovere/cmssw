@@ -68,9 +68,13 @@ from TrackingTools.GsfTracking.bwdGsfElectronPropagator_cff import *
 from TrackingTools.GsfTracking.fwdGsfElectronPropagator_cff import *
 # TrajectoryFilter
 
+electronCkfTrackCandidatesFromMultiCl = electronCkfTrackCandidates.clone()
 
-
-
+from Configuration.Eras.Modifier_phase2_hgcal_cff import phase2_hgcal
+phase2_hgcal.toModify(
+  electronCkfTrackCandidatesFromMultiCl,
+  src = 'electronMergedSeedsFromMultiCl'
+)
 
 
 
