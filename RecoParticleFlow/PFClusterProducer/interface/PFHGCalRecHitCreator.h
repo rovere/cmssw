@@ -23,6 +23,8 @@
 
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
 
+#include <unordered_map>
+
 template <typename DET,PFLayer::Layer Layer,unsigned subdet>
   class PFHGCalRecHitCreator :  public  PFRecHitCreatorBase {
 
@@ -51,13 +53,6 @@ template <typename DET,PFLayer::Layer Layer,unsigned subdet>
       iSetup.get<CaloGeometryRecord>().get(geoHandle);
       const CaloGeometry* geom = geoHandle.product();
 
-      // Get rid of the content of the previous event
-      for (auto c : caloCells_)
-        delete c;
-
-      caloCells_.clear();
-      caloCells_.reserve(rechits.size());
-
       unsigned skipped_rechits = 0;
       for (const auto & hgrh : rechits) {
 		const DET detid(hgrh.detid());
@@ -72,15 +67,21 @@ template <typename DET,PFLayer::Layer Layer,unsigned subdet>
 	double time = hgrh.time();	
 	
     const CaloCellGeometry *thisCell;
+#define WITHFIX
+#ifdef WITHFIX
     if( detid.det() == DetId::Hcal ) {
+#endif
       thisCell = geom->getSubdetectorGeometry(detid.det(),detid.subdetId())->getGeometry(detid);
+#ifdef WITHFIX
     } else {
+      if (!caloCells_.count(detid.rawId())) {
       const auto* hg = static_cast<const HGCalGeometry*>(geom->getSubdetectorGeometry(detid.det(),detid.subdetId()));
-      caloCells_.push_back(new CaloCellGeometryHGCALAdapter(dynamic_cast<const FlatTrd*>(hg->getGeometry(detid)),
-                           recHitTools_.getPosition(detid)));
-      thisCell = caloCells_.back();
+      caloCells_.insert(std::make_pair(detid.rawId(), new CaloCellGeometryHGCALAdapter(static_cast<const FlatTrd*>(hg->getGeometry(detid)),
+                           recHitTools_.getPosition(detid))));
+      }
+      thisCell = caloCells_[detid.rawId()];
     }
-
+#endif
 	// find rechit geometry
 	if(!thisCell) {
 	  LogDebug("PFHGCalRecHitCreator")
@@ -127,7 +128,7 @@ template <typename DET,PFLayer::Layer Layer,unsigned subdet>
   std::string geometryInstance_;
  private:
   hgcal::RecHitTools recHitTools_;
-  std::vector<const CaloCellGeometryHGCALAdapter*> caloCells_;
+  std::unordered_map<uint32_t, const CaloCellGeometryHGCALAdapter*> caloCells_;
 };
 
 #include "DataFormats/ForwardDetId/interface/HGCEEDetId.h"
