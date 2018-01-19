@@ -312,11 +312,7 @@ class CaloParticle_dfs_visitor : public boost::default_dfs_visitor {
     if (simHitBarcodeToIndex_.count(trackIdx)) {
       output_.pSimClusters->emplace_back(*vertex_property.simTrack);
       auto& simcluster = output_.pSimClusters->back();
-      std::unordered_map<uint32_t, float> acc_energy;
       for (auto const& hit_and_energy : simTrackDetIdEnergyMap_[trackIdx]) {
-        acc_energy[hit_and_energy.first] += hit_and_energy.second;
-      }
-      for (auto const& hit_and_energy : acc_energy) {
         simcluster.addRecHitAndFraction(hit_and_energy.first, hit_and_energy.second);
       }
     }
