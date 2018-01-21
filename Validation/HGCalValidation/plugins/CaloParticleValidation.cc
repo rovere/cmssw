@@ -33,6 +33,8 @@ struct Histogram_CaloParticleSingle {
   ConcurrentMonitorElement nSimClusters_;
   ConcurrentMonitorElement nHitInSimClusters_;
   ConcurrentMonitorElement selfEnergy_; // this is the sum of the energy associated to all recHits linked to all SimClusters
+
+  ConcurrentMonitorElement eta_Zorigin_map_;
 };
 
 using Histograms_CaloParticleValidation = std::unordered_map<int, Histogram_CaloParticleSingle>;
@@ -140,6 +142,9 @@ CaloParticleValidation::dqmAnalyze(edm::Event const& iEvent, edm::EventSetup con
       histos.at(id).pt_.fill(caloParticle.pt());
       histos.at(id).energy_.fill(caloParticle.energy());
       histos.at(id).nSimClusters_.fill(caloParticle.simClusters().size());
+      // Find the corresponding vertex.
+      histos.at(id).eta_Zorigin_map_.fill(
+          caloParticle.g4Tracks[0]., caloParticle.eta());
       int simHits = 0;
       float energy = 0.;
       for (auto const sc : caloParticle.simClusters()) {
@@ -170,6 +175,8 @@ CaloParticleValidation::bookHistograms(DQMStore::ConcurrentBooker & ibook,
     histos[particle].nSimClusters_ = ibook.book1D("NSimClusters", "NSimClusters", 100, 0., 100.);
     histos[particle].nHitInSimClusters_ = ibook.book1D("NHitInSimClusters", "NHitInSimClusters", 100, 0., 100.);
     histos[particle].selfEnergy_ = ibook.book1D("SelfEnergy", "SelfEnergy", 250, 0., 500.);
+
+    histos[particle].eta_Zorigin_map_ = ibook.book2D("Eta vs Zorigin", "Eta vs Zorigin", 80, -4., 4.,, 1100, -550., 550.);
   }
 }
 
