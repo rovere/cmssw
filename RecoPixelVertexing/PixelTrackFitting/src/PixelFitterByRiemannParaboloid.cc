@@ -31,8 +31,11 @@ using namespace std;
 
 
 PixelFitterByRiemannParaboloid::PixelFitterByRiemannParaboloid(const edm::EventSetup* es,
-                                                               const MagneticField* field)
-    : theES(es), theField(field) {}
+                                                               const MagneticField* field,
+                                                               bool useErrors,
+                                                               bool useMultipleScattering)
+    : theES(es), theField(field),
+    useErrors_(useErrors), useMultipleScattering_(useMultipleScattering) {}
 
 std::unique_ptr<reco::Track> PixelFitterByRiemannParaboloid::run(
     const std::vector<const TrackingRecHit*>& hits, const TrackingRegion& region) const {
@@ -62,13 +65,18 @@ std::unique_ptr<reco::Track> PixelFitterByRiemannParaboloid::run(
       MatrixXd::Zero(3 * nhits, 3 * nhits);
 
   for (unsigned int i = 0; i < nhits; ++i) {
+    std::cout << "Point number: " << i
+      << " " << points[i].x()
+      << " " << points[i].y()
+      << " " << points[i].z() << std::endl;
     riemannHits.col(i) << points[i].x(), points[i].y(), points[i].z();
 
     const auto& errorMatrix = errors[i].matrix4D();
 
     for (auto j = 0; j < 3; ++j) {
       for (auto l = 0; l < 3; ++l) {
-        riemannHits_cov(i * 3 + j * nhits, i * 3 + l * nhits) = errorMatrix(j, l);
+        std::cout << i * 3 + j << " " <<  i * 3 + l << std::endl;
+        riemannHits_cov(i * 3 + j, i * 3 + l) = errorMatrix(j, l);
 
         std::cout << "printing error matrix for i j l " << i << " " << j << " " << l << std::endl;
 
@@ -78,7 +86,7 @@ std::unique_ptr<reco::Track> PixelFitterByRiemannParaboloid::run(
   }
 
   float bField = 1 / PixelRecoUtilities::fieldInInvGev(*theES);
-  helix_fit fittedTrack = Rfit::Helix_fit(riemannHits, riemannHits_cov, bField, true);
+  helix_fit fittedTrack = Rfit::Helix_fit(riemannHits, riemannHits_cov, bField, useErrors_, useMultipleScattering_);
   int iCharge = fittedTrack.q;
 
   // parameters are:
