@@ -116,16 +116,12 @@ MatrixNd Scatter_cov_rad(const Matrix2xNd& p2D, const Vector4d& fast_fit, Vector
 
   MatrixNd scatter_cov_rad = MatrixXd::Zero(n, n);
   const float cos_f_theta = cos(theta);
-  std::cout << "Scatter_cov cos_theta: " << cos_f_theta << std::endl;
-  std::cout << "Scatter_cov p: " << std::abs(p) << std::endl;
   const double sig2 = sqr(0.015 / std::abs(p) * (1 + 0.038 * log(X / std::abs(cos_f_theta)))) * (X / cos_f_theta) ;
-  std::cout << "Scatter_cov sig2: " << sig2 << std::endl;
   for (u_int k = 0; k < n; ++k) {
     for (u_int l = k; l < n; ++l) {
       for (u_int i = 0; i < std::min(k, l); ++i) {
         scatter_cov_rad(k, l) += (rad(k) - rad(i)) * (rad(l) - rad(i)) * sig2 / sqr(sin(theta));
         scatter_cov_rad(l, k) = scatter_cov_rad(k, l);
-        std::cout << "Scatter_cov scatter_cov_rad:\n" << scatter_cov_rad << std::endl;
       }
     }
   }
@@ -344,8 +340,6 @@ VectorNd X_err2(const Matrix3Nd& V, const circle_fit& circle, const MatrixNx5d& 
     Cov(3, 3) = V(i, i);
     Cov(4, 4) = V(i + n, i + n);
     Cov(3, 4) = Cov(4, 3) = V(i, i + n);
-    std::cout << "X_err2 hit number " << i
-      << " original Cov:\n" << Cov << std::endl;
     x_err2(i) = J.row(i) * Cov * J.row(i).transpose();
   }
   return x_err2;
@@ -419,7 +413,6 @@ Vector2d min_eigen2D(const Matrix2d& A, double& chi2) {
   solver.computeDirect(A);
   int min_index;
   chi2 = solver.eigenvalues().minCoeff(&min_index);
-  std::cout << "Line_fit sum of eigenvalues:  " << solver.eigenvalues().sum() << std::endl;
   return solver.eigenvectors().col(min_index);
 }
 
@@ -484,9 +477,7 @@ Vector4d Fast_fit(const Matrix3xNd& hits) {
   const double dr = result(2) * atan2(cross2D(d, e), d.dot(e));
   // Simple difference in Z between last and first hit
   const double dz = hits(2, n - 1) - hits(2, 0);
-  std::cout << "Theta used here: " << dr/dz << std::endl;
   auto norm = hits.block(0, 0, 2, n).colwise().squaredNorm();
-  std::cout << "Theta in CMSSW: " << (std::sqrt(norm(n - 1)) - std::sqrt(norm(0))) / dz << std::endl;
 /*
       //faster but bad approx for small pt and eta
       const Vector2d d = hits.block(0,1,2,1);
@@ -495,7 +486,6 @@ Vector4d Fast_fit(const Matrix3xNd& hits) {
   */
 
   result(3) = (dr / dz);
-  std::cout << "Fast_Fit circle/line parameters (X0,Y0,R,Theta):\n" << result << std::endl;
 
   return result;
 }
@@ -550,14 +540,11 @@ circle_fit Circle_fit(const Matrix2xNd& hits2D, const Matrix2Nd& hits_cov2D,
 
     if (scattering) {
       MatrixNd scatter_cov_rad = Scatter_cov_rad(hits2D, fast_fit, rad);
-      std::cout << "Circle_fit scatter_cov_rad:\n" << scatter_cov_rad << std::endl;
       V += cov_radtocart(hits2D, scatter_cov_rad, rad);
       cov_rad += scatter_cov_rad;
       G = cov_rad.inverse();
-      std::cout << "Circle_fit G:\n" << G << std::endl;
       renorm = G.sum();
       G *= 1. / renorm;
-      std::cout << "Circle_fit G renorm:\n" << G << std::endl;
       weight = Weight_circle(hits2D, G);
     } else {
       weight = cov_rad.diagonal().cwiseInverse();
@@ -566,18 +553,14 @@ circle_fit Circle_fit(const Matrix2xNd& hits2D, const Matrix2Nd& hits_cov2D,
     }
   }
 
-  std::cout << "Circle_fit weight:\n" << weight << std::endl;
   // SPACE TRANSFORMATION
 
   // center
   const Vector2d h_ = hits2D.rowwise().mean();  // centroid
-  std::cout << "Circle_fit centroid:\n" << h_ << std::endl;
   Matrix3xNd p3D(3, n);
   p3D.block(0, 0, 2, n) = hits2D.colwise() - h_;
-  std::cout << "Circle_fit centered hits:\n" << p3D << std::endl;
   Vector2Nd mc(2 * n);  // centered hits, used in error computation
   mc << p3D.row(0).transpose(), p3D.row(1).transpose();
-  std::cout << "Circle_fit mc:\n" << mc << std::endl;
 
   // scale
   const double q = mc.squaredNorm();
@@ -586,23 +569,19 @@ circle_fit Circle_fit(const Matrix2xNd& hits2D, const Matrix2Nd& hits_cov2D,
 
   // project on paraboloid
   p3D.row(2) = p3D.block(0, 0, 2, n).colwise().squaredNorm();
-  std::cout << "Circle_fit project on paraboloid:\n" << p3D << std::endl;
 
   // COST FUNCTION
 
   // compute
   Matrix3d A = Matrix3d::Zero();
   const Vector3d r0 = p3D * weight;  // center of gravity
-  std::cout << "Circle_fit center gravity:\n" << r0 << std::endl;
   const Matrix3xNd X = p3D.colwise() - r0;
-  std::cout << "Circle_fit X:\n" << X << std::endl;
   if (scattering)
     A = X * G * X.transpose();
   else {
     for (u_int i = 0; i < n; ++i) A += weight(i) * (X.col(i) * X.col(i).transpose());
   }
 
-  std::cout << "Circle_fit A:\n" << A << std::endl;
 
   // minimize
   double chi2;
@@ -610,7 +589,6 @@ circle_fit Circle_fit(const Matrix2xNd& hits2D, const Matrix2Nd& hits_cov2D,
   v *= (v(2) > 0) ? 1 : -1;  // TO FIX dovrebbe essere N(3)>0
   const double c = -v.transpose() * r0;
 
-  std::cout << "Circle_fit autovector:\n" << v << std::endl;
   // COMPUTE CIRCLE PARAMETER
 
   // auxiliary quantities
@@ -748,7 +726,6 @@ circle_fit Circle_fit(const Matrix2xNd& hits2D, const Matrix2Nd& hits_cov2D,
     circle.cov = cov_uvr;
   }
 
-  std::cout << "Circle_fit parameters:\n" << circle.par << std::endl;
 
   return circle;
 }
@@ -790,9 +767,6 @@ circle_fit Circle_fit(const Matrix2xNd& hits2D, const Matrix2Nd& hits_cov2D,
 
 line_fit Line_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, const circle_fit& circle,
                   const Vector4d& fast_fit, const bool& error = true) {
-  std::cout << "Line_fit: number of input points: " << hits.cols() << std::endl;
-  std::cout << "Line_fit: Points\n" << hits
-    << "\nand cov: \n" << hits_cov << std::endl;
   u_int n = hits.cols();
   // PROJECTION ON THE CILINDER
   Matrix2xNd p2D(2, n);
@@ -806,11 +780,6 @@ line_fit Line_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, const circl
   const Vector2d o(circle.par(0), circle.par(1));
   for (u_int i = 0; i < n; ++i) {  // x
     Vector2d p = hits.block(0, i, 2, 1) - o;
-    std::cout << "Point " << i
-      << "\nvector:\n" << p
-      << "\nOrigin:\n" << o
-      << "\nOriginal:\n" << hits.block(0, i, 2, 1)
-      << std::endl;
     const double cross = cross2D(-o, p);
     const double dot = (-o).dot(p);
     // atan2(cross, dot) give back the angle in the transverse plane so tha the final equation reads:
@@ -831,24 +800,17 @@ line_fit Line_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, const circl
     Jx.row(i) << d_X0, d_Y0, d_R, d_x, d_y;
   }
   // Math of d_{X0,Y0,R,x,y} all verified by hand
-  std::cout << "Jacobian:\n" << Jx << std::endl;
 
   // y
   p2D.row(1) = hits.row(2);
 
-  std::cout << "Real points to be fitted:\n" << p2D << std::endl;
 
   // WEIGHT COMPUTATION
   VectorNd x_err2 = X_err2(hits_cov, circle, Jx, error, n);
   VectorNd y_err2 = hits_cov.block(2 * n, 2 * n, n, n).diagonal();
-  std::cout << "hitcov:\n" << hits_cov << std::endl;
-  std::cout << "X_err2(along circle):\n" << x_err2 << std::endl;
-  std::cout << "Y_err2(along z):\n" << y_err2 << std::endl;
 
   const VectorNd err2_inv = Weight_line(x_err2, y_err2, fast_fit(3));
   const VectorNd weight = err2_inv * 1. / err2_inv.sum();
-  std::cout << "Line_fit err2_inv:\n" << err2_inv << std::endl;
-  std::cout << "Line_fit weight:\n" << weight << std::endl;
   // COST FUNCTION
 
   // compute
@@ -857,34 +819,24 @@ line_fit Line_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, const circl
   // This is the X  vector that will be used to build the
   // scatter matrix S = X^T * X
   const Matrix2xNd X = p2D.colwise() - r0;
-  std::cout << "Line_fit r0:\n" << r0 << std::endl;
-  std::cout << "Line_fit X:\n" << X << std::endl;
   Matrix2d A = Matrix2d::Zero();
-  std::cout << "Line_fit Initial A:\n" << A << std::endl;
   for (u_int i = 0; i < n; ++i) {
     A += err2_inv(i) * (X.col(i) * X.col(i).transpose());
-    std::cout << "Line_fit Insert into A:\n" << err2_inv(i) * (X.col(i) * X.col(i).transpose()) << std::endl;
-    std::cout << "Line_fit A:\n" << A << std::endl;
   }
   // minimize
   double chi2;
   Vector2d v = min_eigen2D(A, chi2);
-  std::cout << "Line_fit eigenVector:\n" << v << std::endl;
   // n *= (chi2>0) ? 1 : -1; //TO FIX
   const double c = -v.transpose() * r0;
-  std::cout << "Line_fit c: " << c << std::endl;
 
   // COMPUTE LINE PARAMETER
   line_fit line;
   line.par << -v(0) / v(1),                          // cotan(theta))
       -c * sqrt(sqr(v(0)) + sqr(v(1))) * 1. / v(1);  // Zip
   line.chi2 = abs(chi2);
-  std::cout << "Line_fit derived parameters:\n" << line.par
-    << "\nLine_fit chi2: " << line.chi2 << std::endl;
 
   // ERROR PROPAGATION
   if (error) {
-    std::cout << "Line_fit error computation enabled" << std::endl;
     const double v0_2 = sqr(v(0));
     const double v1_2 = sqr(v(1));
 
@@ -901,15 +853,6 @@ line_fit Line_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, const circl
       const double norm = (err2_inv.cwiseInverse().sum())*err2_inv.sum()*1./sqr(n);
       const double norm_simple = err2_inv.sum();
       const double sig2 = 1./(A(0,0) + A(1,1))*norm;
-      std::cout << "Line_fit err2_inv.cwiseInverse():\n" << err2_inv.cwiseInverse() << std::endl;
-      std::cout << "Line_fit err2_inv.cwiseInverse().sum():\n" << err2_inv.cwiseInverse().sum() << std::endl;
-      std::cout << "Line_fit norm_chernov: " << norm_chernov << std::endl;
-      std::cout << "Line_fit norm: " << norm << std::endl;
-      std::cout << "Line_fit norm_simple: " << norm_simple << std::endl;
-      std::cout << "Line_fit sig2: " << sig2 << std::endl;
-      std::cout << "Line_fit sig2_norm: " << sig2/norm_simple*norm << std::endl;
-      std::cout << "Line_fit Tr(A): " << (A(0,0) + A(1,1)) << std::endl;
-      std::cout << "Line_fit Tr(A)/norm_simple: " << (A(0,0) + A(1,1))/norm_simple << std::endl;
 //      const double sig2 = 1. / (A(0, 0) + A(1, 1));
       C(0, 0) = sig2 * v1_2;
       C(1, 1) = sig2 * v0_2;
@@ -919,7 +862,6 @@ line_fit Line_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, const circl
       C.block(0, 2, 2, 1) = C.block(2, 0, 1, 2).transpose() = -C.block(0, 0, 2, 2) * r0;
       C(2, 2) = v0_2 * C0(0) + v1_2 * C0(1) + C0(0) * C(0, 0) + C0(1) * C(1, 1) +
                 (r0.transpose() * C.block(0, 0, 2, 2) * r0);
-      std::cout << "Line_fit: Cov(C):\n" << C << std::endl;
     }
 
     Matrix<double, 2, 3> J;  // Jacobian of (v,c) -> (cotan(theta)),Zip)
@@ -933,8 +875,6 @@ line_fit Line_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, const circl
 
     line.cov = J * C * J.transpose();
   }
-  std::cout << "Line_fit original parameters:\n" << v << std::endl;
-  std::cout << "Line_fit covariance matrix:\n" << line.cov << std::endl;
 
   return line;
 }
@@ -982,7 +922,6 @@ helix_fit Helix_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, const dou
                     const bool& error = true, const bool& scattering = false) {
   u_int n = hits.cols();
   VectorNd rad = (hits.block(0, 0, 2, n).colwise().norm());
-  std::cout << "XY lengths:\n" << rad << std::endl;
 
   // Fast_fit gives back (X0, Y0, R, theta) w/o errors, using only 3 points.
   const Vector4d fast_fit = Fast_fit(hits);
@@ -1005,11 +944,6 @@ helix_fit Helix_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, const dou
   helix.chi2_circle = circle.chi2;
   helix.chi2_line = line.chi2;
 
-  std::cout << "Helix_fit phi:      " << helix.par(0) << " +/- " << sqrt(helix.cov(0,0)) << std::endl;
-  std::cout << "Helix_fit tip:      " << helix.par(1) << " +/- " << sqrt(helix.cov(1,1)) << std::endl;
-  std::cout << "Helix_fit pt:       " << helix.par(2) << " +/- " << sqrt(helix.cov(2,2)) << std::endl;
-  std::cout << "Helix_fit cottheta: " << helix.par(3) << " +/- " << sqrt(helix.cov(3,3)) << std::endl;
-  std::cout << "Helix_fit zip:      " << helix.par(4) << " +/- " << sqrt(helix.cov(4,4)) << std::endl;
   return helix;
 }
 
