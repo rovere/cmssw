@@ -65,30 +65,13 @@ std::unique_ptr<reco::Track> PixelFitterByRiemannParaboloid::run(
       MatrixXd::Zero(3 * nhits, 3 * nhits);
 
   for (unsigned int i = 0; i < nhits; ++i) {
-    std::cout << "Point number: " << i
-      << " " << points[i].x()
-      << " " << points[i].y()
-      << " " << points[i].z() << std::endl;
-    std::cout << "Errors on Point number: " << i
-      << " xx " << errors[i].cxx()
-      << " yy " << errors[i].cyy()
-      << " zz " << errors[i].czz()
-      << " yx " << errors[i].cyx()
-      << " zx " << errors[i].czx()
-      << " zy " << errors[i].czy()
-      << std::endl;
     riemannHits.col(i) << points[i].x(), points[i].y(), points[i].z();
 
     const auto& errorMatrix = errors[i].matrix4D();
 
     for (auto j = 0; j < 3; ++j) {
       for (auto l = 0; l < 3; ++l) {
-//        std::cout << i * 3 + j << " " <<  i * 3 + l << std::endl;
         riemannHits_cov(i + j * nhits, i + l * nhits) = errorMatrix(j, l);
-
-//        std::cout << "printing error matrix for i j l " << i << " " << j << " " << l << std::endl;
-
-//        std::cout << errorMatrix(j, l) << std::endl;
       }
     }
   }
@@ -122,10 +105,6 @@ std::unique_ptr<reco::Track> PixelFitterByRiemannParaboloid::run(
   float errValZip = std::sqrt(fittedTrack.cov(4, 4));
 
   float chi2 = fittedTrack.chi2_line;
-  //  if (nhits > 2) {
-  //    RZLine rzLine(points,errors,isBarrel);
-  //    chi2 = rzLine.chi2();
-  //  }
 
   PixelTrackBuilder builder;
   Measurement1D phi(valPhi, errValPhi);

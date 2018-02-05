@@ -220,11 +220,8 @@ MatrixNd cov_carttorad_prefit(const Matrix2xNd& p2D, const Matrix2Nd& cov_cart,
     else {
       Vector2d a = p2D.col(i);
       Vector2d b = p2D.col(i) - fast_fit.head(2);
-      const double x1 = p2D(0, i);
-      const double y1 = p2D(1, i);
       const double x2 = a.dot(b);
       const double y2 = cross2D(a, b);
-//      const double tan_c = (y1 * x2 + y2 * x1) / (x1 * x2 + y1 * y2);
       const double tan_c = - y2/x2;
       const double tan_c2 = sqr(tan_c);
       cov_rad(i, i) =
@@ -477,13 +474,6 @@ Vector4d Fast_fit(const Matrix3xNd& hits) {
   const double dr = result(2) * atan2(cross2D(d, e), d.dot(e));
   // Simple difference in Z between last and first hit
   const double dz = hits(2, n - 1) - hits(2, 0);
-  auto norm = hits.block(0, 0, 2, n).colwise().squaredNorm();
-/*
-      //faster but bad approx for small pt and eta
-      const Vector2d d = hits.block(0,1,2,1);
-      const double dr = d.norm() - a.norm();
-      const double dz = hits(2,1)-hits(2,0);
-  */
 
   result(3) = (dr / dz);
 
@@ -851,7 +841,6 @@ line_fit Line_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, const circl
       // * compute the average error in the orthogonal direction: err2_inv.cwiseInverse().sum()/sqr(n)
       // * normalize the A(0,0)+A(1,1) dividing by err2_inv.sum(), since those have been weighted
       const double norm = (err2_inv.cwiseInverse().sum())*err2_inv.sum()*1./sqr(n);
-      const double norm_simple = err2_inv.sum();
       const double sig2 = 1./(A(0,0) + A(1,1))*norm;
 //      const double sig2 = 1. / (A(0, 0) + A(1, 1));
       C(0, 0) = sig2 * v1_2;
