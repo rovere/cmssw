@@ -196,8 +196,6 @@ reco::Track * PixelTrackBuilder::build(
   reco::Track * track = new reco::Track( chi2, ndof, pos, mom,
         impactPointState.charge(), impactPointState.curvilinearError());
 
-  std::cout <<"RECONSTRUCTED TRACK (0,0,0):      " << print(*track,GlobalPoint(0,0,0))<<std::endl;
-  std::cout <<"RECONSTRUCTED TRACK " << origin<<"     " << print(*track,origin)<<std::endl;
 
   return track;
 }
