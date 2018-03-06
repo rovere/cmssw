@@ -3,6 +3,13 @@
 
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
+#include <cuda.h>
+
+#ifdef __CUDACC__
+#define CUDA_HOSTDEV __host__ __device__
+#else
+#define CUDA_HOSTDEV
+#endif
 
 namespace Rfit {
 
@@ -69,11 +76,21 @@ struct helix_fit {
   VectorXd time;  // TO FIX just for profiling
 };
 
+
+template<class C>
+CUDA_HOSTDEV void printIt(C * m) {
+  for (u_int r = 0; r < m->rows(); ++r) {
+    for (u_int c = 0; c < m->cols(); ++c) {
+      printf("Matrix(%d,%d) = %f\n", r, c, (*m)(r,c));
+    }
+  }
+}
+
+
 /*!
     \brief raise to square.
 */
-
-inline double sqr(const double a) { return a * a; }
+CUDA_HOSTDEV inline double sqr(const double a) { return a * a; }
 
 /*!
     \brief Compute cross product of two 2D vector (assuming z component 0),
@@ -85,7 +102,7 @@ inline double sqr(const double a) { return a * a; }
     \return z component of the cross product.
 */
 
-inline double cross2D(const Vector2d& a, const Vector2d& b) {
+CUDA_HOSTDEV inline double cross2D(const Vector2d& a, const Vector2d& b) {
   return a.x() * b.y() - a.y() * b.x();
 }
 
@@ -109,7 +126,7 @@ inline double cross2D(const Vector2d& a, const Vector2d& b) {
 
  */
 // X in input TO FIX
-MatrixNd Scatter_cov_rad(const Matrix2xNd& p2D, const Vector4d& fast_fit, VectorNd const & rad, double B) {
+CUDA_HOSTDEV MatrixNd Scatter_cov_rad(const Matrix2xNd& p2D, const Vector4d& fast_fit, VectorNd const & rad, double B) {
   u_int n = p2D.cols();
   double X = 0.04;
   double theta = atan(fast_fit(3));
@@ -140,9 +157,9 @@ MatrixNd Scatter_cov_rad(const Matrix2xNd& p2D, const Vector4d& fast_fit, Vector
     \return cov_cart covariance matrix in Cartesian coordinates.
 */
 
-inline Matrix2Nd cov_radtocart(const Matrix2xNd& p2D,
-                               const MatrixNd& cov_rad,
-                               const VectorNd &rad) {
+CUDA_HOSTDEV inline Matrix2Nd cov_radtocart(const Matrix2xNd& p2D,
+    const MatrixNd& cov_rad,
+    const VectorNd &rad) {
   u_int n = p2D.cols();
   Matrix2Nd cov_cart = MatrixXd::Zero(2 * n, 2 * n);
   VectorNd rad_inv = rad.cwiseInverse();
@@ -175,9 +192,9 @@ inline Matrix2Nd cov_radtocart(const Matrix2xNd& p2D,
 
     \warning correlation between different point are not computed.
 */
-MatrixNd cov_carttorad(const Matrix2xNd& p2D,
-                       const Matrix2Nd& cov_cart,
-                       const VectorNd& rad) {
+CUDA_HOSTDEV MatrixNd cov_carttorad(const Matrix2xNd& p2D,
+    const Matrix2Nd& cov_cart,
+    const VectorNd& rad) {
   u_int n = p2D.cols();
   MatrixNd cov_rad = MatrixXd::Zero(n, n);
   const VectorNd rad_inv2 = rad.cwiseInverse().array().square();
@@ -210,7 +227,7 @@ MatrixNd cov_carttorad(const Matrix2xNd& p2D,
 
 */
 
-MatrixNd cov_carttorad_prefit(const Matrix2xNd& p2D, const Matrix2Nd& cov_cart,
+CUDA_HOSTDEV MatrixNd cov_carttorad_prefit(const Matrix2xNd& p2D, const Matrix2Nd& cov_cart,
                               const Vector4d& fast_fit,
                               const VectorNd& rad) {
   u_int n = p2D.cols();
@@ -248,7 +265,7 @@ MatrixNd cov_carttorad_prefit(const Matrix2xNd& p2D, const Matrix2Nd& cov_cart,
     diagonal cov matrix. Further investigation needed.
 */
 
-inline VectorNd Weight_circle(const MatrixNd& cov_rad_inv) {
+CUDA_HOSTDEV inline VectorNd Weight_circle(const MatrixNd& cov_rad_inv) {
   return cov_rad_inv.colwise().sum().transpose();
 }
 
@@ -264,7 +281,7 @@ inline VectorNd Weight_circle(const MatrixNd& cov_rad_inv) {
     \return weight points' weights' vector for the line fit (ODR).
 */
 
-inline VectorNd Weight_line(const ArrayNd& x_err2, const ArrayNd& y_err2, const double& tan_theta) {
+CUDA_HOSTDEV inline VectorNd Weight_line(const ArrayNd& x_err2, const ArrayNd& y_err2, const double& tan_theta) {
   return (1. + sqr(tan_theta)) * 1. / (x_err2 + y_err2 * sqr(tan_theta));
 }
 
@@ -279,7 +296,7 @@ inline VectorNd Weight_line(const ArrayNd& x_err2, const ArrayNd& y_err2, const 
     \return q int 1 or -1.
 */
 
-inline int Charge(const Matrix2xNd& p2D, const Vector3d& par_uvr) {
+CUDA_HOSTDEV inline int Charge(const Matrix2xNd& p2D, const Vector3d& par_uvr) {
   return ((p2D(0, 1) - p2D(0, 0)) * (par_uvr.y() - p2D(1, 0)) -
               (p2D(1, 1) - p2D(1, 0)) * (par_uvr.x() - p2D(0, 0)) >
           0)
@@ -297,7 +314,7 @@ inline int Charge(const Matrix2xNd& p2D, const Vector3d& par_uvr) {
     \param error flag for errors computation.
 */
 
-void par_uvrtopak(circle_fit& circle, const double B, const bool& error) {
+CUDA_HOSTDEV void par_uvrtopak(circle_fit& circle, const double B, const bool& error) {
   Vector3d par_pak;
   const double temp0 = circle.par.head(2).squaredNorm();
   const double temp1 = sqrt(temp0);
@@ -329,7 +346,7 @@ void par_uvrtopak(circle_fit& circle, const double B, const bool& error) {
     \return x_err2 squared errors in the x axis.
 */
 
-VectorNd X_err2(const Matrix3Nd& V, const circle_fit& circle, const MatrixNx5d& J,
+CUDA_HOSTDEV VectorNd X_err2(const Matrix3Nd& V, const circle_fit& circle, const MatrixNx5d& J,
                 const bool& error, u_int n) {
   VectorNd x_err2(n);
   for (u_int i = 0; i < n; ++i) {
@@ -363,7 +380,7 @@ VectorNd X_err2(const Matrix3Nd& V, const circle_fit& circle, const MatrixNx5d& 
 
 */
 
-Vector3d min_eigen3D(const Matrix3d& A, double& chi2) {
+CUDA_HOSTDEV Vector3d min_eigen3D(const Matrix3d& A, double& chi2) {
   SelfAdjointEigenSolver<Matrix3d> solver(3);
   solver.computeDirect(A);
   int min_index;
@@ -385,7 +402,7 @@ Vector3d min_eigen3D(const Matrix3d& A, double& chi2) {
     speed up in  single precision.
 */
 
-Vector3d min_eigen3D_fast(const Matrix3d& A) {
+CUDA_HOSTDEV Vector3d min_eigen3D_fast(const Matrix3d& A) {
   SelfAdjointEigenSolver<Matrix3f> solver(3);
   solver.computeDirect(A.cast<float>());
   int min_index;
@@ -406,7 +423,7 @@ Vector3d min_eigen3D_fast(const Matrix3d& A) {
     significantly in single precision.
 */
 
-Vector2d min_eigen2D(const Matrix2d& A, double& chi2) {
+CUDA_HOSTDEV Vector2d min_eigen2D(const Matrix2d& A, double& chi2) {
   SelfAdjointEigenSolver<Matrix2d> solver(2);
   solver.computeDirect(A);
   int min_index;
@@ -431,7 +448,7 @@ Vector2d min_eigen2D(const Matrix2d& A, double& chi2) {
     - computation of error due to multiple scattering.
 */
 
-Vector4d Fast_fit(const Matrix3xNd& hits) {
+CUDA_HOSTDEV Vector4d Fast_fit(const Matrix3xNd& hits) {
   Vector4d result;
   u_int n = hits.cols(); // get the number of hits
 
@@ -513,11 +530,11 @@ Vector4d Fast_fit(const Matrix3xNd& hits) {
     scattering.
 */
 
-circle_fit Circle_fit(const Matrix2xNd& hits2D, const Matrix2Nd& hits_cov2D,
-                      const Vector4d& fast_fit, VectorNd const & rad,
-                      const double B,
-                      const bool& error = true,
-                      const bool& scattering = false) {
+CUDA_HOSTDEV circle_fit Circle_fit(const Matrix2xNd& hits2D, const Matrix2Nd& hits_cov2D,
+    const Vector4d& fast_fit, VectorNd const & rad,
+    const double B,
+    const bool& error = true,
+    const bool& scattering = false) {
   // INITIALIZATION
   Matrix2Nd V = hits_cov2D;
   u_int n = hits2D.cols();
@@ -758,7 +775,7 @@ circle_fit Circle_fit(const Matrix2xNd& hits2D, const Matrix2Nd& hits_cov2D,
     errors.
 */
 
-line_fit Line_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, const circle_fit& circle,
+CUDA_HOSTDEV line_fit Line_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, const circle_fit& circle,
                   const Vector4d& fast_fit, const bool& error = true) {
   u_int n = hits.cols();
   // PROJECTION ON THE CILINDER
