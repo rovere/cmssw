@@ -355,7 +355,9 @@ CUDA_HOSTDEV VectorNd X_err2(const Matrix3Nd& V, const circle_fit& circle, const
     Cov(3, 3) = V(i, i);
     Cov(4, 4) = V(i + n, i + n);
     Cov(3, 4) = Cov(4, 3) = V(i, i + n);
-    x_err2(i) = J.row(i) * Cov * J.row(i).transpose();
+    Eigen::Matrix<double, 1, 1> tmp;
+    tmp = J.row(i) * Cov * J.row(i).transpose().eval();
+    x_err2(i) = tmp(0,0);
   }
   return x_err2;
 }
@@ -592,12 +594,15 @@ CUDA_HOSTDEV circle_fit Circle_fit(const Matrix2xNd& hits2D, const Matrix2Nd& hi
     for (u_int i = 0; i < n; ++i) A += weight(i) * (X.col(i) * X.col(i).transpose());
   }
 
-
   // minimize
   double chi2;
   Vector3d v = min_eigen3D(A, chi2);
   v *= (v(2) > 0) ? 1 : -1;  // TO FIX dovrebbe essere N(3)>0
-  const double c = -v.transpose() * r0;
+  // This hack to be able to run on GPU where the automatic assignment to a
+  // double from the vector multiplication is not working.
+  Matrix<double, 1, 1> cm;
+  cm.noalias() = -v.transpose() * r0;
+  const double c = cm(0,0);
 
   // COMPUTE CIRCLE PARAMETER
 
@@ -837,7 +842,11 @@ CUDA_HOSTDEV line_fit Line_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov
   double chi2;
   Vector2d v = min_eigen2D(A, chi2);
   // n *= (chi2>0) ? 1 : -1; //TO FIX
-  const double c = -v.transpose() * r0;
+  // This hack to be able to run on GPU where the automatic assignment to a
+  // double from the vector multiplication is not working.
+  Matrix<double, 1, 1> cm;
+  cm.noalias() = -v.transpose() * r0;
+  const double c = cm(0,0);
 
   // COMPUTE LINE PARAMETER
   line_fit line;
@@ -869,8 +878,8 @@ CUDA_HOSTDEV line_fit Line_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov
       const VectorNd weight_2 = (weight).array().square();
       const Vector2d C0(weight_2.dot(x_err2), weight_2.dot(y_err2));
       C.block(0, 2, 2, 1) = C.block(2, 0, 1, 2).transpose() = -C.block(0, 0, 2, 2) * r0;
-      C(2, 2) = v0_2 * C0(0) + v1_2 * C0(1) + C0(0) * C(0, 0) + C0(1) * C(1, 1) +
-                (r0.transpose() * C.block(0, 0, 2, 2) * r0);
+      Matrix<double, 1, 1> tmp = (r0.transpose() * C.block(0, 0, 2, 2) * r0);
+      C(2, 2) = v0_2 * C0(0) + v1_2 * C0(1) + C0(0) * C(0, 0) + C0(1) * C(1, 1) + tmp(0,0);
     }
 
     Matrix<double, 2, 3> J;  // Jacobian of (v,c) -> (cotan(theta)),Zip)
@@ -881,8 +890,8 @@ CUDA_HOSTDEV line_fit Line_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov
       const double t2 = 1. / sqrt_;
       J << -t0, v(0) * t1, 0, -c * v(0) * t0 * t2, v0_2 * c * t1 * t2, -sqrt_ * t0;
     }
-
-    line.cov = J * C * J.transpose();
+    Matrix<double, 3, 2> JT = J.transpose().eval();
+    line.cov.noalias() = J * C * JT;
   }
 
   return line;
