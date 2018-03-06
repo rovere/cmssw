@@ -33,23 +33,23 @@ __global__ void kernelCircleFit(Rfit::Matrix3xNd * hits,
   u_int n = hits->cols();
   Rfit::VectorNd rad = (hits->block(0, 0, 2, n).colwise().norm());
 
-  printf("fast_fit_input(0): %f\n", (*fast_fit_input)(0));
-  printf("fast_fit_input(1): %f\n", (*fast_fit_input)(1));
-  printf("fast_fit_input(2): %f\n", (*fast_fit_input)(2));
-  printf("fast_fit_input(3): %f\n", (*fast_fit_input)(3));
-  printf("rad(0,0): %f\n", rad(0,0));
-  printf("rad(1,1): %f\n", rad(1,1));
-  printf("rad(2,2): %f\n", rad(2,2));
-  printf("hits_cov(0,0): %f\n", (*hits_cov)(0,0));
-  printf("hits_cov(1,1): %f\n", (*hits_cov)(1,1));
-  printf("hits_cov(2,2): %f\n", (*hits_cov)(2,2));
-  printf("hits_cov(11,11): %f\n", (*hits_cov)(11,11));
-  printf("B: %f\n", B);
-
+  if (!NODEBUG) {
+    printf("fast_fit_input(0): %f\n", (*fast_fit_input)(0));
+    printf("fast_fit_input(1): %f\n", (*fast_fit_input)(1));
+    printf("fast_fit_input(2): %f\n", (*fast_fit_input)(2));
+    printf("fast_fit_input(3): %f\n", (*fast_fit_input)(3));
+    printf("rad(0,0): %f\n", rad(0,0));
+    printf("rad(1,1): %f\n", rad(1,1));
+    printf("rad(2,2): %f\n", rad(2,2));
+    printf("hits_cov(0,0): %f\n", (*hits_cov)(0,0));
+    printf("hits_cov(1,1): %f\n", (*hits_cov)(1,1));
+    printf("hits_cov(2,2): %f\n", (*hits_cov)(2,2));
+    printf("hits_cov(11,11): %f\n", (*hits_cov)(11,11));
+    printf("B: %f\n", B);
+  }
   (*circle_fit_resultsGPU) =
     Rfit::Circle_fit(hits->block(0,0,2,n), hits_cov->block(0, 0, 2 * n, 2 * n),
       *fast_fit_input, rad, B, false, false);
-  printf("Fitted results: %f\n", (*circle_fit_resultsGPU).par(0,0));
 }
 
 __global__ void kernelLineFit(Rfit::Matrix3xNd * hits,
@@ -97,7 +97,9 @@ void testFit() {
 
   // FAST_FIT_CPU
   Vector4d fast_fit_results = Rfit::Fast_fit(hits);
-  std::cout << "Generated hits:\n" << hits << std::endl;
+  if (!NODEBUG) {
+    std::cout << "Generated hits:\n" << hits << std::endl;
+  }
   std::cout << "Fitted values (FastFit, [X0, Y0, R, tan(theta)]):\n" << fast_fit_results << std::endl;
 
   // FAST_FIT GPU
@@ -109,7 +111,7 @@ void testFit() {
   cudaDeviceSynchronize();
   
   cudaMemcpy(fast_fit_resultsGPUret, fast_fit_resultsGPU, sizeof(Vector4d), cudaMemcpyDeviceToHost);
-  std::cout << "Fitted values GPU (FastFit, [X0, Y0, R, tan(theta)]):\n" << *fast_fit_resultsGPUret << std::endl;
+  std::cout << "Fitted values (FastFit, [X0, Y0, R, tan(theta)]): GPU\n" << *fast_fit_resultsGPUret << std::endl;
   assert(isEqualFuzzy(fast_fit_results, (*fast_fit_resultsGPUret)));
 
   // CIRCLE_FIT CPU
@@ -149,7 +151,7 @@ void testFit() {
   cudaDeviceSynchronize();
 
   cudaMemcpy(line_fit_resultsGPUret, line_fit_resultsGPU, sizeof(Rfit::line_fit), cudaMemcpyDeviceToHost);
-  std::cout << "Fitted values (LineFit):\n" << line_fit_resultsGPUret->par << std::endl;
+  std::cout << "Fitted values (LineFit) GPU:\n" << line_fit_resultsGPUret->par << std::endl;
   assert(isEqualFuzzy(line_fit_results.par, line_fit_resultsGPUret->par));
 }
 
