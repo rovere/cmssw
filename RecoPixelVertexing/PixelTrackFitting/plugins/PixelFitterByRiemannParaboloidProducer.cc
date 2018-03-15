@@ -30,7 +30,7 @@ public:
     edm::ParameterSetDescription desc;
     desc.add<bool>("useErrors", true);
     desc.add<bool>("useMultipleScattering", true);
-    descriptions.add("pixelFitterByRiemannParaboloid", desc);
+    descriptions.add("pixelFitterByRiemannParaboloidDefault", desc);
   }
 
 private:
