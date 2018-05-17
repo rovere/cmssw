@@ -300,21 +300,21 @@ void SimPFProducer::produce(edm::StreamID, edm::Event& evt, const edm::EventSetu
     for( const auto& match : matches ) {
       uint64_t hash = hashSimInfo(*(match.first));
       if( hashToSimCluster.count(hash) ) {
-	auto simcHash = hashToSimCluster[hash];
+	auto simcKey = hashToSimCluster[hash];
 
-	if( !usedSimCluster[simcHash] ) {
-	  if( simCluster2Block.count(simcHash) &&
-	      simCluster2BlockIndex.count(simcHash) ) {
-	    size_t block    = simCluster2Block.find(simcHash)->second;
-	    size_t blockIdx = simCluster2BlockIndex.find(simcHash)->second;
+	if( !usedSimCluster[simcKey] ) {
+	  if( simCluster2Block.count(simcKey) &&
+	      simCluster2BlockIndex.count(simcKey) ) {
+	    size_t block    = simCluster2Block.find(simcKey)->second;
+	    size_t blockIdx = simCluster2BlockIndex.find(simcKey)->second;
 	    edm::Ref<reco::PFBlockCollection> blockRef(blocksHandle,block);
 	    candidate.addElementInBlock(blockRef,blockIdx);
-	    usedSimCluster[simcHash] = true;
+	    usedSimCluster[simcKey] = true;
 	  }
 	}
 	if( absPdgId == 11 ) { // collect brems/conv. brems
-	  if( simCluster2Block.count(simcHash) ) {
-	    auto block_index = simCluster2Block.find(simcHash)->second;
+	  if( simCluster2Block.count(simcKey) ) {
+	    auto block_index = simCluster2Block.find(simcKey)->second;
 	    auto supercluster_index = caloParticle2SuperCluster[ block_index ];
 	    if( supercluster_index != -1 ) {
 	      edm::Ref<reco::PFBlockCollection> blockRef(blocksHandle,block_index);
