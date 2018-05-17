@@ -81,6 +81,7 @@ private:
   // tracking particle associators by order of preference
   const std::vector<edm::EDGetTokenT<reco::TrackToTrackingParticleAssociator> > associators_;
 
+  void rescaleCandidates(reco::PFCandidateCollection *, const std::vector<reco::PFBlock> &) const;
 };
 
 DEFINE_FWK_MODULE(SimPFProducer);
@@ -389,5 +390,33 @@ void SimPFProducer::produce(edm::StreamID, edm::Event& evt, const edm::EventSetu
     }
   }
 
+  rescaleCandidates(candidates.get(), theblocks);
   evt.put(std::move(candidates));
+}
+
+void SimPFProducer::rescaleCandidates(reco::PFCandidateCollection * candidates,
+    const std::vector<reco::PFBlock> &theblocks) const {
+  std::vector<bool> usedBlocks(theblocks.size(), false);
+  for (auto & c : *candidates) {
+    std::cout << c << std::endl;
+    float clusters_energy = 0.;
+    auto const & elements_in_block = c.elementsInBlocks();
+    for(unsigned i=0; i < elements_in_block.size(); i++) {
+      auto blockRef = elements_in_block[i].first;
+      if (!usedBlocks[blockRef.key()]) {
+        usedBlocks[blockRef.key()] = true;
+        const auto& elements = theblocks[blockRef.key()].elements();
+        for( const auto& elem : elements ) {
+          const auto& ref = elem.clusterRef();
+          std::cout << "Block b: " << blockRef.key()
+            << " element e: " << i << " "
+            << *ref << std::endl;
+          clusters_energy += ref->correctedEnergy();
+        } // end of elements
+      }
+    } // end of elements/blocks
+    if (clusters_energy > 0.)
+      c.rescaleMomentum(clusters_energy/c.energy());
+    std::cout << "Corrected pfcandidate: " << c << std::endl;
+  } // end of candidates
 }
