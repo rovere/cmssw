@@ -24,7 +24,7 @@ __global__ void kernel(Matrix3d * m, Eigen::SelfAdjointEigenSolver<Matrix3d>::Re
 }
 
 __global__ void kernelInverse(Matrix3d * in, Matrix3d * out) {
-//  (*out) = in->inverse();
+  (*out) = in->inverse();
 }
 
 template<typename M1, typename M2, typename M3>
