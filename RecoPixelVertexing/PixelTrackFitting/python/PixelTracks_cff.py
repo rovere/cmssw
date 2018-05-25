@@ -80,7 +80,7 @@ trackingLowPU.toReplaceWith(pixelTracksSequence, _pixelTracksSequence_lowPU)
 
 # Use Riemann fit and substitute previous Fitter producer with the Riemann one
 from Configuration.ProcessModifiers.riemannFit_cff import riemannFit
-from Configuration.ProcessModifiers.riemannFit_cff import riemannFitGPU
+from Configuration.ProcessModifiers.riemannFitGPU_cff import riemannFitGPU
 riemannFit.toModify(pixelTracks, Fitter = "pixelFitterByRiemannParaboloid")
 riemannFitGPU.toModify(pixelTracks, runOnGPU = True)
 _pixelTracksSequence_riemannFit = pixelTracksSequence.copy()
