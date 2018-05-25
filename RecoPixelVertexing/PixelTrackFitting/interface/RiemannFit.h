@@ -73,15 +73,15 @@ struct helix_fit {
   double chi2_circle;
   double chi2_line;
   Vector4d fast_fit;
-  VectorXd time;  // TO FIX just for profiling
+//  VectorXd time;  // TO FIX just for profiling
 };
 
 
 template<class C>
-CUDA_HOSTDEV void printIt(C * m) {
+CUDA_HOSTDEV void printIt(C * m, const char * prefix = "") {
   for (u_int r = 0; r < m->rows(); ++r) {
     for (u_int c = 0; c < m->cols(); ++c) {
-      printf("Matrix(%d,%d) = %f\n", r, c, (*m)(r,c));
+      printf("%s Matrix(%d,%d) = %g\n", prefix, r, c, (*m)(r,c));
     }
   }
 }
@@ -126,7 +126,7 @@ CUDA_HOSTDEV inline double cross2D(const Vector2d& a, const Vector2d& b) {
 
  */
 // X in input TO FIX
-CUDA_HOSTDEV MatrixNd Scatter_cov_rad(const Matrix2xNd& p2D, const Vector4d& fast_fit, VectorNd const & rad, double B) {
+CUDA_HOSTDEV inline MatrixNd Scatter_cov_rad(const Matrix2xNd& p2D, const Vector4d& fast_fit, VectorNd const & rad, double B) {
   u_int n = p2D.cols();
   double X = 0.04;
   double theta = atan(fast_fit(3));
@@ -192,7 +192,7 @@ CUDA_HOSTDEV inline Matrix2Nd cov_radtocart(const Matrix2xNd& p2D,
 
     \warning correlation between different point are not computed.
 */
-CUDA_HOSTDEV MatrixNd cov_carttorad(const Matrix2xNd& p2D,
+CUDA_HOSTDEV inline MatrixNd cov_carttorad(const Matrix2xNd& p2D,
     const Matrix2Nd& cov_cart,
     const VectorNd& rad) {
   u_int n = p2D.cols();
@@ -227,7 +227,7 @@ CUDA_HOSTDEV MatrixNd cov_carttorad(const Matrix2xNd& p2D,
 
 */
 
-CUDA_HOSTDEV MatrixNd cov_carttorad_prefit(const Matrix2xNd& p2D, const Matrix2Nd& cov_cart,
+CUDA_HOSTDEV inline MatrixNd cov_carttorad_prefit(const Matrix2xNd& p2D, const Matrix2Nd& cov_cart,
                               const Vector4d& fast_fit,
                               const VectorNd& rad) {
   u_int n = p2D.cols();
@@ -314,7 +314,7 @@ CUDA_HOSTDEV inline int Charge(const Matrix2xNd& p2D, const Vector3d& par_uvr) {
     \param error flag for errors computation.
 */
 
-CUDA_HOSTDEV void par_uvrtopak(circle_fit& circle, const double B, const bool& error) {
+CUDA_HOSTDEV inline void par_uvrtopak(circle_fit& circle, const double B, const bool& error) {
   Vector3d par_pak;
   const double temp0 = circle.par.head(2).squaredNorm();
   const double temp1 = sqrt(temp0);
@@ -346,7 +346,7 @@ CUDA_HOSTDEV void par_uvrtopak(circle_fit& circle, const double B, const bool& e
     \return x_err2 squared errors in the x axis.
 */
 
-CUDA_HOSTDEV VectorNd X_err2(const Matrix3Nd& V, const circle_fit& circle, const MatrixNx5d& J,
+CUDA_HOSTDEV inline VectorNd X_err2(const Matrix3Nd& V, const circle_fit& circle, const MatrixNx5d& J,
                 const bool& error, u_int n) {
   VectorNd x_err2(n);
   for (u_int i = 0; i < n; ++i) {
@@ -404,7 +404,7 @@ CUDA_HOSTDEV Vector3d min_eigen3D(const Matrix3d& A, double& chi2) {
     speed up in  single precision.
 */
 
-CUDA_HOSTDEV Vector3d min_eigen3D_fast(const Matrix3d& A) {
+CUDA_HOSTDEV inline Vector3d min_eigen3D_fast(const Matrix3d& A) {
   SelfAdjointEigenSolver<Matrix3f> solver(3);
   solver.computeDirect(A.cast<float>());
   int min_index;
@@ -425,7 +425,7 @@ CUDA_HOSTDEV Vector3d min_eigen3D_fast(const Matrix3d& A) {
     significantly in single precision.
 */
 
-CUDA_HOSTDEV Vector2d min_eigen2D(const Matrix2d& A, double& chi2) {
+CUDA_HOSTDEV inline Vector2d min_eigen2D(const Matrix2d& A, double& chi2) {
   SelfAdjointEigenSolver<Matrix2d> solver(2);
   solver.computeDirect(A);
   int min_index;
@@ -450,7 +450,7 @@ CUDA_HOSTDEV Vector2d min_eigen2D(const Matrix2d& A, double& chi2) {
     - computation of error due to multiple scattering.
 */
 
-CUDA_HOSTDEV Vector4d Fast_fit(const Matrix3xNd& hits) {
+CUDA_HOSTDEV inline Vector4d Fast_fit(const Matrix3xNd& hits) {
   Vector4d result;
   u_int n = hits.cols(); // get the number of hits
 
@@ -532,7 +532,7 @@ CUDA_HOSTDEV Vector4d Fast_fit(const Matrix3xNd& hits) {
     scattering.
 */
 
-CUDA_HOSTDEV circle_fit Circle_fit(const Matrix2xNd& hits2D, const Matrix2Nd& hits_cov2D,
+CUDA_HOSTDEV inline circle_fit Circle_fit(const Matrix2xNd& hits2D, const Matrix2Nd& hits_cov2D,
     const Vector4d& fast_fit, VectorNd const & rad,
     const double B,
     const bool& error = true,
@@ -780,7 +780,7 @@ CUDA_HOSTDEV circle_fit Circle_fit(const Matrix2xNd& hits2D, const Matrix2Nd& hi
     errors.
 */
 
-CUDA_HOSTDEV line_fit Line_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, const circle_fit& circle,
+CUDA_HOSTDEV inline line_fit Line_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, const circle_fit& circle,
                   const Vector4d& fast_fit, const bool& error = true) {
   u_int n = hits.cols();
   // PROJECTION ON THE CILINDER
@@ -936,7 +936,7 @@ CUDA_HOSTDEV line_fit Line_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov
    \bug see Circle_fit(), Line_fit() and Fast_fit() bugs.
 */
 
-helix_fit Helix_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, const double B,
+inline helix_fit Helix_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, const double B,
                     const bool& error = true, const bool& scattering = false) {
   u_int n = hits.cols();
   VectorNd rad = (hits.block(0, 0, 2, n).colwise().norm());
