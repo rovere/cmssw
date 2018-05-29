@@ -11,12 +11,14 @@
 #define CUDA_HOSTDEV
 #endif
 
+#define DEBUG 0
+
 namespace Rfit {
 
 using namespace Eigen;
 
 constexpr double d = 1.e-4;         //!< used in numerical derivative (J2 in Circle_fit())
-constexpr unsigned int max_nop = 8;  //!< In order to avoid use of dynamic memory
+constexpr unsigned int max_nop = 4;  //!< In order to avoid use of dynamic memory
 
 using MatrixNd = Eigen::Matrix<double, Dynamic, Dynamic, 0, max_nop, max_nop>;
 using ArrayNd = Eigen::Array<double, Dynamic, Dynamic, 0, max_nop, max_nop>;
@@ -45,7 +47,7 @@ struct circle_fit {
       |cov(X0,Y0)|cov(Y0,Y0)|cov( R,Y0)| \n
       |cov(X0, R)|cov(Y0, R)|cov( R, R)|
   */
-  int q;  //!< particle charge
+  int64_t q;  //!< particle charge
   double chi2;
 };
 
@@ -598,9 +600,15 @@ CUDA_HOSTDEV inline circle_fit Circle_fit(const Matrix2xNd& hits2D,
       V += cov_radtocart(hits2D, scatter_cov_rad, rad);
       printIt(&V, "circle_fit - V:", DEBUG);
       cov_rad += scatter_cov_rad;
-      G = cov_rad.inverse();
-      renorm = G.sum();
-      G *= 1. / renorm;
+      printIt(&cov_rad, "circle_fit - cov_rad:", DEBUG);
+      Matrix4d cov_rad4 = cov_rad;
+      Matrix4d G4;
+      G4 = cov_rad4.inverse();
+      printIt(&G4, "circle_fit - G4:", DEBUG);
+      renorm = G4.sum();
+      G4 *= 1. / renorm;
+      printIt(&G4, "circle_fit - G4:", DEBUG);
+      G = G4;
       weight = Weight_circle(G);
     } else {
       weight = cov_rad.diagonal().cwiseInverse();
@@ -716,8 +724,14 @@ CUDA_HOSTDEV inline circle_fit Circle_fit(const Matrix2xNd& hits2D,
       printf("circle_fit - ERROR PRPAGATION ACTIVATED 2\n");
     }
     {
+      Matrix<double, 1, 1> cm;
+      Matrix<double, 1, 1> cm2;
+      cm = mc.transpose() * V * mc;
+//      cm2 = mc * mc.transpose();
+      const double c = cm(0,0);
+//      const double c2 = cm2(0,0);
       const Matrix2Nd Vcs = sqr(s) * V + sqr(sqr(s)) * 1. / (4. * q * n) *
-                                             (2. * V.squaredNorm() + 4. * mc.transpose() * V * mc) *
+                                             (2. * V.squaredNorm() + 4. * c) * // mc.transpose() * V * mc) *
                                              mc * mc.transpose();
       printIt(&Vcs, "circle_fit - Vcs:", DEBUG);
       Vcs_[0][0] = Vcs.block(0, 0, n, n);
@@ -749,7 +763,10 @@ CUDA_HOSTDEV inline circle_fit Circle_fit(const Matrix2xNd& hits2D,
     Matrix3d C0;  // cov matrix of center of gravity (r0.x,r0.y,r0.z)
     for (u_int i = 0; i < 3; ++i) {
       for (u_int j = i; j < 3; ++j) {
-        C0(i, j) = weight.transpose() * C[i][j] * weight;
+        Matrix<double, 1, 1> tmp;
+        tmp = weight.transpose() * C[i][j] * weight;
+        const double c = tmp(0,0);
+        C0(i, j) = c; //weight.transpose() * C[i][j] * weight;
         C0(j, i) = C0(i, j);
       }
     }
@@ -799,10 +816,17 @@ CUDA_HOSTDEV inline circle_fit Circle_fit(const Matrix2xNd& hits2D,
             t1 = D_[i][l] * s_v.col(k) + D_[i][k] * s_v.col(l);
         }
 
-        if (i == j)
-          E(a, b) = 0. + s_v.col(i).transpose() * (t0 + t1);
-        else
-          E(a, b) = 0. + (s_v.col(i).transpose() * t0) + (s_v.col(j).transpose() * t1);
+        if (i == j) {
+          Matrix<double, 1, 1> cm;
+          cm = s_v.col(i).transpose() * (t0 + t1);
+          const double c = cm(0,0);
+          E(a, b) = 0. + c;
+        } else {
+          Matrix<double, 1, 1> cm;
+          cm = (s_v.col(i).transpose() * t0) + (s_v.col(j).transpose() * t1);
+          const double c = cm(0,0);
+          E(a, b) = 0. + c;//(s_v.col(i).transpose() * t0) + (s_v.col(j).transpose() * t1);
+        }
         if (b != a) E(b, a) = E(a, b);
       }
     }
@@ -826,8 +850,15 @@ CUDA_HOSTDEV inline circle_fit Circle_fit(const Matrix2xNd& hits2D,
       Cvc.block(0, 0, 3, 3) = t0;
       Cvc.block(0, 3, 3, 1) = t1;
       Cvc.block(3, 0, 1, 3) = t1.transpose();
-      Cvc(3, 3) =
-          (v.transpose() * C0 * v) + (C0.cwiseProduct(t0)).sum() + (r0.transpose() * t0 * r0);
+      Matrix<double, 1, 1> cm1;
+//      Matrix<double, 1, 1> cm2;
+      Matrix<double, 1, 1> cm3;
+      cm1 = (v.transpose() * C0 * v);
+//      cm2 = (C0.cwiseProduct(t0)).sum();
+      cm3 = (r0.transpose() * t0 * r0);
+      const double c = cm1(0,0) + (C0.cwiseProduct(t0)).sum() + cm3(0,0);
+      Cvc(3, 3) = c;
+         // (v.transpose() * C0 * v) + (C0.cwiseProduct(t0)).sum() + (r0.transpose() * t0 * r0);
     }
     printIt(&Cvc, "circle_fit - Cvc:", DEBUG);
 
@@ -961,14 +992,19 @@ CUDA_HOSTDEV inline line_fit Line_fit(const Matrix3xNd& hits,
   for (u_int i = 0; i < n; ++i) {
     A += err2_inv(i) * (X.col(i) * X.col(i).transpose());
   }
+
+  printIt(&A, "Line_fit - A: ", DEBUG);
+
   // minimize
   double chi2;
   Vector2d v = min_eigen2D(A, chi2);
+  printIt(&v, "Line_fit - v: ", DEBUG);
+
   // n *= (chi2>0) ? 1 : -1; //TO FIX
   // This hack to be able to run on GPU where the automatic assignment to a
   // double from the vector multiplication is not working.
   Matrix<double, 1, 1> cm;
-  cm.noalias() = -v.transpose() * r0;
+  cm = -v.transpose() * r0;
   const double c = cm(0,0);
 
   // COMPUTE LINE PARAMETER
@@ -1015,7 +1051,7 @@ CUDA_HOSTDEV inline line_fit Line_fit(const Matrix3xNd& hits,
       J << -t0, v(0) * t1, 0, -c * v(0) * t0 * t2, v0_2 * c * t1 * t2, -sqrt_ * t0;
     }
     Matrix<double, 3, 2> JT = J.transpose().eval();
-    line.cov.noalias() = J * C * JT;
+    line.cov = J * C * JT;
   }
 
   printIt(&line.cov, "Line cov:", DEBUG);
