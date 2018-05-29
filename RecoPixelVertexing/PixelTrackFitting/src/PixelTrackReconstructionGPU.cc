@@ -121,13 +121,15 @@ void PixelTrackReconstructionGPU::run(TracksWithTTRHs& tracks,
   launchKernelFit(hits_and_covariancesGPU, 12*4*total_seeds, 4,
       bField, helix_fit_resultsGPU);
   // CUDA MEMCOPY DEVICE2HOST OF HELIX_FIT
-  cudaDeviceSynchronize();
+  cudaCheck(cudaDeviceSynchronize());
 //  cudaCheck(cudaMemcpy(helix_fit_results.data(), helix_fit_resultsGPU,
 //      sizeof(Rfit::helix_fit)*helix_fit_results.size(), cudaMemcpyDeviceToHost));
   cudaCheck(cudaGetLastError());
-  cudaMemcpy(helix_fit_results.data(), helix_fit_resultsGPU,
-      sizeof(Rfit::helix_fit)*helix_fit_results.size(), cudaMemcpyDeviceToHost);
+  cudaCheck(cudaMemcpy(helix_fit_results.data(), helix_fit_resultsGPU,
+      sizeof(Rfit::helix_fit)*helix_fit_results.size(), cudaMemcpyDeviceToHost));
 
+  cudaCheck(cudaFree(hits_and_covariancesGPU));
+  cudaCheck(cudaFree(helix_fit_resultsGPU));
   // Loop on results, create tracks, filter them and pass them down the chain.
   // In order to avoid huge mess with indexing and remembering who did what,
   // simply iterate again over the main containers in the same order, since we
