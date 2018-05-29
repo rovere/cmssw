@@ -7,7 +7,10 @@
 using namespace Eigen;
 
 __global__ void KernelFullFitAllHits(float * hits_and_covariances,
-    int hits_in_fit, int cumulative_size, double B, Rfit::helix_fit * results) {
+    int hits_in_fit,
+    int cumulative_size,
+    double B,
+    Rfit::helix_fit * results) {
   // Reshape Eigen components from hits_and_covariances, using proper thread and block indices
   // Perform the fit
   // Store the results in the proper vector, using again correct indices
@@ -22,8 +25,8 @@ __global__ void KernelFullFitAllHits(float * hits_and_covariances,
   }
 
   if (DEBUG) {
-  printf("BlockDim.x: %d, BlockIdx.x: %d, threadIdx.x: %d, start: %d, cumulative_size: %d\n",
-      blockDim.x, blockIdx.x, threadIdx.x, start, cumulative_size);
+    printf("BlockDim.x: %d, BlockIdx.x: %d, threadIdx.x: %d, start: %d, cumulative_size: %d\n",
+        blockDim.x, blockIdx.x, threadIdx.x, start, cumulative_size);
   }
 
   Rfit::Matrix3xNd hits(3,hits_in_fit);
@@ -56,6 +59,7 @@ __global__ void KernelFullFitAllHits(float * hits_and_covariances,
     printf("KernelFullFitAllHits hits(2,1): %d\t%f\n", helix_start, hits(2,1));
     printf("KernelFullFitAllHits hits(2,2): %d\t%f\n", helix_start, hits(2,2));
     printf("KernelFullFitAllHits hits(2,3): %d\t%f\n", helix_start, hits(2,3));
+    Rfit::printIt(&hits);
     Rfit::printIt(&hits_cov);
   }
 
@@ -70,7 +74,7 @@ __global__ void KernelFullFitAllHits(float * hits_and_covariances,
   }
 
   u_int n = hits.cols();
-  if (DEBUG)
+  if (true)
     printf("KernelFullFitAllHits using %d hits: %d\n", n, helix_start);
 
   Rfit::VectorNd rad = (hits.block(0, 0, 2, n).colwise().norm());
@@ -105,11 +109,10 @@ __global__ void KernelFullFitAllHits(float * hits_and_covariances,
 
 void PixelTrackReconstructionGPU::launchKernelFit(float * hits_and_covariancesGPU, 
     int cumulative_size, int hits_in_fit, float B, Rfit::helix_fit * results) {
-  const dim3 threads_per_block(16,1);
+  const dim3 threads_per_block(32,1);
   // We need to partition data in blocks of:
   // 12(3+9) * hits_in_fit
   int num_blocks = cumulative_size/(hits_in_fit*12)/threads_per_block.x + 1;
   KernelFullFitAllHits<<<num_blocks, threads_per_block>>>(hits_and_covariancesGPU, hits_in_fit, cumulative_size, B, results);
-//  KernelFullFitAllHits<<<1, 1>>>(hits_and_covariancesGPU, hits_in_fit, cumulative_size, B, results);
 }
 
