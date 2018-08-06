@@ -101,7 +101,7 @@ HGCalLayerClusterProducer::HGCalLayerClusterProducer(const edm::ParameterSet &ps
     algo = std::make_unique<HGCalImagingAlgo>(vecDeltas, kappa, ecut, algoId, dependSensor, dEdXweights, thicknessCorrection, fcPerMip, fcPerEle, nonAgedNoises, noiseMip, verbosity);
   }
 
-
+  produces<std::vector<bool> >("InitialLayerClustersMask");
   produces<std::vector<reco::BasicCluster> >();
   produces<std::vector<reco::BasicCluster> >("sharing");
   //time for layer clusters
@@ -231,6 +231,9 @@ void HGCalLayerClusterProducer::produce(edm::Event& evt,
     }
     times.push_back(timeCl);
   }
+  std::unique_ptr<std::vector<bool> > layerClustersMask(new std::vector<bool>);
+  layerClustersMask->resize(clusterHandle->size(),true);
+  evt.put(std::move(layerClustersMask),"InitialLayerClustersMask");
 
   auto timeCl = std::make_unique<edm::ValueMap<float>>();
   edm::ValueMap<float>::Filler filler(*timeCl);
