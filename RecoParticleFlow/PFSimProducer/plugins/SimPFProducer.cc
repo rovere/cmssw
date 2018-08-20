@@ -202,6 +202,8 @@ void SimPFProducer::produce(edm::StreamID, edm::Event& evt, const edm::EventSetu
   std::unordered_multimap<size_t,size_t> caloParticle2SimCluster;
   std::vector<int> caloParticle2SuperCluster;
   for( unsigned icp = 0; icp < CaloParticles.size(); ++icp ) {
+    std::cout << "*** Starting with CaloParticle: " << icp
+      << std::endl << CaloParticles[icp] << std::endl;
     blocks->emplace_back();
     auto& block = blocks->back();
     const auto& simclusters = CaloParticles[icp].simClusters();
@@ -229,6 +231,8 @@ void SimPFProducer::produce(edm::StreamID, edm::Event& evt, const edm::EventSetu
 
     caloParticle2SuperCluster.push_back(-1);
     if( (pdgId == 22 || pdgId == 11) && pttot > superClusterThreshold_ ) {
+      std::cout << "*** CaloParticle " << icp << " used as superCluster seed"
+        << " with size: " << good_simclusters.size() << std::endl;
       caloParticle2SuperCluster[icp] = superclusters->size();
 
       math::XYZPoint seedpos; // take seed pos as supercluster point
@@ -246,6 +250,30 @@ void SimPFProducer::produce(edm::StreamID, edm::Event& evt, const edm::EventSetu
     }
   }
 
+  for (auto it = hashToSimCluster.begin(); it != hashToSimCluster.end(); ++it) {
+    std::cout <<"*** hashToSimCluster hash: " << it->first << " idx " << it->second << std::endl;
+  }
+
+  for (auto it = simCluster2Block.begin(); it != simCluster2Block.end(); ++it) {
+    std::cout << "*** simCluster2Block sc.key: " << it->first << " caloParticle id: " << it->second << std::endl;
+  }
+
+  for (auto it = simCluster2BlockIndex.begin(); it != simCluster2BlockIndex.end(); ++it) {
+    std::cout << "*** simCluster2BlockIndex sc.key: " << it->first << " block idx: " << it->second << std::endl;
+  }
+
+  for (auto it = caloParticle2SimCluster.begin(); it != caloParticle2SimCluster.end(); ++it) {
+    auto range = caloParticle2SimCluster.equal_range(it->first);
+
+    std::cout << "*** CaloParticle2SimCluster: " << it->first << std::endl;
+
+    for (auto local_it = range.first; local_it != range.second; ++local_it)
+      std::cout << "\t*** " << local_it->second << std::endl;
+
+    it = range.second;
+    if (it == caloParticle2SimCluster.end())
+      break;
+  }
   auto blocksHandle = evt.put(std::move(blocks));
   auto superClustersHandle = evt.put(std::move(superclusters),"perfect");
 
@@ -270,6 +298,7 @@ void SimPFProducer::produce(edm::StreamID, edm::Event& evt, const edm::EventSetu
     const auto& matches = assoc_tps->val;
 
     const auto absPdgId = std::abs(matches[0].first->pdgId());
+    std::cout << "*** SimPFProducer analysing TP: " << std::endl << *matches[0].first << std::endl;
     const auto charge = tkRef->charge();
     const auto three_mom = tkRef->momentum();
     constexpr double mpion2 = 0.13957*0.13957;
@@ -298,10 +327,19 @@ void SimPFProducer::produce(edm::StreamID, edm::Event& evt, const edm::EventSetu
 
     // bind to cluster if there is one and try to gather conversions, etc
     for( const auto& match : matches ) {
+      std::cout << "*** Trying TP: " << std::endl << *match.first << std::endl;
       uint64_t hash = hashSimInfo(*(match.first));
+      std::cout << "*** TP with hash: " << hash << std::endl;
+      std::cout << "*** TP with first track Id "
+        << match.first->g4Tracks()[0].trackId() << std::endl;
       if( hashToSimCluster.count(hash) ) {
 	auto simcHash = hashToSimCluster[hash];
+        std::cout << "*** TP with idx: " << simcHash << std::endl;
 
+        for ( auto const & v  : usedSimCluster) {
+          std::cout << ((v) ? "T" : "F") << " ";
+        }
+        std::cout << std::endl;
 	if( !usedSimCluster[simcHash] ) {
 	  if( simCluster2Block.count(simcHash) &&
 	      simCluster2BlockIndex.count(simcHash) ) {
@@ -310,6 +348,7 @@ void SimPFProducer::produce(edm::StreamID, edm::Event& evt, const edm::EventSetu
 	    edm::Ref<reco::PFBlockCollection> blockRef(blocksHandle,block);
 	    candidate.addElementInBlock(blockRef,blockIdx);
 	    usedSimCluster[simcHash] = true;
+            std::cout << "*** Updated candidate 1: " << std::endl << candidate << std::endl;
 	  }
 	}
 	if( absPdgId == 11 ) { // collect brems/conv. brems
@@ -323,6 +362,7 @@ void SimPFProducer::produce(edm::StreamID, edm::Event& evt, const edm::EventSetu
 		if( !usedSimCluster[ref.key()] ) {
 		  candidate.addElementInBlock(blockRef,elem.index());
 		  usedSimCluster[ref.key()] = true;
+                  std::cout << "*** Updated candidate 2: " << std::endl << candidate << std::endl;
 		}
 	      }
 
@@ -332,8 +372,15 @@ void SimPFProducer::produce(edm::StreamID, edm::Event& evt, const edm::EventSetu
 	  }
 	}
       }
-      // Now try to include also electrons that have been reconstructed using the GraphCaloParticles
-      else if (caloParticle2SimCluster.count(match.first->g4Tracks()[0].trackId())) {
+      // Now try to include also electrons that have been reconstructed using
+      // the GraphCaloParticles. In particular, recover the cases in which the
+      // tracking particle associated to the CaloParticle has not left any hits
+      // in the calorimeters or, if it had, the cluster has been skipped due to
+      // threshold requirements.
+      if (caloParticle2SimCluster.count(match.first->g4Tracks()[0].trackId()))
+      {
+        std::cout << "*** Recovering CP w/o direct hits or with below-threshold clusters with id: "
+          << match.first->g4Tracks()[0].trackId() << std::endl;
         auto range = caloParticle2SimCluster.equal_range(match.first->g4Tracks()[0].trackId());
         for (auto it = range.first; it != range.second; ++it) {
           if (!usedSimCluster[it->second]) {
@@ -342,10 +389,12 @@ void SimPFProducer::produce(edm::StreamID, edm::Event& evt, const edm::EventSetu
             size_t blockIdx = simCluster2BlockIndex.find(it->second)->second;
             edm::Ref<reco::PFBlockCollection> blockRef(blocksHandle,block);
             candidate.addElementInBlock(blockRef,blockIdx);
+            std::cout << "*** Updated candidate 3: " << std::endl << candidate << std::endl;
           }
         }
       }
     }
+    std::cout << "*** SimPFProducer produced a candidate: " << std::endl << candidate << std::endl;
     usedTrack[tkRef.key()] = true;
     // remove tracks already used by muons
     if( MuonTrackToGeneralTrack.count(itk) || absPdgId == 13)
@@ -381,6 +430,16 @@ void SimPFProducer::produce(edm::StreamID, edm::Event& evt, const edm::EventSetu
       }
     }
   }
+
+  int k = 0;
+  double ptx_tot = 0.;
+  double pty_tot = 0.;
+  for (auto const & c: *candidates) {
+    ptx_tot += c.px();
+    pty_tot += c.py();
+    std::cout << "*** " << ++k << " " << c << std::endl;
+  }
+  std::cout << "*** PFCandidate Pt_tot: " << std::sqrt(ptx_tot*ptx_tot + pty_tot*pty_tot)<< std::endl;
 
   evt.put(std::move(candidates));
 }

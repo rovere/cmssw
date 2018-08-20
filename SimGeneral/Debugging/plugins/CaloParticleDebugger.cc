@@ -226,7 +226,7 @@ CaloParticleDebugger::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   idx = 0;
   for (auto i : sorted_cp_idx) {
     auto const & cp = calopart[i];
-    std::cout << "\n\n" << idx++ << " |Eta|: " << std::abs(cp.momentum().eta())
+    std::cout << "\n\n" << idx++ << " Eta: " << cp.momentum().eta()
               << "\tType: " << cp.pdgId()
               << "\tEnergy: " << cp.energy()
               << "\tIdx: " << cp.g4Tracks()[0].trackId() << std::endl; // << cp << std::endl;
