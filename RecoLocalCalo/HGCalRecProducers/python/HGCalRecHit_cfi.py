@@ -94,4 +94,9 @@ HGCalRecHit = cms.EDProducer(
 
     )
 
+from RecoLocalCalo.HGCalRecProducers.HGCalMipLikeRecHit_cfi import HGCalMipLikeRecHit as _HGCalMipLikeRecHit_default
 
+HGCalMipLikeRecHit = _HGCalMipLikeRecHit_default.clone(
+    weights = dEdX_weights,
+    thickness_corrections = HGCalRecHit.thicknessCorrection
+    )

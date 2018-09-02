@@ -12,6 +12,7 @@ from RecoLocalCalo.HGCalRecProducers.hgcalLayerClusters_cff import hgcalLayerClu
 
 hgcalLocalRecoSequence = cms.Sequence( HGCalUncalibRecHit+
                                        HGCalRecHit+
+                                       HGCalMipLikeRecHit+
                                        hgcalLayerClusters+
                                        hgcalMultiClusters+
                                        particleFlowRecHitHGCSeq+
