@@ -16,17 +16,31 @@ namespace BrokenLine {
 	
 	using namespace Eigen;
 	
-	constexpr unsigned int max_nop = 5;  //!< In order to avoid use of dynamic memory
+	constexpr unsigned int max_nop = 4;  //!< In order to avoid use of dynamic memory
 	
 	using MatrixNd = Eigen::Matrix<double, Dynamic, Dynamic, 0, max_nop, max_nop>;
+	using MatrixNplusONEd = Eigen::Matrix<double, Dynamic, Dynamic, 0, max_nop + 1, max_nop + 1>;
 	using Matrix3Nd = Eigen::Matrix<double, Dynamic, Dynamic, 0, 3 * max_nop, 3 * max_nop>;
 	using Matrix2xNd = Eigen::Matrix<double, 2, Dynamic, 0, 2, max_nop>;
 	using Matrix3xNd = Eigen::Matrix<double, 3, Dynamic, 0, 3, max_nop>;
 	using VectorNd = Eigen::Matrix<double, Dynamic, 1, 0, max_nop, 1>;
+	using VectorNplusONEd = Eigen::Matrix<double, Dynamic, 1, 0, max_nop + 1, 1>;
 	using Matrix2x3d = Eigen::Matrix<double, 2, 3>;
 	using Matrix5d = Eigen::Matrix<double, 5, 5>;
 	using Vector5d = Eigen::Matrix<double, 5, 1>;
 	using u_int    = unsigned int;
+	
+	/*using MatrixNd = Eigen::Matrix<double, max_nop, max_nop, 0, max_nop, max_nop>;
+	using MatrixNplusONEd = Eigen::Matrix<double, max_nop + 1, max_nop + 1, 0, max_nop + 1, max_nop + 1>;
+	using Matrix3Nd = Eigen::Matrix<double, 3 * max_nop, 3 * max_nop, 0, 3 * max_nop, 3 * max_nop>;
+	using Matrix2xNd = Eigen::Matrix<double, 2, max_nop, 0, 2, max_nop>;
+	using Matrix3xNd = Eigen::Matrix<double, 3, max_nop, 0, 3, max_nop>;
+	using VectorNd = Eigen::Matrix<double, max_nop, 1, 0, max_nop, 1>;
+	using VectorNplusONEd = Eigen::Matrix<double, max_nop + 1, 1, 0, max_nop + 1, 1>;
+	using Matrix2x3d = Eigen::Matrix<double, 2, 3>;
+	using Matrix5d = Eigen::Matrix<double, 5, 5>;
+	using Vector5d = Eigen::Matrix<double, 5, 1>;
+	using u_int    = unsigned int;*/
 	
 	struct karimaki_circle_fit {
 		Vector3d par;  //!< Karimäki's parameters: (phi, d, k=1/R)
@@ -280,7 +294,7 @@ namespace BrokenLine {
 		
 		result(0)=hits(0,0)-(a(1)*c.squaredNorm()+c(1)*a.squaredNorm())/(2*cross2D(c,a));
 		result(1)=hits(1,0)+(a(0)*c.squaredNorm()+c(0)*a.squaredNorm())/(2*cross2D(c,a));
-		// check on Wikipedia for these formulas
+		// check Wikipedia for these formulas
 		
 		result(2)=(a.norm()*b.norm()*c.norm())/(2*abs(cross2D(b,a)));
 		// Using Math Olympiad's formula R=abc/(4A)
@@ -415,12 +429,12 @@ namespace BrokenLine {
 			w(i)=1/((RR*V*RR.transpose())(1,1)); // compute the orthogonal weight point by point
 		}
 		
-		VectorNd r_u=VectorNd::Zero(n+1);
+		VectorNplusONEd r_u=VectorNplusONEd::Zero(n+1);
 		for(i=0;i<n;i++) {
 			r_u(i)=w(i)*Z(i);
 		} r_u(n)=0;
 		
-		MatrixNd C_U=MatrixNd::Zero(n+1,n+1);
+		MatrixNplusONEd C_U=MatrixNplusONEd::Zero(n+1,n+1);
 		for(i=0;i<n;i++) {
 			if(i>0 && i<n-1) C_U(i,n)+=-(s(i+1)-s(i-1))/(2*VarBeta(i))*(s(i+1)-s(i-1))/((s(i+1)-s(i))*(s(i)-s(i-1)));
 			if(i>1) C_U(i,n)+=(s(i)-s(i-2))/(2*VarBeta(i-1)*(s(i)-s(i-1)));
@@ -428,12 +442,12 @@ namespace BrokenLine {
 			
 			if(i>0 && i<n-1) C_U(n,n)+=sqr(s(i+1)-s(i-1))/(4*VarBeta(i));
 		} C_U(n,n)=C_U(n,n)/2;
-		MatrixNd C_u;
+		MatrixNplusONEd C_u;
 		C_u=C_U+C_U.transpose();
 		C_u.block(0,0,n,n)=MatrixC_u(w,s,VarBeta);
-		MatrixNd I=C_u.inverse();
+		MatrixNplusONEd I=C_u.inverse();
 		
-		VectorNd u=I*r_u; // obtain the fitted parameters by solving the linear system
+		VectorNplusONEd u=I*r_u; // obtain the fitted parameters by solving the linear system
 		
 		// (phi, d_ca, k) in the system in which the first exp. data is the origin
 		double alpha=(s(1)-s(0))/fast_fit(2);

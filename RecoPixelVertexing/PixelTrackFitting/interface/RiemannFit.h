@@ -6,7 +6,7 @@
 #include <Eigen/Eigenvalues>
 
 #ifndef RFIT_DEBUG
-#define RFIT_DEBUG 0
+#define RFIT_DEBUG 1
 #endif  // RFIT_DEBUG
 
 namespace Rfit
