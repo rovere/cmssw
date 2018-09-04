@@ -4,6 +4,7 @@
 #include <Eigen/Eigenvalues>
 
 #include "RecoPixelVertexing/PixelTrackFitting/interface/RiemannFit.h"
+#include "RecoPixelVertexing/PixelTrackFitting/interface/BrokenLine.h"
 #include "HeterogeneousCore/CUDAUtilities/interface/cudaCheck.h"
 
 #include "test_common.h"
@@ -51,6 +52,52 @@ void kernelFullFit(Rfit::Matrix3xNd * hits,
   (*line_fit_resultsGPU) = Rfit::Line_fit(*hits, *hits_cov, *circle_fit_resultsGPU, fast_fit, errors);
 
   return;
+}
+
+__global__
+void kernelFullBrokenLine(BrokenLine::Matrix3xNd * hits,
+BrokenLine::Matrix3Nd * hits_cov,
+BrokenLine::PreparedBrokenLineData * data,
+Vector4d * fast_fit,
+double B,
+BrokenLine::helix_fit * helix_fit_resultsGPU,
+BrokenLine::karimaki_circle_fit * circleGPU,
+BrokenLine::line_fit * lineGPU) {
+
+	/*hits->resize(3,4);
+	hits_cov->resize(12, 12);*/
+
+	BrokenLine::helix_fit& helix = (*helix_fit_resultsGPU);
+	BrokenLine::karimaki_circle_fit& circle = (*circleGPU);
+	BrokenLine::line_fit& line = (*lineGPU);
+
+	helix.fast_fit=BrokenLine::BL_Fast_fit(*hits);
+
+	//const BrokenLine::PreparedBrokenLineData data=BrokenLine::PrepareBrokenLineData(*hits,*hits_cov,helix.fast_fit,B);
+	(*data) = BrokenLine::PrepareBrokenLineData(*hits,*hits_cov,helix.fast_fit,B);
+
+	circle=BrokenLine::BL_Circle_fit(*hits,*hits_cov,helix.fast_fit,B,*data);
+	line=BrokenLine::BL_Line_fit(*hits,*hits_cov,helix.fast_fit,B,*data);
+
+	// the circle fit gives k, but here we want p_t, so let's change the parameter and the covariance matrix
+	Matrix3d Jacob;
+	Jacob << 1,0,0,
+	0,1,0,
+	0,0,-abs(circle.par(2))*B/(BrokenLine::sqr(circle.par(2))*circle.par(2));
+	circle.par(2)=B/abs(circle.par(2));
+	circle.cov=Jacob*circle.cov*Jacob.transpose();
+
+	helix.par << circle.par, line.par;
+	helix.cov=MatrixXd::Zero(5, 5);
+	helix.cov.block(0,0,3,3)=circle.cov;
+	helix.cov.block(3,3,2,2)=line.cov;
+	helix.q=circle.q;
+	helix.chi2_circle=circle.chi2;
+	helix.chi2_line=line.chi2;
+
+	//(*helix_fit_resultsGPU) = BrokenLine::Helix_fit(*hits, *hits_cov, B);
+
+	return;
 }
 
 __global__
@@ -114,6 +161,28 @@ void fillHitsAndHitsCov(Rfit::Matrix3xNd & hits, Rfit::Matrix3Nd & hits_cov) {
   hits_cov(1,5) = hits_cov(5,1) = -1.11936e-06;
   hits_cov(2,6) = hits_cov(6,2) = -6.24945e-07;
   hits_cov(3,7) = hits_cov(7,3) = -5.28e-06;
+}
+
+void fillHitsAndHitsCovBrokenLine(BrokenLine::Matrix3xNd & hits, BrokenLine::Matrix3Nd & hits_cov) {
+hits << 1.98645, 4.72598, 7.65632, 11.3151,
+2.18002, 4.88864, 7.75845, 11.3134,
+2.46338, 6.99838,  11.808,  17.793;
+hits_cov(0,0) = 7.14652e-06;
+hits_cov(1,1) = 2.15789e-06;
+hits_cov(2,2) = 1.63328e-06;
+hits_cov(3,3) = 6.27919e-06;
+hits_cov(4,4) = 6.10348e-06;
+hits_cov(5,5) = 2.08211e-06;
+hits_cov(6,6) = 1.61672e-06;
+hits_cov(7,7) = 6.28081e-06;
+hits_cov(8,8) = 5.184e-05;
+hits_cov(9,9) = 1.444e-05;
+hits_cov(10,10) = 6.25e-06;
+hits_cov(11,11) = 3.136e-05;
+hits_cov(0,4) = hits_cov(4,0) = -5.60077e-06;
+hits_cov(1,5) = hits_cov(5,1) = -1.11936e-06;
+hits_cov(2,6) = hits_cov(6,2) = -6.24945e-07;
+hits_cov(3,7) = hits_cov(7,3) = -5.28e-06;
 }
 
 void testFit() {
@@ -249,13 +318,66 @@ void testFitOneGo(bool errors, double epsilon=1e-6) {
   cudaDeviceReset();
 }
 
+void testBrokenLineOneGo(double epsilon=1e-6) {
+	constexpr double B = 0.0113921;
+	BrokenLine::Matrix3xNd hits(3,4);
+	BrokenLine::Matrix3Nd hits_cov = MatrixXd::Zero(12,12);
+
+	fillHitsAndHitsCovBrokenLine(hits, hits_cov);
+
+	// HELIX_FIT CPU
+	BrokenLine::helix_fit helix_fit_results = BrokenLine::Helix_fit(hits,hits_cov,B);
+
+	std::cout << "Fitted values (HelixFit) CPU:\n" << helix_fit_results.par << std::endl;
+
+	// FIT GPU
+	std::cout << "GPU FIT" << std::endl;
+	BrokenLine::Matrix3xNd * hitsGPU = nullptr;
+	BrokenLine::Matrix3Nd * hits_covGPU = nullptr;
+BrokenLine::PreparedBrokenLineData * dataGPU = nullptr;
+Vector4d * fast_fitGPU = nullptr;
+BrokenLine::karimaki_circle_fit * circleGPU = nullptr;
+BrokenLine::line_fit * lineGPU = nullptr;
+	BrokenLine::helix_fit * helix_fit_resultsGPU = nullptr;
+	BrokenLine::helix_fit * helix_fit_resultsGPUret = new BrokenLine::helix_fit();
+
+	cudaCheck(cudaMalloc((void **)&hitsGPU, sizeof(BrokenLine::Matrix3xNd(3,4))));
+    cudaCheck(cudaMalloc((void **)&hits_covGPU, sizeof(BrokenLine::Matrix3Nd(12,12))));
+cudaCheck(cudaMalloc((void **)&dataGPU, sizeof(BrokenLine::PreparedBrokenLineData)));
+cudaCheck(cudaMalloc((void **)&fast_fitGPU, sizeof(Vector4d)));
+cudaCheck(cudaMalloc((void **)&circleGPU, sizeof(BrokenLine::karimaki_circle_fit)));
+cudaCheck(cudaMalloc((void **)&lineGPU, sizeof(BrokenLine::line_fit)));
+	cudaCheck(cudaMalloc((void **)&helix_fit_resultsGPU, sizeof(BrokenLine::helix_fit)));
+
+	cudaCheck(cudaMemcpy(hitsGPU, &hits, sizeof(BrokenLine::Matrix3xNd(3,4)), cudaMemcpyHostToDevice));
+	cudaCheck(cudaMemcpy(hits_covGPU, &hits_cov, sizeof(BrokenLine::Matrix3Nd(12,12)), cudaMemcpyHostToDevice));
+
+	kernelFullBrokenLine<<<1, 1>>>(hitsGPU, hits_covGPU, dataGPU, fast_fitGPU, B, helix_fit_resultsGPU, circleGPU, lineGPU);
+	cudaCheck(cudaDeviceSynchronize());
+
+	cudaCheck(cudaMemcpy(helix_fit_resultsGPUret, helix_fit_resultsGPU, sizeof(BrokenLine::helix_fit), cudaMemcpyDeviceToHost));
+
+	std::cout << "Fitted values (HelixFit) GPU:\n" << helix_fit_resultsGPUret->par << std::endl;
+	assert(isEqualFuzzy(helix_fit_results.par, helix_fit_resultsGPUret->par, epsilon));
+
+	cudaCheck(cudaFree(hitsGPU));
+	cudaCheck(cudaFree(hits_covGPU));
+	cudaCheck(cudaFree(helix_fit_resultsGPU));
+	delete helix_fit_resultsGPUret;
+
+	cudaDeviceReset();
+}
+
 int main (int argc, char * argv[]) {
 //  testFit();
-  std::cout << "TEST FIT, NO ERRORS" << std::endl;
+  /*std::cout << "TEST FIT, NO ERRORS" << std::endl;
   testFitOneGo(false);
 
   std::cout << "TEST FIT, ERRORS AND SCATTER" << std::endl;
-  testFitOneGo(true, 1e-5);
+  testFitOneGo(true, 1e-5);*/
+
+	std::cout << "TEST BROKEN LINE" << std::endl;
+	testBrokenLineOneGo(1e-5);
 
   return 0;
 }
