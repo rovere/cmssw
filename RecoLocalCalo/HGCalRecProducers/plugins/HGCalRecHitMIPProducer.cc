@@ -99,15 +99,27 @@ HGCalRecHitMIPProducer::produce(edm::Event& evt, const edm::EventSetup& es) {
     DetId detid = hit.detid();
     int layer = rhtools_.getLayerWithOffset(detid);
     int thickness_idx = rhtools_.getSiThickIndex(detid);
+//    std::cout << "*** S/N: " << hit.signalOverSigmaNoise()
+//      << " energy: " << hit.energy()
+//      << " (layer-thickId): (" << layer << ", " << thickness_idx << ")"
+//      << " mip_energy_gev[][]: " << mip_energy_gev_[layer][thickness_idx]
+//      << " mip_energy_gev_cut[][]: " << mip_cut_*mip_energy_gev_[layer][thickness_idx]
+//      << " decision: " << (hit.signalOverSigmaNoise() > 3.0f
+//        && hit.energy() < mip_cut_*mip_energy_gev_[layer][thickness_idx])
+//      << std::endl;
     return (hit.signalOverSigmaNoise() > 3.0f
-        && hit.energy() > mip_cut_*mip_energy_gev_[layer][thickness_idx]);
+        && hit.energy() < mip_cut_*mip_energy_gev_[layer][thickness_idx]);
   };
   // Loop over RecHits and filter them
 
   // collection of rechits to put in the event
   auto ee_mipRecHits = std::make_unique<HGCRecHitCollection>();
   ee_mipRecHits->reserve(eeRecHits->size());
-  std::copy_if(eeRecHits->begin(), eeRecHits->end(), ee_mipRecHits->begin(), mip_selection);
+  // Reserve calls reserve on the underlying std::vector, but we would need
+  // resize for copy_if to work with the simple std::begin(output_collection)
+  // syntax. For this reason we use std::back_inserter(output_collection)
+  // which is far less performing if several allocations are needed.
+  std::copy_if(eeRecHits->begin(), eeRecHits->end(), std::back_inserter(*ee_mipRecHits), mip_selection);
 //  auto last_element = std::copy_if(eeRecHits->begin(), eeRecHits->end(), ee_mipRecHits->begin(), mip_selection);
 //  ee_mipRecHits->resize(std::distance(ee_mipRecHits->begin(), last_element));
 
