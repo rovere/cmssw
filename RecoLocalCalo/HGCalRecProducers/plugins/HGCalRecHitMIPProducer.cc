@@ -98,7 +98,15 @@ HGCalRecHitMIPProducer::produce(edm::Event& evt, const edm::EventSetup& es) {
   auto mip_selection = [&](const HGCRecHit & hit)->bool {
     DetId detid = hit.detid();
     int layer = rhtools_.getLayerWithOffset(detid);
+    // We use 0-based vectors, while the return values of the previous
+    // functions starts from 1.
+    --layer;
     int thickness_idx = rhtools_.getSiThickIndex(detid);
+    // Take care also of the Scintillators: when the index we have back is -1,
+    // it means we landed on a non-Si detector, so that we assume it is
+    // Scintillator
+    if (thickness_idx < 0)
+      thickness_idx = 3;
 //    std::cout << "*** S/N: " << hit.signalOverSigmaNoise()
 //      << " energy: " << hit.energy()
 //      << " (layer-thickId): (" << layer << ", " << thickness_idx << ")"
@@ -172,8 +180,12 @@ void HGCalRecHitMIPProducer::computeMipEnergies() {
 
   for (unsigned l = 0; l < maxlayers_; ++l) {
     for (unsigned t = 0; t < thicknesses_; ++t) {
-      mip_energy_gev_[l][t] = weights_[1+l] * thickness_corrections_[t] * 0.001f/cce_[t];
+      mip_energy_gev_[l][t] = weights_[1+l] / thickness_corrections_[t] * 0.001f/cce_[t];
     }
+    // Append the noise value for the scintillators, for all layers, even if
+    // non existant. This will have index 3, which is unphysical for Si
+    // detectors.
+    mip_energy_gev_[l].push_back(weights_[1+l] * 0.001f);
   }
 }
 
