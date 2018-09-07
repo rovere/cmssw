@@ -114,17 +114,19 @@ HGCalRecHitMIPProducer::produce(edm::Event& evt, const edm::EventSetup& es) {
 
   // collection of rechits to put in the event
   auto ee_mipRecHits = std::make_unique<HGCRecHitCollection>();
+  auto hef_mipRecHits = std::make_unique<HGChefRecHitCollection>();
+  auto heb_mipRecHits = std::make_unique<HGChebRecHitCollection>();
   ee_mipRecHits->reserve(eeRecHits->size());
+  hef_mipRecHits->reserve(hefRecHits->size());
+  heb_mipRecHits->reserve(hebRecHits->size());
   // Reserve calls reserve on the underlying std::vector, but we would need
   // resize for copy_if to work with the simple std::begin(output_collection)
   // syntax. For this reason we use std::back_inserter(output_collection)
   // which is far less performing if several allocations are needed.
   std::copy_if(eeRecHits->begin(), eeRecHits->end(), std::back_inserter(*ee_mipRecHits), mip_selection);
-//  auto last_element = std::copy_if(eeRecHits->begin(), eeRecHits->end(), ee_mipRecHits->begin(), mip_selection);
-//  ee_mipRecHits->resize(std::distance(ee_mipRecHits->begin(), last_element));
+  std::copy_if(hefRecHits->begin(), hefRecHits->end(), std::back_inserter(*hef_mipRecHits), mip_selection);
+  std::copy_if(hebRecHits->begin(), hebRecHits->end(), std::back_inserter(*heb_mipRecHits), mip_selection);
 
-  auto hef_mipRecHits = std::make_unique<HGChefRecHitCollection>();
-  auto heb_mipRecHits = std::make_unique<HGChebRecHitCollection>();
 
 
   // put the collection of recunstructed hits in the event
@@ -154,7 +156,7 @@ void HGCalRecHitMIPProducer::fillDescriptions(edm::ConfigurationDescriptions& de
   desc.addUntracked<unsigned>("maxlayers", 52);
   desc.addUntracked<unsigned>("thicknesses", 3);
   desc.addUntracked<double>("mip_cut", 3.0);
-  descriptions.add("HGCalMipLikeRecHit",desc);
+  descriptions.add("HGCalMipLikeRecHitDefault",desc);
 }
 
 
