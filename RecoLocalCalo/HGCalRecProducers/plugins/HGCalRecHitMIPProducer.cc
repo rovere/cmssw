@@ -44,6 +44,7 @@ class HGCalRecHitMIPProducer : public edm::stream::EDProducer<> {
   unsigned maxlayers_;
   unsigned thicknesses_;
   double mip_cut_;
+  double signal_over_sigma_noise_;
   std::vector<std::vector<double> > mip_energy_gev_; // first index is layer number, second is thickness
   hgcal::RecHitTools rhtools_;
 };
@@ -60,7 +61,8 @@ HGCalRecHitMIPProducer::HGCalRecHitMIPProducer(const edm::ParameterSet& ps) :
   cce_ (ps.getParameter<std::vector<double> >("cce")),
   maxlayers_(ps.getUntrackedParameter<unsigned>("maxlayers")),
   thicknesses_(ps.getUntrackedParameter<unsigned>("thicknesses")),
-  mip_cut_(ps.getUntrackedParameter<double>("mip_cut")) {
+  mip_cut_(ps.getUntrackedParameter<double>("mip_cut")),
+  signal_over_sigma_noise_(ps.getUntrackedParameter<double>("signalOverSigmaNoise")) {
   produces< HGCRecHitCollection >(ee_mip_RechitCollection_);
   produces< HGCRecHitCollection >(hef_mip_RechitCollection_);
   produces< HGCRecHitCollection >(heb_mip_RechitCollection_);
@@ -115,7 +117,7 @@ HGCalRecHitMIPProducer::produce(edm::Event& evt, const edm::EventSetup& es) {
 //      << " decision: " << (hit.signalOverSigmaNoise() > 3.0f
 //        && hit.energy() < mip_cut_*mip_energy_gev_[layer][thickness_idx])
 //      << std::endl;
-    return (hit.signalOverSigmaNoise() > 3.0f
+    return (hit.signalOverSigmaNoise() > signal_over_sigma_noise_
         && hit.energy() < mip_cut_*mip_energy_gev_[layer][thickness_idx]);
   };
   // Loop over RecHits and filter them
@@ -164,6 +166,7 @@ void HGCalRecHitMIPProducer::fillDescriptions(edm::ConfigurationDescriptions& de
   desc.addUntracked<unsigned>("maxlayers", 52);
   desc.addUntracked<unsigned>("thicknesses", 3);
   desc.addUntracked<double>("mip_cut", 3.0);
+  desc.addUntracked<double>("signalOverSigmaNoise", 4.0);
   descriptions.add("HGCalMipLikeRecHitDefault",desc);
 }
 
