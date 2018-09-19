@@ -1,3 +1,4 @@
+
 #include "RecoPixelVertexing/PixelTrackFitting/interface/PixelFitterByBrokenLine.h"
 #include "RecoPixelVertexing/PixelTrackFitting/interface/BrokenLine.h"
 
@@ -26,6 +27,7 @@
 #include "RecoPixelVertexing/PixelTrackFitting/interface/PixelTrackErrorParam.h"
 
 #include "CommonTools/Utils/interface/DynArray.h"
+#include <chrono>
 
 using namespace std;
 
@@ -56,6 +58,12 @@ std::unique_ptr<reco::Track> PixelFitterByBrokenLine::run(
     isBarrel[i] = recHit->detUnit()->type().isBarrel();
   }
 
+  float bField = 1 / PixelRecoUtilities::fieldInInvGev(*es_);
+
+  std::chrono::time_point<std::chrono::system_clock> start, end;
+  start = std::chrono::system_clock::now();
+  //std::cout << "qui comincia il tempo" << std::endl;
+
   Matrix<double, 3, Dynamic, 0, 3, max_nop> brokenLineHits(3, nhits);
 
   Matrix<double, Dynamic, Dynamic, 0, 3 * max_nop, 3 * max_nop> brokenLineHits_cov =
@@ -73,8 +81,12 @@ std::unique_ptr<reco::Track> PixelFitterByBrokenLine::run(
     }
   }
 
-  float bField = 1 / PixelRecoUtilities::fieldInInvGev(*es_);
   helix_fit fittedTrack = BrokenLine::Helix_fit(brokenLineHits, brokenLineHits_cov, bField);
+  
+  end = std::chrono::system_clock::now();
+  //std::cout << "qui finisce il tempo" << std::endl;
+  int elapsed_nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count();
+
   int iCharge = fittedTrack.q;
 
   // parameters are:
@@ -103,8 +115,15 @@ std::unique_ptr<reco::Track> PixelFitterByBrokenLine::run(
 
   float chi2 = (fittedTrack.chi2_line + fittedTrack.chi2_circle);
 
-  //std::cout << valPt << " " << fittedTrack.chi2_line <<	" " << fittedTrack.chi2_circle << " " << chi2 << std::endl;
+  std::cout << valPt << " " << std::asinh(valCotTheta) << " " << fittedTrack.chi2_line << " " << fittedTrack.chi2_circle
+  << " " << elapsed_nanoseconds << std::endl;
 
+  //std::cout << valPt << " " << fittedTrack.chi2_line <<	" " << fittedTrack.chi2_circle << " " << chi2 << std::endl;
+  if (valPt > 4 && valPt < 5 && valCotTheta > 0.4 && valCotTheta < 2 && fittedTrack.chi2_line > 1.2 && fittedTrack.chi2_line < 
+3 && fittedTrack.chi2_circle > 0.6 && fittedTrack.chi2_circle < 2) {
+  // std::cout << brokenLineHits << std::endl;
+  // std::cout << brokenLineHits_cov << std::endl;
+  }
   PixelTrackBuilder builder;
   Measurement1D phi(valPhi, errValPhi);
   Measurement1D tip(valTip, errValTip);

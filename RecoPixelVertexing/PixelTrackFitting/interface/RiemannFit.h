@@ -4,7 +4,7 @@
 #include "FitResult.h"
 
 #ifndef RFIT_DEBUG
-#define RFIT_DEBUG 1
+#define RFIT_DEBUG 0
 #endif  // RFIT_DEBUG
 
 namespace Rfit

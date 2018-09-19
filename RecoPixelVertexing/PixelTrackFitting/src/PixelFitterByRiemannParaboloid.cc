@@ -26,6 +26,7 @@
 #include "RecoPixelVertexing/PixelTrackFitting/interface/PixelTrackErrorParam.h"
 
 #include "CommonTools/Utils/interface/DynArray.h"
+#include <chrono>
 
 using namespace std;
 
@@ -60,8 +61,13 @@ std::unique_ptr<reco::Track> PixelFitterByRiemannParaboloid::run(
     isBarrel[i] = recHit->detUnit()->type().isBarrel();
   }
 
-   assert(nhits==4);
-   Rfit::Matrix3xNd<4> riemannHits;
+  float bField = 1 / PixelRecoUtilities::fieldInInvGev(*es_);
+
+  std::chrono::time_point<std::chrono::system_clock> start, end;
+  start = std::chrono::system_clock::now();
+  //std::cout << "qui comincia il tempo" << std::endl;
+
+  Matrix<double, 3, Dynamic, 0, 3, max_nop> riemannHits(3, nhits);
 
   Eigen::Matrix<float,6,4> riemannHits_ge = Eigen::Matrix<float,6,4>::Zero();
 
@@ -72,8 +78,13 @@ std::unique_ptr<reco::Track> PixelFitterByRiemannParaboloid::run(
                               errors[i].czx(), errors[i].czy(), errors[i].czz();
   }
 
-  float bField = 1 / PixelRecoUtilities::fieldInInvGev(setup);
-  helix_fit fittedTrack = Rfit::Helix_fit(riemannHits, riemannHits_ge, bField, useErrors_);
+  helix_fit fittedTrack = Rfit::Helix_fit(riemannHits, riemannHits_cov, bField, useErrors_);
+
+  end = std::chrono::system_clock::now();
+  //std::cout << "qui finisce il tempo" << std::endl;
+  int elapsed_nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count();
+  std::cout << elapsed_nanoseconds << std::endl;
+
   int iCharge = fittedTrack.q;
 
   // parameters are:
