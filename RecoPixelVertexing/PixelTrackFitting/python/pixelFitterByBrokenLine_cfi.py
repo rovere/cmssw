@@ -1,0 +1,6 @@
+import FWCore.ParameterSet.Config as cms
+
+from RecoPixelVertexing.PixelTrackFitting.pixelFitterByBrokenLineDefault_cfi import pixelFitterByBrokenLineDefault
+
+pixelFitterByBrokenLine = pixelFitterByBrokenLineDefault.clone()
+
