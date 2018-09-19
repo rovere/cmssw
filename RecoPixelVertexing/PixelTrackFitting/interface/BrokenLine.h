@@ -18,19 +18,21 @@ namespace BrokenLine {
 	
 	constexpr unsigned int max_nop = 4;  //!< In order to avoid use of dynamic memory
 	
-	using MatrixNd = Eigen::Matrix<double, Dynamic, Dynamic, 0, max_nop, max_nop>;
-	using MatrixNplusONEd = Eigen::Matrix<double, Dynamic, Dynamic, 0, max_nop + 1, max_nop + 1>;
-	using Matrix3Nd = Eigen::Matrix<double, Dynamic, Dynamic, 0, 3 * max_nop, 3 * max_nop>;
-	using Matrix2xNd = Eigen::Matrix<double, 2, Dynamic, 0, 2, max_nop>;
-	using Matrix3xNd = Eigen::Matrix<double, 3, Dynamic, 0, 3, max_nop>;
-	using VectorNd = Eigen::Matrix<double, Dynamic, 1, 0, max_nop, 1>;
-	using VectorNplusONEd = Eigen::Matrix<double, Dynamic, 1, 0, max_nop + 1, 1>;
-	using Matrix2x3d = Eigen::Matrix<double, 2, 3>;
-	using Matrix5d = Eigen::Matrix<double, 5, 5>;
-	using Vector5d = Eigen::Matrix<double, 5, 1>;
-	using u_int    = unsigned int;
+	// WARNING: USE STATIC DIMENSIONS ON GPUs. To do so, comment these definitions and uncomment the others following
 	
-	/*using MatrixNd = Eigen::Matrix<double, max_nop, max_nop, 0, max_nop, max_nop>;
+	/*using MatrixNd = Eigen::Matrix<double, Dynamic, Dynamic, 0, max_nop, max_nop>;
+	 using MatrixNplusONEd = Eigen::Matrix<double, Dynamic, Dynamic, 0, max_nop + 1, max_nop + 1>;
+	 using Matrix3Nd = Eigen::Matrix<double, Dynamic, Dynamic, 0, 3 * max_nop, 3 * max_nop>;
+	 using Matrix2xNd = Eigen::Matrix<double, 2, Dynamic, 0, 2, max_nop>;
+	 using Matrix3xNd = Eigen::Matrix<double, 3, Dynamic, 0, 3, max_nop>;
+	 using VectorNd = Eigen::Matrix<double, Dynamic, 1, 0, max_nop, 1>;
+	 using VectorNplusONEd = Eigen::Matrix<double, Dynamic, 1, 0, max_nop + 1, 1>;
+	 using Matrix2x3d = Eigen::Matrix<double, 2, 3>;
+	 using Matrix5d = Eigen::Matrix<double, 5, 5>;
+	 using Vector5d = Eigen::Matrix<double, 5, 1>;
+	 using u_int    = unsigned int;*/
+	
+	using MatrixNd = Eigen::Matrix<double, max_nop, max_nop, 0, max_nop, max_nop>;
 	using MatrixNplusONEd = Eigen::Matrix<double, max_nop + 1, max_nop + 1, 0, max_nop + 1, max_nop + 1>;
 	using Matrix3Nd = Eigen::Matrix<double, 3 * max_nop, 3 * max_nop, 0, 3 * max_nop, 3 * max_nop>;
 	using Matrix2xNd = Eigen::Matrix<double, 2, max_nop, 0, 2, max_nop>;
@@ -40,7 +42,7 @@ namespace BrokenLine {
 	using Matrix2x3d = Eigen::Matrix<double, 2, 3>;
 	using Matrix5d = Eigen::Matrix<double, 5, 5>;
 	using Vector5d = Eigen::Matrix<double, 5, 1>;
-	using u_int    = unsigned int;*/
+	using u_int    = unsigned int;
 	
 	struct karimaki_circle_fit {
 		Vector3d par;  //!< Karimäki's parameters: (phi, d, k=1/R)
@@ -117,8 +119,9 @@ namespace BrokenLine {
 		double XX_0; //!< radiation length of the material in cm
 		if(Layer==1) XX_0=16/0.06;
 		else XX_0=16/0.06;
-		XX_0*=1; //1.55 correction made by looking at the pulls
-		return (sqr((13.6/1000)/(1*B*R*sqrt(1+sqr(slope))))*(abs(length)/XX_0)*sqr(1+0.038*log(abs(length)/XX_0)))/3;
+		XX_0*=1;
+		double geometry_factor=0.7; //!< number between 1/3 (uniform material) and 1 (thin scatterer) to be manually tuned
+		return geometry_factor*sqr((13.6/1000)/(1*B*R*sqrt(1+sqr(slope))))*(abs(length)/XX_0)*sqr(1+0.038*log(abs(length)/XX_0));
 	}
 	
 	/*!
@@ -144,7 +147,7 @@ namespace BrokenLine {
 	 \param x0 x coordinate of the translation vector.
 	 \param y0 y coordinate of the translation vector.
 	 */
-	CUDA_HOSTDEV inline void TranslateKarimaki(karimaki_circle_fit& circle, const double& x0, const double& y0) {
+	CUDA_HOSTDEV inline void TranslateKarimaki(karimaki_circle_fit& circle, const double& x0, const double& y0, Matrix3d& Jacob) {
 		double A,U,BB,C,DO,DP,uu,xi,v,mu,lambda,zeta;
 		DP=x0*cos(circle.par(0))+y0*sin(circle.par(0));
 		DO=x0*sin(circle.par(0))-y0*cos(circle.par(0))+circle.par(1);
@@ -159,7 +162,6 @@ namespace BrokenLine {
 		mu=1/(U*(1+U))+circle.par(2)*lambda;
 		zeta=sqr(DO)+sqr(DP);
 		
-		Matrix3d Jacob;
 		Jacob << xi*uu*v, -xi*sqr(circle.par(2))*DP, xi*DP,
 		2*mu*uu*DP, 2*mu*v, mu*zeta-lambda*A,
 		0, 0, 1;
@@ -192,17 +194,17 @@ namespace BrokenLine {
 	 \param fast_fit pre-fit result in the form (X0,Y0,R,tan(theta)).
 	 \param B magnetic field in Gev/cm/c.
 	 
-	 \return
+	 \return see description of PreparedBrokenLineData.
 	 */
-	CUDA_HOSTDEV inline PreparedBrokenLineData PrepareBrokenLineData(const Matrix3xNd& hits,
-																	 const Matrix3Nd& hits_cov,
-																	 const Vector4d& fast_fit,
-																	 const double B) {
+	CUDA_HOSTDEV inline void PrepareBrokenLineData(const Matrix3xNd& hits,
+												   const Matrix3Nd& hits_cov,
+												   const Vector4d& fast_fit,
+												   const double B,
+												   PreparedBrokenLineData & results) {
 		u_int n=hits.cols();
 		u_int i;
 		Vector2d d;
 		Vector2d e;
-		PreparedBrokenLineData results;
 		results.radii=Matrix2xNd::Zero(2,n);
 		results.s=VectorNd::Zero(n);
 		results.S=VectorNd::Zero(n);
@@ -218,6 +220,7 @@ namespace BrokenLine {
 		
 		Matrix2d R=RotationMatrix(slope);
 		
+		// calculate radii and s
 		results.radii=hits.block(0,0,2,n)-fast_fit.head(2)*MatrixXd::Constant(1,n,1);
 		e=-fast_fit(2)*fast_fit.head(2)/fast_fit.head(2).norm();
 		for(i=0;i<n;i++) {
@@ -227,6 +230,7 @@ namespace BrokenLine {
 		}
 		VectorNd z=hits.block(2,0,1,n).transpose();
 		
+		//calculate S and Z
 		Matrix2xNd pointsSZ=Matrix2xNd::Zero(2,n);
 		for(i=0;i<n;i++) {
 			pointsSZ(0,i)=results.s(i);
@@ -236,11 +240,10 @@ namespace BrokenLine {
 		results.S=pointsSZ.block(0,0,1,n).transpose();
 		results.Z=pointsSZ.block(1,0,1,n).transpose();
 		
+		//calculate VarBeta
 		for(i=1;i<n-1;i++) {
 			results.VarBeta(i)=MultScatt(results.S(i+1)-results.S(i),B,fast_fit(2),i+2,slope)+MultScatt(results.S(i)-results.S(i-1),B,fast_fit(2),i+1,slope);
 		}
-		
-		return results;
 	}
 	
 	/*!
@@ -309,73 +312,6 @@ namespace BrokenLine {
 	}
 	
 	/*!
-	 \brief A very fast helix fit: it fits a circle by three points (first, middle
-	 and last point) and a line by two points (first and last). [Recycled for the Broken Line fit!]
-	 
-	 \param hits points to be fitted
-	 
-	 \return result in this form: (X0,Y0,R,tan(theta)).
-	 
-	 \warning points must be passed ordered (from internal layer to external) in
-	 order to maximize accuracy and do not mistake tan(theta) sign.
-	 
-	 \details This fast fit is used as pre-fit which is needed for:\n
-	 - momentum estimation for the computation of the multiple scattering variances;\n
-	 - properly change the coordinate system (rotate the line or define the curvilinear coordinates for the circle) in order to apply the Broken Line fit procedure.
-	 */
-	
-	CUDA_HOSTDEV inline Vector4d Fast_fit(const Matrix3xNd& hits) {
-		Vector4d result;
-		u_int n = hits.cols(); // get the number of hits
-		
-		// CIRCLE FIT
-		// Make segments between middle-to-first(b) and last-to-first(c) hits
-		const Vector2d b = hits.block(0, n / 2, 2, 1) - hits.block(0, 0, 2, 1);
-		const Vector2d c = hits.block(0, n - 1, 2, 1) - hits.block(0, 0, 2, 1);
-
-		// Compute their lengths
-		const double b2 = b.squaredNorm();
-		const double c2 = c.squaredNorm();
-		double X0;
-		double Y0;
-		// The algebra has been verified (MR). The usual approach has been followed:
-		// * use an orthogonal reference frame passing from the first point.
-		// * build the segments (chords)
-		// * build orthogonal lines through mid points
-		// * make a system and solve for X0 and Y0.
-		// * add the initial point
-		if (abs(b.x()) > abs(b.y())) {  //!< in case b.x is 0 (2 hits with same x)
-			const double k = c.x() / b.x();
-			const double div = 2. * (k * b.y() - c.y());
-			// if aligned TO FIX
-			Y0 = (k * b2 - c2) / div;
-			X0 = b2 / (2 * b.x()) - b.y() / b.x() * Y0;
-		} else {
-			const double k = c.y() / b.y();
-			const double div = 2. * (k * b.x() - c.x());
-			// if aligned TO FIX
-			X0 = (k * b2 - c2) / div;
-			Y0 = b2 / (2 * b.y()) - b.x() / b.y() * X0;
-		}
-		
-		result(0) = X0 + hits(0, 0);
-		result(1) = Y0 + hits(1, 0);
-		result(2) = sqrt(sqr(X0) + sqr(Y0));
-		
-		// LINE FIT
-		const Vector2d d = hits.block(0, 0, 2, 1) - result.head(2);
-		const Vector2d e = hits.block(0, n - 1, 2, 1) - result.head(2);
-		// Compute the arc-length between first and last point: L = R * theta = R *  atan (tan (Theta) )
-		const double dr = result(2) * atan2(cross2D(d, e), d.dot(e));
-		// Simple difference in Z between last and first hit
-		const double dz = hits(2, n - 1) - hits(2, 0);
-		
-		result(3) = (dr / dz);
-		
-		return result;
-	}
-	
-	/*!
 	 \brief Performs the Broken Line fit in the curved track case (that is, the fit parameters are the interceptions u and the curvature correction \Delta\kappa).
 	 
 	 \param hits hits coordinates.
@@ -393,24 +329,26 @@ namespace BrokenLine {
 	 -chi2 value of the cost function in the minimum.
 	 */
 	
-	CUDA_HOSTDEV inline karimaki_circle_fit BL_Circle_fit(const Matrix3xNd& hits,
-														  const Matrix3Nd& hits_cov,
-														  const Vector4d& fast_fit,
-														  const double B,
-														  const PreparedBrokenLineData& data) {
+	CUDA_HOSTDEV inline void BL_Circle_fit(const Matrix3xNd& hits,
+										   const Matrix3Nd& hits_cov,
+										   const Vector4d& fast_fit,
+										   const double B,
+										   PreparedBrokenLineData& data,
+										   karimaki_circle_fit & circle_results,
+										   Matrix3d& Jacob,
+										   MatrixNplusONEd& C_U) {
 		u_int n=hits.cols();
 		u_int i;
-		karimaki_circle_fit circle_results;
 		
 		circle_results.q=data.q;
-		Matrix2xNd radii=data.radii;
-		VectorNd s=data.s;
-		VectorNd S=data.S;
-		VectorNd VarBeta=data.VarBeta;
+		Matrix2xNd& radii=data.radii;
+		const VectorNd& s=data.s;
+		const VectorNd& S=data.S;
+		VectorNd& Z=data.Z;
+		VectorNd& VarBeta=data.VarBeta;
 		const double slope=-circle_results.q/fast_fit(3);
 		VarBeta*=1+sqr(slope); // the kink angles are projected!
 		
-		VectorNd Z=VectorNd::Zero(n);
 		for(i=0;i<n;i++) {
 			Z(i)=radii.block(0,i,2,1).norm()-fast_fit(2);
 		}
@@ -418,14 +356,14 @@ namespace BrokenLine {
 		Matrix2d V; // covariance matrix
 		VectorNd w=VectorNd::Zero(n); // weights
 		Matrix2d RR; // rotation matrix point by point
-		double Slope; // slope of the circle point by point
+		//double Slope; // slope of the circle point by point
 		for(i=0;i<n;i++) {
 			V(0,0)=hits_cov(i,i); // I could not find an easy access to sub-matrices in Eigen...
 			V(0,1)=hits_cov(i,i+n);
 			V(1,0)=hits_cov(i+n,i);
 			V(1,1)=hits_cov(i+n,i+n);
-			Slope=-radii(0,i)/radii(1,i);
-			RR=RotationMatrix(Slope);
+			//Slope=-radii(0,i)/radii(1,i);
+			RR=RotationMatrix(-radii(0,i)/radii(1,i));
 			w(i)=1/((RR*V*RR.transpose())(1,1)); // compute the orthogonal weight point by point
 		}
 		
@@ -434,37 +372,66 @@ namespace BrokenLine {
 			r_u(i)=w(i)*Z(i);
 		} r_u(n)=0;
 		
-		MatrixNplusONEd C_U=MatrixNplusONEd::Zero(n+1,n+1);
+		C_U=MatrixNplusONEd::Zero(n+1,n+1);
+		//add the border to the C_u matrix
 		for(i=0;i<n;i++) {
-			if(i>0 && i<n-1) C_U(i,n)+=-(s(i+1)-s(i-1))/(2*VarBeta(i))*(s(i+1)-s(i-1))/((s(i+1)-s(i))*(s(i)-s(i-1)));
-			if(i>1) C_U(i,n)+=(s(i)-s(i-2))/(2*VarBeta(i-1)*(s(i)-s(i-1)));
-			if(i<n-2) C_U(i,n)+=(s(i+2)-s(i))/(2*VarBeta(i+1)*(s(i+1)-s(i)));
+			if(i>0 && i<n-1) {
+				C_U(i,n)+=-(s(i+1)-s(i-1))/(2*VarBeta(i))*(s(i+1)-s(i-1))/((s(i+1)-s(i))*(s(i)-s(i-1)));
+				C_U(n,i)=C_U(i,n);
+			}
+			if(i>1) {
+				C_U(i,n)+=(s(i)-s(i-2))/(2*VarBeta(i-1)*(s(i)-s(i-1)));
+				C_U(n,i)=C_U(i,n);
+			}
+			if(i<n-2) {
+				C_U(i,n)+=(s(i+2)-s(i))/(2*VarBeta(i+1)*(s(i+1)-s(i)));
+				C_U(n,i)=C_U(i,n);
+			}
 			
 			if(i>0 && i<n-1) C_U(n,n)+=sqr(s(i+1)-s(i-1))/(4*VarBeta(i));
-		} C_U(n,n)=C_U(n,n)/2;
-		MatrixNplusONEd C_u;
-		C_u=C_U+C_U.transpose();
-		C_u.block(0,0,n,n)=MatrixC_u(w,s,VarBeta);
-		MatrixNplusONEd I=C_u.inverse();
-		
-		VectorNplusONEd u=I*r_u; // obtain the fitted parameters by solving the linear system
-		
-		// (phi, d_ca, k) in the system in which the first exp. data is the origin
-		double alpha=(s(1)-s(0))/fast_fit(2);
-		circle_results.par << atan2(-radii(0,0),radii(1,0))+circle_results.q*(u(1)-u(0)/cos(alpha))/(2*fast_fit(2)*tan(alpha/2)),
-		-circle_results.q*u(0), circle_results.q*(1/fast_fit(2)+u(n));
-		
-		if(circle_results.q==-1) {
-			if(circle_results.par(0)<0) circle_results.par(0)+=3.14159265358979323;
-			else circle_results.par(0)+=-3.14159265358979323;
 		}
+		C_U.block(0,0,n,n)=MatrixC_u(w,s,VarBeta);
+		MatrixNplusONEd& I=C_U;
+		I=C_U.inverse();//MatrixNplusONEd I=C_U.inverse();
 		
-		circle_results.cov << (I(1,1)-2*I(0,1)/cos(alpha)+I(0,0)/sqr(cos(alpha)))/sqr(2*fast_fit(2)*tan(alpha/2))+(1+sqr(slope))*MultScatt(S(1)-S(0),B,fast_fit(2),2,slope), (I(0,0)/cos(alpha)-I(0,1))/(2*fast_fit(2)*tan(alpha/2)), (I(1,n)-I(0,n)/cos(alpha))/(2*fast_fit(2)*tan(alpha/2)),
-		(I(0,0)/cos(alpha)-I(0,1))/(2*fast_fit(2)*tan(alpha/2)), I(0,0), -I(0,n),
-		(I(1,n)-I(0,n)/cos(alpha))/(2*fast_fit(2)*tan(alpha/2)), -I(0,n), I(n,n);
+		VectorNplusONEd& u=r_u;
+		u=I*r_u; // obtain the fitted parameters by solving the linear system
 		
-		// translate to the original xy system
-		TranslateKarimaki(circle_results,hits(0,0),hits(1,0));
+		// compute (phi, d_ca, k) in the system in which the midpoint of the first two corrected hits is the origin...
+		
+		radii.block(0,0,2,1)/=radii.block(0,0,2,1).norm();
+		radii.block(0,1,2,1)/=radii.block(0,1,2,1).norm();
+		
+		Vector2d d=hits.block(0,0,2,1)+(-Z(0)+u(0))*radii.block(0,0,2,1);
+		Vector2d e=hits.block(0,1,2,1)+(-Z(1)+u(1))*radii.block(0,1,2,1);
+		
+		circle_results.par << atan2((e-d)(1),(e-d)(0)),
+		-circle_results.q*(fast_fit(2)-sqrt(sqr(fast_fit(2))-(e-d).squaredNorm()/4)),
+		circle_results.q*(1/fast_fit(2)+u(n));
+		
+		assert(circle_results.q*circle_results.par(1)<=0);
+		
+		Vector2d eMinusd=e-d;
+		double tmp1=eMinusd.squaredNorm();
+		
+		Jacob << (radii(1,0)*eMinusd(0)-eMinusd(1)*radii(0,0))/tmp1,(radii(1,1)*eMinusd(0)-eMinusd(1)*radii(0,1))/tmp1,0,
+		(circle_results.q/2)*(eMinusd(0)*radii(0,0)+eMinusd(1)*radii(1,0))/sqrt(sqr(2*fast_fit(2))-tmp1),(circle_results.q/2)*(eMinusd(0)*radii(0,1)+eMinusd(1)*radii(1,1))/sqrt(sqr(2*fast_fit(2))-tmp1),0,
+		0,0,circle_results.q;
+		
+		circle_results.cov << I(0,0), I(0,1), I(0,n),
+		I(1,0), I(1,1), I(1,n),
+		I(n,0), I(n,1), I(n,n);
+		
+		circle_results.cov=Jacob*circle_results.cov*Jacob.transpose();
+		
+		//...Translate in the system in which the first corrected hit is the origin, adding the m.s. correction...
+		
+		TranslateKarimaki(circle_results,(e-d)(0)/2,(e-d)(1)/2,Jacob);
+		circle_results.cov(0,0)+=(1+sqr(slope))*MultScatt(S(1)-S(0),B,fast_fit(2),2,slope);
+		
+		//...And translate back to the original system
+		
+		TranslateKarimaki(circle_results,d(0),d(1),Jacob);
 		
 		// compute chi2
 		circle_results.chi2=0;
@@ -474,8 +441,6 @@ namespace BrokenLine {
 		}
 		
 		assert(circle_results.chi2>=0);
-		
-		return circle_results;
 	}
 	
 	/*!
@@ -491,30 +456,30 @@ namespace BrokenLine {
 	 The step 3 is the correction of the fast pre-fitted parameters for the innermost part of the track. It is first done in a comfortable coordinate system (the one in which the first hit is the origin) and then the parameters and their covariance matrix are transformed to the original coordinate system.
 	 
 	 \return circle_results karimaki_circle_fit:
-	 -par parameter of the line in this form: (phi, d, k); \n
+	 -par parameter of the line in this form: (cot(theta), Zip); \n
 	 -cov covariance matrix of the fitted parameter; \n
 	 -chi2 value of the cost function in the minimum.
 	 */
 	
-	CUDA_HOSTDEV inline line_fit BL_Line_fit(const Matrix3xNd& hits,
-											 const Matrix3Nd& hits_cov,
-											 const Vector4d& fast_fit,
-											 const double B,
-											 const PreparedBrokenLineData& data) {
+	CUDA_HOSTDEV inline void BL_Line_fit(const Matrix3xNd& hits,
+										 const Matrix3Nd& hits_cov,
+										 const Vector4d& fast_fit,
+										 const double B,
+										 const PreparedBrokenLineData& data,
+										 line_fit & line_results) {
 		u_int n=hits.cols();
 		u_int i;
-		line_fit line_results;
 		
-		Matrix2xNd radii=data.radii;
-		VectorNd S=data.S;
-		VectorNd Z=data.Z;
-		VectorNd VarBeta=data.VarBeta;
+		const Matrix2xNd& radii=data.radii;
+		const VectorNd& S=data.S;
+		const VectorNd& Z=data.Z;
+		const VectorNd& VarBeta=data.VarBeta;
 		
 		const double slope=-data.q/fast_fit(3);
 		Matrix2d R=RotationMatrix(slope);
 		
 		Matrix3d V=Matrix3d::Zero(); // covariance matrix XYZ
-		Matrix2x3d JacobXYZtosZ=Matrix2x3d::Zero(); // jacobian for the computation of the error on s (xyz -> sz)
+		Matrix2x3d JacobXYZtosZ=Matrix2x3d::Zero(); // jacobian for computation of the error on s (xyz -> sz)
 		VectorNd w=VectorNd::Zero(n);
 		for(i=0;i<n;i++) {
 			V(0,0)=hits_cov(i,i); // I could not find an easy way to access the sub-matrices in Eigen...
@@ -537,8 +502,7 @@ namespace BrokenLine {
 			r_u(i)=w(i)*Z(i);
 		}
 		
-		MatrixNd C_u=MatrixC_u(w,S,VarBeta);
-		MatrixNd I=C_u.inverse();
+		MatrixNd I=MatrixC_u(w,S,VarBeta).inverse();
 		VectorNd u=I*r_u; // obtain the fitted parameters by solving the linear system
 		
 		// line parameters in the system in which the first hit is the origin and with axis along SZ
@@ -556,12 +520,13 @@ namespace BrokenLine {
 		line_results.cov=Jacob*line_results.cov*Jacob.transpose();
 		
 		// rotate to the original sz system
-		Jacob(0,0)=1/sqr(R(0,0)-line_results.par(0)*R(0,1));
+		double tmp=R(0,0)-line_results.par(0)*R(0,1);
+		Jacob(0,0)=1/sqr(tmp);
 		Jacob(0,1)=0;
-		Jacob(1,0)=line_results.par(1)*R(0,1)/sqr(R(0,0)-line_results.par(0)*R(0,1));
-		Jacob(1,1)=1/(R(0,0)-line_results.par(0)*R(0,1));
-		line_results.par(1)=line_results.par(1)/(R(0,0)-line_results.par(0)*R(0,1));
-		line_results.par(0)=(R(0,1)+line_results.par(0)*R(0,0))/(R(0,0)-line_results.par(0)*R(0,1));
+		Jacob(1,0)=line_results.par(1)*R(0,1)/sqr(tmp);
+		Jacob(1,1)=1/tmp;
+		line_results.par(1)=line_results.par(1)/tmp;
+		line_results.par(0)=(R(0,1)+line_results.par(0)*R(0,0))/tmp;
 		line_results.cov=Jacob*line_results.cov*Jacob.transpose();
 		
 		// compute chi2
@@ -572,8 +537,6 @@ namespace BrokenLine {
 		}
 		
 		assert(line_results.chi2>=0);
-		
-		return line_results;
 	}
 	
 	/*!
@@ -608,7 +571,7 @@ namespace BrokenLine {
 	 
 	 \bug see BL_Circle_fit(), BL_Line_fit() and Fast_fit() bugs.
 	 
-	 \return (phi,Tip,p_t,cotan(theta)),Zip), their covariance matrix and the chi2's of the circle and line fits.
+	 \return (phi,Tip,p_t,cot(theta)),Zip), their covariance matrix and the chi2's of the circle and line fits.
 	 */
 	
 	CUDA_HOSTDEV inline helix_fit Helix_fit(const Matrix3xNd& hits,
@@ -618,13 +581,17 @@ namespace BrokenLine {
 		
 		helix.fast_fit=BL_Fast_fit(hits);
 		
-		const PreparedBrokenLineData data=PrepareBrokenLineData(hits,hits_cov,helix.fast_fit,B);
+		PreparedBrokenLineData data;
+		karimaki_circle_fit circle;
+		line_fit line;
+		Matrix3d Jacob;
+		MatrixNplusONEd C_U;
 		
-		karimaki_circle_fit circle=BL_Circle_fit(hits,hits_cov,helix.fast_fit,B,data);
-		line_fit line=BL_Line_fit(hits,hits_cov,helix.fast_fit,B,data);
+		PrepareBrokenLineData(hits,hits_cov,helix.fast_fit,B,data);
+		BL_Line_fit(hits,hits_cov,helix.fast_fit,B,data,line);
+		BL_Circle_fit(hits,hits_cov,helix.fast_fit,B,data,circle,Jacob,C_U);
 		
 		// the circle fit gives k, but here we want p_t, so let's change the parameter and the covariance matrix
-		Matrix3d Jacob;
 		Jacob << 1,0,0,
 		0,1,0,
 		0,0,-abs(circle.par(2))*B/(sqr(circle.par(2))*circle.par(2));
