@@ -50,18 +50,11 @@ void PixelTrackProducer::produce(edm::Event& ev, const edm::EventSetup& es)
   LogDebug("PixelTrackProducer, produce")<<"event# :"<<ev.id();
 
   TracksWithTTRHs tracks;
-  //std::chrono::time_point<std::chrono::system_clock> start, end;
-  //start = std::chrono::system_clock::now();
-  //std::cout << "qui comincia il tempo" << std::endl;
   if (!runOnGPU_)
     theReconstruction.run(tracks, ev, es);
   else {
     theGPUReconstruction.run(tracks, ev, es);
   }
-  //end = std::chrono::system_clock::now();
-  //std::cout << "qui finisce il tempo" << std::endl;
-  //int elapsed_microseconds = std::chrono::duration_cast<std::chrono::microseconds>(end-start).count();
-  //std::cout << " " << elapsed_microseconds << std::endl;
   edm::ESHandle<TrackerTopology> httopo;
   es.get<TrackerTopologyRcd>().get(httopo);
 

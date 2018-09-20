@@ -26,7 +26,7 @@ public:
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     edm::ParameterSetDescription desc;
-    descriptions.add("pixelFitterByBrokenLineDefault", desc);
+    descriptions.add("pixelFitterByBrokenLine", desc);
   }
 
 private:

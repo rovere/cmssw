@@ -4,13 +4,7 @@
 #include <Eigen/Core>
 #include <Eigen/Cholesky>
 #include <Eigen/Eigenvalues>
-#include <cuda.h>
-
-#ifdef __CUDACC__
-#define CUDA_HOSTDEV __host__ __device__
-#else
-#define CUDA_HOSTDEV
-#endif
+#include <cuda_runtime.h>
 
 namespace BrokenLine {
 	
@@ -20,29 +14,31 @@ namespace BrokenLine {
 	
 	// WARNING: USE STATIC DIMENSIONS ON GPUs. To do so, comment these definitions and uncomment the others following
 	
-	/*using MatrixNd = Eigen::Matrix<double, Dynamic, Dynamic, 0, max_nop, max_nop>;
-	 using MatrixNplusONEd = Eigen::Matrix<double, Dynamic, Dynamic, 0, max_nop + 1, max_nop + 1>;
-	 using Matrix3Nd = Eigen::Matrix<double, Dynamic, Dynamic, 0, 3 * max_nop, 3 * max_nop>;
-	 using Matrix2xNd = Eigen::Matrix<double, 2, Dynamic, 0, 2, max_nop>;
-	 using Matrix3xNd = Eigen::Matrix<double, 3, Dynamic, 0, 3, max_nop>;
-	 using VectorNd = Eigen::Matrix<double, Dynamic, 1, 0, max_nop, 1>;
-	 using VectorNplusONEd = Eigen::Matrix<double, Dynamic, 1, 0, max_nop + 1, 1>;
-	 using Matrix2x3d = Eigen::Matrix<double, 2, 3>;
-	 using Matrix5d = Eigen::Matrix<double, 5, 5>;
-	 using Vector5d = Eigen::Matrix<double, 5, 1>;
-	 using u_int    = unsigned int;*/
-	
-	using MatrixNd = Eigen::Matrix<double, max_nop, max_nop, 0, max_nop, max_nop>;
-	using MatrixNplusONEd = Eigen::Matrix<double, max_nop + 1, max_nop + 1, 0, max_nop + 1, max_nop + 1>;
-	using Matrix3Nd = Eigen::Matrix<double, 3 * max_nop, 3 * max_nop, 0, 3 * max_nop, 3 * max_nop>;
-	using Matrix2xNd = Eigen::Matrix<double, 2, max_nop, 0, 2, max_nop>;
-	using Matrix3xNd = Eigen::Matrix<double, 3, max_nop, 0, 3, max_nop>;
-	using VectorNd = Eigen::Matrix<double, max_nop, 1, 0, max_nop, 1>;
-	using VectorNplusONEd = Eigen::Matrix<double, max_nop + 1, 1, 0, max_nop + 1, 1>;
+	using MatrixNd = Eigen::Matrix<double, Dynamic, Dynamic, 0, max_nop, max_nop>;
+	using MatrixNplusONEd = Eigen::Matrix<double, Dynamic, Dynamic, 0, max_nop + 1, max_nop + 1>;
+	using Matrix3Nd = Eigen::Matrix<double, Dynamic, Dynamic, 0, 3 * max_nop, 3 * max_nop>;
+	using Matrix2xNd = Eigen::Matrix<double, 2, Dynamic, 0, 2, max_nop>;
+	using Matrix3xNd = Eigen::Matrix<double, 3, Dynamic, 0, 3, max_nop>;
+	using VectorNd = Eigen::Matrix<double, Dynamic, 1, 0, max_nop, 1>;
+	using VectorNplusONEd = Eigen::Matrix<double, Dynamic, 1, 0, max_nop + 1, 1>;
 	using Matrix2x3d = Eigen::Matrix<double, 2, 3>;
 	using Matrix5d = Eigen::Matrix<double, 5, 5>;
 	using Vector5d = Eigen::Matrix<double, 5, 1>;
 	using u_int    = unsigned int;
+	
+	/*
+	 using MatrixNd = Eigen::Matrix<double, max_nop, max_nop, 0, max_nop, max_nop>;
+	 using MatrixNplusONEd = Eigen::Matrix<double, max_nop + 1, max_nop + 1, 0, max_nop + 1, max_nop + 1>;
+	 using Matrix3Nd = Eigen::Matrix<double, 3 * max_nop, 3 * max_nop, 0, 3 * max_nop, 3 * max_nop>;
+	 using Matrix2xNd = Eigen::Matrix<double, 2, max_nop, 0, 2, max_nop>;
+	 using Matrix3xNd = Eigen::Matrix<double, 3, max_nop, 0, 3, max_nop>;
+	 using VectorNd = Eigen::Matrix<double, max_nop, 1, 0, max_nop, 1>;
+	 using VectorNplusONEd = Eigen::Matrix<double, max_nop + 1, 1, 0, max_nop + 1, 1>;
+	 using Matrix2x3d = Eigen::Matrix<double, 2, 3>;
+	 using Matrix5d = Eigen::Matrix<double, 5, 5>;
+	 using Vector5d = Eigen::Matrix<double, 5, 1>;
+	 using u_int    = unsigned int;
+	 */
 	
 	struct karimaki_circle_fit {
 		Vector3d par;  //!< Karimäki's parameters: (phi, d, k=1/R)
@@ -97,7 +93,7 @@ namespace BrokenLine {
 	/*!
 	 \brief raise to square.
 	 */
-	CUDA_HOSTDEV inline double sqr(const double a) {
+	__host__ __device__ inline double sqr(const double a) {
 		return a*a;
 	}
 	
@@ -115,7 +111,7 @@ namespace BrokenLine {
 	 
 	 \return the variance of the planar angle ((theta_0)^2 /3).
 	 */
-	CUDA_HOSTDEV inline double MultScatt(const double& length, const double B, const double& R, int Layer, double slope) {
+	__host__ __device__ inline double MultScatt(const double& length, const double B, const double& R, int Layer, double slope) {
 		double XX_0; //!< radiation length of the material in cm
 		if(Layer==1) XX_0=16/0.06;
 		else XX_0=16/0.06;
@@ -131,7 +127,7 @@ namespace BrokenLine {
 	 
 	 \return 2D rotation matrix.
 	 */
-	CUDA_HOSTDEV inline Matrix2d RotationMatrix(const double& slope) {
+	__host__ __device__ inline Matrix2d RotationMatrix(const double& slope) {
 		Matrix2d Rot;
 		Rot(0,0)=1/sqrt(1+sqr(slope));
 		Rot(0,1)=slope*Rot(0,0);
@@ -146,8 +142,9 @@ namespace BrokenLine {
 	 \param circle circle fit in the old coordinate system.
 	 \param x0 x coordinate of the translation vector.
 	 \param y0 y coordinate of the translation vector.
+	 \param Jacob passed by reference in order to save stack.
 	 */
-	CUDA_HOSTDEV inline void TranslateKarimaki(karimaki_circle_fit& circle, const double& x0, const double& y0, Matrix3d& Jacob) {
+	__host__ __device__ inline void TranslateKarimaki(karimaki_circle_fit& circle, const double& x0, const double& y0, Matrix3d& Jacob) {
 		double A,U,BB,C,DO,DP,uu,xi,v,mu,lambda,zeta;
 		DP=x0*cos(circle.par(0))+y0*sin(circle.par(0));
 		DO=x0*sin(circle.par(0))-y0*cos(circle.par(0))+circle.par(1);
@@ -182,7 +179,7 @@ namespace BrokenLine {
 	 \return z component of the cross product.
 	 */
 	
-	CUDA_HOSTDEV inline double cross2D(const Vector2d& a, const Vector2d& b) {
+	__host__ __device__ inline double cross2D(const Vector2d& a, const Vector2d& b) {
 		return a.x()*b.y()-a.y()*b.x();
 	}
 	
@@ -193,14 +190,13 @@ namespace BrokenLine {
 	 \param hits_cov hits covariance matrix.
 	 \param fast_fit pre-fit result in the form (X0,Y0,R,tan(theta)).
 	 \param B magnetic field in Gev/cm/c.
-	 
-	 \return see description of PreparedBrokenLineData.
+	 \param results PreparedBrokenLineData to be filled (see description of PreparedBrokenLineData).
 	 */
-	CUDA_HOSTDEV inline void PrepareBrokenLineData(const Matrix3xNd& hits,
-												   const Matrix3Nd& hits_cov,
-												   const Vector4d& fast_fit,
-												   const double B,
-												   PreparedBrokenLineData & results) {
+	__host__ __device__ inline void PrepareBrokenLineData(const Matrix3xNd& hits,
+														  const Matrix3Nd& hits_cov,
+														  const Vector4d& fast_fit,
+														  const double B,
+														  PreparedBrokenLineData & results) {
 		u_int n=hits.cols();
 		u_int i;
 		Vector2d d;
@@ -253,9 +249,9 @@ namespace BrokenLine {
 	 \param S total distance traveled by the particle from the pre-fitted closest approach.
 	 \param VarBeta kink angles' variance.
 	 
-	 \return
+	 \return the n-by-n matrix of the linear system
 	 */
-	CUDA_HOSTDEV inline MatrixNd MatrixC_u(const VectorNd& w, const VectorNd& S, const VectorNd& VarBeta) {
+	__host__ __device__ inline MatrixNd MatrixC_u(const VectorNd& w, const VectorNd& S, const VectorNd& VarBeta) {
 		u_int n=S.rows();
 		u_int i;
 		
@@ -282,12 +278,14 @@ namespace BrokenLine {
 	/*!
 	 \brief A very fast helix fit.
 	 
+	 \param hits the measured hits.
+	 
 	 \return (X0,Y0,R,tan(theta)).
 	 
 	 \warning sign of theta is (intentionally, for now) mistaken for negative charges.
 	 */
 	
-	CUDA_HOSTDEV inline Vector4d BL_Fast_fit(const Matrix3xNd& hits) {
+	__host__ __device__ inline Vector4d BL_Fast_fit(const Matrix3xNd& hits) {
 		Vector4d result;
 		u_int n=hits.cols();
 		
@@ -318,25 +316,27 @@ namespace BrokenLine {
 	 \param hits_cov hits covariance matrix.
 	 \param fast_fit pre-fit result in the form (X0,Y0,R,tan(theta)).
 	 \param B magnetic field in Gev/cm/c.
+	 \param data PreparedBrokenLineData.
+	 \param circle_results struct to be filled with the results in this form:
+	 -par parameter of the line in this form: (phi, d, k); \n
+	 -cov covariance matrix of the fitted parameter; \n
+	 -chi2 value of the cost function in the minimum.
+	 \param Jacob passed by reference in order to save stack.
+	 \param C_U passed by reference in order to sake stack.
 	 
 	 \details The function implements the steps 2 and 3 of the Broken Line fit with the curvature correction.\n
 	 The step 2 is the least square fit, done by imposing the minimum constraint on the cost function and solving the consequent linear system. It determines the fitted parameters u and \Delta\kappa and their covariance matrix.
 	 The step 3 is the correction of the fast pre-fitted parameters for the innermost part of the track. It is first done in a comfortable coordinate system (the one in which the first hit is the origin) and then the parameters and their covariance matrix are transformed to the original coordinate system.
-	 
-	 \return circle_results karimaki_circle_fit:
-	 -par parameter of the line in this form: (phi, d, k); \n
-	 -cov covariance matrix of the fitted parameter; \n
-	 -chi2 value of the cost function in the minimum.
 	 */
 	
-	CUDA_HOSTDEV inline void BL_Circle_fit(const Matrix3xNd& hits,
-										   const Matrix3Nd& hits_cov,
-										   const Vector4d& fast_fit,
-										   const double B,
-										   PreparedBrokenLineData& data,
-										   karimaki_circle_fit & circle_results,
-										   Matrix3d& Jacob,
-										   MatrixNplusONEd& C_U) {
+	__host__ __device__ inline void BL_Circle_fit(const Matrix3xNd& hits,
+												  const Matrix3Nd& hits_cov,
+												  const Vector4d& fast_fit,
+												  const double B,
+												  PreparedBrokenLineData& data,
+												  karimaki_circle_fit & circle_results,
+												  Matrix3d& Jacob,
+												  MatrixNplusONEd& C_U) {
 		u_int n=hits.cols();
 		u_int i;
 		
@@ -450,23 +450,23 @@ namespace BrokenLine {
 	 \param hits_cov hits covariance matrix.
 	 \param fast_fit pre-fit result in the form (X0,Y0,R,tan(theta)).
 	 \param B magnetic field in Gev/cm/c.
+	 \param data PreparedBrokenLineData.
+	 \param line_results struct to be filled with the results in this form:
+	 -par parameter of the line in this form: (cot(theta), Zip); \n
+	 -cov covariance matrix of the fitted parameter; \n
+	 -chi2 value of the cost function in the minimum.
 	 
 	 \details The function implements the steps 2 and 3 of the Broken Line fit without the curvature correction.\n
 	 The step 2 is the least square fit, done by imposing the minimum constraint on the cost function and solving the consequent linear system. It determines the fitted parameters u and their covariance matrix.
 	 The step 3 is the correction of the fast pre-fitted parameters for the innermost part of the track. It is first done in a comfortable coordinate system (the one in which the first hit is the origin) and then the parameters and their covariance matrix are transformed to the original coordinate system.
-	 
-	 \return circle_results karimaki_circle_fit:
-	 -par parameter of the line in this form: (cot(theta), Zip); \n
-	 -cov covariance matrix of the fitted parameter; \n
-	 -chi2 value of the cost function in the minimum.
 	 */
 	
-	CUDA_HOSTDEV inline void BL_Line_fit(const Matrix3xNd& hits,
-										 const Matrix3Nd& hits_cov,
-										 const Vector4d& fast_fit,
-										 const double B,
-										 const PreparedBrokenLineData& data,
-										 line_fit & line_results) {
+	__host__ __device__ inline void BL_Line_fit(const Matrix3xNd& hits,
+												const Matrix3Nd& hits_cov,
+												const Vector4d& fast_fit,
+												const double B,
+												const PreparedBrokenLineData& data,
+												line_fit & line_results) {
 		u_int n=hits.cols();
 		u_int i;
 		
@@ -574,9 +574,9 @@ namespace BrokenLine {
 	 \return (phi,Tip,p_t,cot(theta)),Zip), their covariance matrix and the chi2's of the circle and line fits.
 	 */
 	
-	CUDA_HOSTDEV inline helix_fit Helix_fit(const Matrix3xNd& hits,
-											const Matrix3Nd& hits_cov,
-											const double B) {
+	__host__ __device__ inline helix_fit Helix_fit(const Matrix3xNd& hits,
+												   const Matrix3Nd& hits_cov,
+												   const double B) {
 		helix_fit helix;
 		
 		helix.fast_fit=BL_Fast_fit(hits);
