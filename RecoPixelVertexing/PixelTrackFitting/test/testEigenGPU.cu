@@ -401,10 +401,12 @@ void testBrokenLineOneGo(double epsilon=1e-6) {
 	cudaCheck(cudaMemcpy(hits_covGPU, &hits_cov, sizeof(BrokenLine::Matrix3Nd(12,12)), cudaMemcpyHostToDevice));
 	
 	/*
-	 IMPORTANT: if compiling with "-g -G" you need to increase the stack size (uncomment the following lines)
+	 IMPORTANT: if compiling with "-g -G" or using dinamically-sized matrices, you need to increase the stack size.
+	 You can comment the following two lines when using static-sized-matrices.
+	 1761 bytes is the minimum value that makes it work with dinamically-sized matrices.
 	 */
-	//cudaDeviceSetLimit(cudaLimitStackSize, 9080);
-	//cudaCheck(cudaDeviceSynchronize());
+	cudaDeviceSetLimit(cudaLimitStackSize, 1761);
+	cudaCheck(cudaDeviceSynchronize());
 	
 	kernelFullBrokenLineFastFitAndData<<<1, 1>>>(hitsGPU, hits_covGPU, dataGPU, fast_fitGPU, B, helix_fit_resultsGPU, circleGPU, lineGPU, JacobGPU, C_UGPU);
 	cudaCheck(cudaDeviceSynchronize());

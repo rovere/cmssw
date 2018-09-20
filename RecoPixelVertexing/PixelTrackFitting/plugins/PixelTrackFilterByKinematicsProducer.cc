@@ -43,7 +43,7 @@ void PixelTrackFilterByKinematicsProducer::fillDescriptions(edm::ConfigurationDe
 
   desc.add<double>("ptMin", 0.1);
   desc.add<double>("nSigmaInvPtTolerance", 0.0);
-  desc.add<double>("tipMax", 0.1);
+  desc.add<double>("tipMax", 1.0);
   desc.add<double>("nSigmaTipMaxTolerance", 0.0);
   desc.add<double>("chi2", 1000.0);
 

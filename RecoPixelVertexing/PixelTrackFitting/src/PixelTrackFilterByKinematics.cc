@@ -27,8 +27,8 @@ bool PixelTrackFilterByKinematics::operator()(const reco::Track* ptrack, const P
 {
   if (!ptrack) return false;
   auto const & track = *ptrack;
-  if ( (std::abs(track.d0())-theTIPMax) > theNSigmaTipMaxTolerance*track.d0Error()) return false;
   if (track.chi2() > theChi2Max) return false;
+  if ( (std::abs(track.d0())-theTIPMax) > theNSigmaTipMaxTolerance*track.d0Error()) return false;
   
   float pt_v = float(track.pt());
   float opt_v = 1.f/pt_v;
