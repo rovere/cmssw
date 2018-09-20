@@ -2,12 +2,14 @@
 // Author: Felice Pantaleo, CERN
 //
 
-#include "CAHitQuadrupletGeneratorGPU.h"
+#include <cstdint>
+#include <cuda_runtime.h>
+
 #include "HeterogeneousCore/CUDAUtilities/interface/cudaCheck.h"
 #include "RecoLocalTracker/SiPixelRecHits/interface/pixelCPEforGPU.h"
+#include "CAHitQuadrupletGeneratorGPU.h"
 #include "GPUCACell.h"
 #include "gpuPixelDoublets.h"
-#include <cstdint>
 
 using HitsOnCPU = siPixelRecHitsHeterogeneousProduct::HitsOnCPU;
 using namespace Eigen;
@@ -271,6 +273,7 @@ void CAHitQuadrupletGeneratorGPU::deallocateOnGPU()
   cudaFree(fast_fit_resultsGPU_);
   cudaFree(circle_fit_resultsGPU_);
   cudaFree(line_fit_resultsGPU_);
+  cudaFree(helix_fit_resultsGPU_);
 }
 
 void CAHitQuadrupletGeneratorGPU::allocateOnGPU()
