@@ -210,7 +210,7 @@ void testFitOneGo(bool errors, double epsilon=1e-6) {
       fast_fit_results, rad, B, errors);
   // LINE_FIT CPU
   Rfit::line_fit line_fit_results = Rfit::Line_fit(hits, hits_cov, circle_fit_results,
-      fast_fit_results, errors);
+      fast_fit_results, B, errors);
 
   // FIT GPU
   std::cout << "GPU FIT" << std::endl;
@@ -255,7 +255,7 @@ void testFitOneGo(bool errors, double epsilon=1e-6) {
 int main (int argc, char * argv[]) {
 //  testFit();
   std::cout << "TEST FIT, NO ERRORS" << std::endl;
-  testFitOneGo(false);
+  testFitOneGo(true);
 
   std::cout << "TEST FIT, ERRORS AND SCATTER" << std::endl;
   testFitOneGo(true, 1e-5);
