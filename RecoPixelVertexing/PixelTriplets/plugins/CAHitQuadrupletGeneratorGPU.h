@@ -7,9 +7,11 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/EDGetToken.h"
 #include "HeterogeneousCore/CUDAUtilities/interface/GPUSimpleVector.h"
+#include "RecoLocalTracker/SiPixelClusterizer/interface/PixelTrackingGPUConstants.h"
 #include "RecoLocalTracker/SiPixelRecHits/plugins/siPixelRecHitsHeterogeneousProduct.h"
 #include "RecoPixelVertexing/PixelTrackFitting/interface/RZLine.h"
 #include "RecoPixelVertexing/PixelTriplets/interface/OrderedHitSeeds.h"
+#include "RecoPixelVertexing/PixelTriplets/plugins/RecHitsMap.h"
 #include "RecoTracker/TkHitPairs/interface/HitPairGeneratorFromLayerPair.h"
 #include "RecoTracker/TkHitPairs/interface/IntermediateHitDoublets.h"
 #include "RecoTracker/TkHitPairs/interface/LayerHitMapCache.h"
@@ -19,7 +21,7 @@
 #include "RecoTracker/TkSeedingLayers/interface/SeedComparitor.h"
 #include "RecoTracker/TkSeedingLayers/interface/SeedComparitorFactory.h"
 #include "RecoPixelVertexing/PixelTriplets/plugins/RecHitsMap.h"
-
+#include "RecoPixelVertexing/PixelTrackFitting/interface/RiemannFit.h"
 
 #include "GPUCACell.h"
 
@@ -67,7 +69,6 @@ public:
     void deallocateOnGPU();
 
 private:
-//    LayerCacheType theLayerCache;
 
     std::unique_ptr<SeedComparitor> theComparitor;
 
@@ -139,6 +140,8 @@ private:
     std::vector<std::array<int,4>> fetchKernelResult(int);
 
 
+    float bField_;
+
     const float extraHitRPhitolerance;
 
     const QuantityDependsPt maxChi2;
@@ -151,13 +154,11 @@ private:
     const float caHardPtCut = 0.f;
 
     static constexpr int maxNumberOfQuadruplets_ = 10000;
-    static constexpr int maxCellsPerHit_ = 2048; // 512;
+    static constexpr int maxCellsPerHit_ = 256;
     static constexpr int maxNumberOfLayerPairs_ = 13;
     static constexpr int maxNumberOfLayers_ = 10;
     static constexpr int maxNumberOfDoublets_ = 262144;
-    static constexpr int maxNumberOfHits_ = 20000;
     static constexpr int maxNumberOfRegions_ = 2;
-
 
     std::vector<GPU::SimpleVector<Quadruplet>*> h_foundNtupletsVec_;
     std::vector<Quadruplet*> h_foundNtupletsData_;
@@ -173,6 +174,13 @@ private:
 
     RecHitsMap<TrackingRecHit const *> hitmap_ = RecHitsMap<TrackingRecHit const *>(nullptr);
 
+    // Riemann Fit stuff
+    Rfit::Matrix3xNd *hitsGPU_ = nullptr;
+    Rfit::Matrix3Nd *hits_covGPU_ = nullptr;
+    Eigen::Vector4d *fast_fit_resultsGPU_ = nullptr;
+    Rfit::circle_fit *circle_fit_resultsGPU_ = nullptr;
+    Rfit::line_fit *line_fit_resultsGPU_ = nullptr;
+    Rfit::helix_fit * helix_fit_resultsGPU_ = nullptr;
 };
 
 #endif // RecoPixelVertexing_PixelTriplets_plugins_CAHitQuadrupletGeneratorGPU_h
