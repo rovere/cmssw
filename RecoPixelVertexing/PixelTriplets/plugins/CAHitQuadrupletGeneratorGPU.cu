@@ -55,20 +55,15 @@ KernelFastFitAllHits(GPU::SimpleVector<Quadruplet> * foundNtuplets,
         // i: index of the hits/point (0,..,3)
         // j: index of space component (x,y,z)
         // l: index of space components (x,y,z)
-        // ge is always in sync with the index i and is formatted (guess!!) as:
+        // ge is always in sync with the index i and is formatted as:
         // ge[] ==> [xx, xy, xz, yy, yz, zz]
         // in (j,l) notation, we have:
         // ge[] ==> [(0,0), (0,1), (0,2), (1,1), (1,2), (2,2)]
-        // So:
-        // (i=0,j=0,l=1) ==> (x_0,y_0)
-        // (i=1,j=2,l=0) ==> (z_1,x_1)
-        auto ge_idx = j + l;
-        if (ge_idx == 2 && j == l) {
-          ge_idx = 3;
-        }
-        else if (ge_idx > 2) {
-          ++ge_idx;
-        }
+        // so the index ge_idx corresponds to the matrix elements:
+        // | 0  1  2 |
+        // | 1  3  4 |
+        // | 2  4  5 |
+        auto ge_idx = j + l + (j > 0 and l > 0);
         hits_cov[helix_start](i + j * hits_in_fit, i + l * hits_in_fit) = ge[ge_idx];
       }
     }
