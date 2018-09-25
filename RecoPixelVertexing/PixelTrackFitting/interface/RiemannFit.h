@@ -6,7 +6,6 @@
 #include <Eigen/Eigenvalues>
 
 #include <math.h>
-#include <tuple>
 
 #ifndef RFIT_DEBUG
 #define RFIT_DEBUG 0
@@ -119,15 +118,18 @@ __host__ __device__ inline double cross2D(const Vector2d& a, const Vector2d& b)
 }
 
 
-__host__ __device__ inline std::tuple<double, double, bool> computeRadLenEff(const Vector4d& fast_fit,
-                                                                          const double B) {
+__host__ __device__ inline void computeRadLenEff(const Vector4d& fast_fit,
+                                                 const double B,
+                                                 double & radlen_eff,
+                                                 double & theta,
+                                                 bool & in_forward) {
     double X_barrel = 0.015;
     double X_forward = 0.05;
-    double theta = atan(fast_fit(3));
+    theta = atan(fast_fit(3));
     // atan returns values in [-pi/2, pi/2], we need [0, pi]
     theta = theta < 0. ? theta + M_PI : theta;
-    double radlen_eff = X_barrel / std::abs(sin(theta)); //sqrt(fast_fit(3) * fast_fit(3) + 1) / fast_fit(3);
-    bool in_forward = (theta <= 0.398 or theta >= 2.743);
+    radlen_eff = X_barrel / std::abs(sin(theta));
+    in_forward = (theta <= 0.398 or theta >= 2.743);
     if (in_forward)
       radlen_eff = X_forward / std::abs(cos(theta));
     assert(radlen_eff > 0.);
@@ -140,8 +142,6 @@ __host__ __device__ inline std::tuple<double, double, bool> computeRadLenEff(con
     // in fact, needed. This is an approximation.
     if (std::abs(p_t/1.) < 1.)
       radlen_eff /= std::abs(p_t/1.);
-
-    return std::make_tuple(radlen_eff, theta, in_forward);
 }
 
 /*!
@@ -162,10 +162,10 @@ __host__ __device__ inline MatrixNd Scatter_cov_line(Matrix2Nd& cov_sz,
     u_int n = s_arcs.rows();
     double p_t = fast_fit(2) * B;
     double p_2 = p_t * p_t * (1. + 1. / (fast_fit(3) * fast_fit(3)));
-    double radlen_eff;
-    double theta;
-    bool in_forward;
-    std::tie(radlen_eff, theta, in_forward) = computeRadLenEff(fast_fit, B);
+    double radlen_eff = 0.;
+    double theta = 0.;
+    bool in_forward = false;
+    computeRadLenEff(fast_fit, B, radlen_eff, theta, in_forward);
 
     const double sig2 = .000225 / p_2 * sqr(1 + 0.038 * log(radlen_eff)) * radlen_eff;
     for (u_int k = 0; k < n; ++k)
@@ -246,10 +246,10 @@ __host__ __device__ inline MatrixNd Scatter_cov_rad(const Matrix2xNd& p2D,
     u_int n = p2D.cols();
     double p_t = fast_fit(2) * B;
     double p_2 = p_t * p_t * (1. + 1. / (fast_fit(3) * fast_fit(3)));
-    double radlen_eff;
-    double theta;
-    bool in_forward;
-    std::tie(radlen_eff, theta, in_forward) = computeRadLenEff(fast_fit, B);
+    double radlen_eff = 0.;
+    double theta = 0.;
+    bool in_forward = false;
+    computeRadLenEff(fast_fit, B, radlen_eff, theta, in_forward);
 
     MatrixNd scatter_cov_rad = MatrixXd::Zero(n, n);
     const double sig2 = .000225 / p_2 * sqr(1 + 0.038 * log(radlen_eff)) * radlen_eff;
