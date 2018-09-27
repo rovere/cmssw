@@ -140,8 +140,8 @@ __host__ __device__ inline void computeRadLenEff(const Vector4d& fast_fit,
     // transerse momentum. The cut-off is at 1 Gev, set using a single Muon Pt
     // gun and verifying that, at that momentum, not additional correction is,
     // in fact, needed. This is an approximation.
-    if (std::abs(p_t/1.) < 1.)
-      radlen_eff /= std::abs(p_t/1.);
+    if (std::abs(p_t) < 1.)
+      radlen_eff /= std::abs(p_t);
 }
 
 /*!
@@ -150,11 +150,12 @@ __host__ __device__ inline void computeRadLenEff(const Vector4d& fast_fit,
     and forward cases.
 
  */
-__host__ __device__ inline MatrixNd Scatter_cov_line(Matrix2Nd& cov_sz,
-                                                     const Vector4d& fast_fit,
-                                                     VectorNd const& s_arcs,
-                                                     VectorNd const& z_values,
-                                                     const double B)
+__host__ __device__ inline void Scatter_cov_line(Matrix2Nd& cov_sz,
+                                                 const Vector4d& fast_fit,
+                                                 VectorNd const& s_arcs,
+                                                 VectorNd const& z_values,
+                                                 const double B,
+                                                 Matrix2Nd &results)
 {
 #if RFIT_DEBUG
     Rfit::printIt(&s_arcs, "Scatter_cov_line - s_arcs: ");
@@ -209,13 +210,10 @@ __host__ __device__ inline MatrixNd Scatter_cov_line(Matrix2Nd& cov_sz,
     Rfit::printIt(&rot, "Scatter_cov_line - rot: ");
 #endif
 
-    Matrix2Nd tmp = rot*cov_sz*rot.transpose();
-    // We are interested only in the errors in the rotated s -axis which, in
-    // our formalism, are in the upper square matrix.
+    results = rot*cov_sz*rot.transpose();
 #if RFIT_DEBUG
     Rfit::printIt(&tmp, "Scatter_cov_line - tmp: ");
 #endif
-    return tmp.block(0, 0, n, n);
 }
 
 /*!
@@ -402,9 +400,9 @@ __host__ __device__ inline MatrixNd cov_carttorad_prefit(const Matrix2xNd& p2D, 
     diagonal cov matrix. Further investigation needed.
 */
 
-__host__ __device__ inline VectorNd Weight_circle(const MatrixNd& cov_rad_inv)
+__host__ __device__ inline void Weight_circle(const MatrixNd& cov_rad_inv, VectorNd & result)
 {
-    return cov_rad_inv.colwise().sum().transpose();
+    result = cov_rad_inv.colwise().sum().transpose();
 }
 
 /*!
@@ -522,7 +520,7 @@ __host__ __device__ inline VectorNd X_err2(const Matrix3Nd& V, const circle_fit&
 
 */
 
-__host__ __device__ inline Vector3d min_eigen3D(const Matrix3d& A, double& chi2)
+__host__ __device__ inline void min_eigen3D(const Matrix3d& A, double& chi2, Vector3d &eigenvector)
 {
 #if RFIT_DEBUG
     printf("min_eigen3D - enter\n");
@@ -534,7 +532,7 @@ __host__ __device__ inline Vector3d min_eigen3D(const Matrix3d& A, double& chi2)
 #if RFIT_DEBUG
     printf("min_eigen3D - exit\n");
 #endif
-    return solver.eigenvectors().col(min_index);
+    eigenvector = solver.eigenvectors().col(min_index);
 }
 
 /*!
@@ -573,13 +571,13 @@ __host__ __device__ inline Vector3d min_eigen3D_fast(const Matrix3d& A)
     significantly in single precision.
 */
 
-__host__ __device__ inline Vector2d min_eigen2D(const Matrix2d& A, double& chi2)
+__host__ __device__ inline void min_eigen2D(const Matrix2d& A, double& chi2, Vector2d & eigenvector)
 {
     SelfAdjointEigenSolver<Matrix2d> solver(2);
     solver.computeDirect(A);
     int min_index;
     chi2 = solver.eigenvalues().minCoeff(&min_index);
-    return solver.eigenvectors().col(min_index);
+    eigenvector = solver.eigenvectors().col(min_index);
 }
 
 /*!
@@ -599,9 +597,8 @@ __host__ __device__ inline Vector2d min_eigen2D(const Matrix2d& A, double& chi2)
     - computation of error due to multiple scattering.
 */
 
-__host__ __device__ inline Vector4d Fast_fit(const Matrix3xNd& hits)
+__host__ __device__ inline void Fast_fit(const Matrix3xNd& hits, Vector4d & result)
 {
-    Vector4d result;
     u_int n = hits.cols();  // get the number of hits
     printIt(&hits, "Fast_fit - hits: ");
 
@@ -659,7 +656,6 @@ __host__ __device__ inline Vector4d Fast_fit(const Matrix3xNd& hits)
 #if RFIT_DEBUG
     printf("Fast_fit: [%f, %f, %f, %f]\n", result(0), result(1), result(2), result(3));
 #endif
-    return result;
 }
 
 /*!
@@ -694,11 +690,12 @@ __host__ __device__ inline Vector4d Fast_fit(const Matrix3xNd& hits)
     scattering.
 */
 
-__host__ __device__ inline circle_fit Circle_fit(const Matrix2xNd& hits2D,
+__host__ __device__ inline void Circle_fit(const Matrix2xNd& hits2D,
                                                  const Matrix2Nd& hits_cov2D,
                                                  const Vector4d& fast_fit,
                                                  const VectorNd& rad,
                                                  const double B,
+                                                 circle_fit & circle,
                                                  const bool error = true)
 {
 #if RFIT_DEBUG
@@ -741,7 +738,7 @@ __host__ __device__ inline circle_fit Circle_fit(const Matrix2xNd& hits2D,
         G4 *= 1. / renorm;
         printIt(&G4, "circle_fit - G4:");
         G = G4;
-        weight = Weight_circle(G);
+        Weight_circle(G, weight);
     }
     printIt(&weight, "circle_fit - weight:");
 
@@ -789,7 +786,8 @@ __host__ __device__ inline circle_fit Circle_fit(const Matrix2xNd& hits2D,
 #endif
     // minimize
     double chi2;
-    Vector3d v = min_eigen3D(A, chi2);
+    Vector3d v;
+    min_eigen3D(A, chi2, v);
 #if RFIT_DEBUG
     printf("circle_fit - AFTER MIN_EIGEN\n");
 #endif
@@ -824,7 +822,6 @@ __host__ __device__ inline circle_fit Circle_fit(const Matrix2xNd& hits2D,
     Vector3d par_uvr_;  // used in error propagation
     par_uvr_ << -v(0) * v2x2_inv, -v(1) * v2x2_inv, h * v2x2_inv;
 
-    circle_fit circle;
     circle.par << par_uvr_(0) * s_inv + h_(0), par_uvr_(1) * s_inv + h_(1), par_uvr_(2) * s_inv;
     circle.q = Charge(hits2D, circle.par);
     circle.chi2 = abs(chi2) * renorm * 1. / sqr(2 * v(2) * par_uvr_(2) * s);
@@ -1019,7 +1016,6 @@ __host__ __device__ inline circle_fit Circle_fit(const Matrix2xNd& hits2D,
 #if RFIT_DEBUG
     printf("circle_fit - exit\n");
 #endif
-    return circle;
 }
 
 /*!
@@ -1057,11 +1053,12 @@ __host__ __device__ inline circle_fit Circle_fit(const Matrix2xNd& hits2D,
     errors.
 */
 
-__host__ __device__ inline line_fit Line_fit(const Matrix3xNd& hits,
+__host__ __device__ inline void Line_fit(const Matrix3xNd& hits,
                                              const Matrix3Nd& hits_cov,
                                              const circle_fit& circle,
                                              const Vector4d& fast_fit,
                                              const double B,
+                                             line_fit &line,
                                              const bool error = true)
 {
     u_int n = hits.cols();
@@ -1120,14 +1117,17 @@ __host__ __device__ inline line_fit Line_fit(const Matrix3xNd& hits,
 #if RFIT_DEBUG
     printIt(&cov_sz, "line_fit - cov_sz:");
 #endif
-    MatrixNd cov_with_ms = Scatter_cov_line(cov_sz, fast_fit, p2D.row(0), p2D.row(1), B);
+    Matrix2Nd cov_with_ms = MatrixXd::Zero(2*n, 2*n);
+    Scatter_cov_line(cov_sz, fast_fit, p2D.row(0), p2D.row(1), B, cov_with_ms);
 #if RFIT_DEBUG
     printIt(&cov_with_ms, "line_fit - cov_with_ms: ");
 #endif
+    // We are interested only in the errors in the rotated s-axis which, in our
+    // formalism, are in the upper square nxn matrix.
     Matrix4d G, G4;
-    G4 = cov_with_ms.inverse();
+    G4 = (cov_with_ms.block(0, 0, n, n)).inverse();
 #if RFIT_DEBUG
-    printIt(&G4, "line_fit - cov_with_ms.inverse():");
+    printIt(&G4, "line_fit - cov_with_ms.block(0, 0, n, n).inverse():");
 #endif
     double renorm = G4.sum();
     G4 *= 1. / renorm;
@@ -1135,10 +1135,11 @@ __host__ __device__ inline line_fit Line_fit(const Matrix3xNd& hits,
     printIt(&G4, "line_fit - G4:");
 #endif
     G = G4;
-    const VectorNd weight = Weight_circle(G);
+    VectorNd weight;
+    Weight_circle(G, weight);
 
 
-    VectorNd err2_inv = cov_with_ms.diagonal();
+    VectorNd err2_inv = cov_with_ms.block(0, 0, n, n).diagonal();
     err2_inv = err2_inv.cwiseInverse();
 //    const VectorNd err2_inv = Weight_line(x_err2, y_err2, fast_fit(3));
 //    const VectorNd weight = err2_inv * 1. / err2_inv.sum();
@@ -1171,7 +1172,8 @@ __host__ __device__ inline line_fit Line_fit(const Matrix3xNd& hits,
 
     // minimize
     double chi2;
-    Vector2d v = min_eigen2D(A, chi2);
+    Vector2d v;
+    min_eigen2D(A, chi2, v);
 #if RFIT_DEBUG
     printIt(&v, "Line_fit - v: ");
     printf("Line_fit chi2: %e\n", chi2);
@@ -1185,7 +1187,6 @@ __host__ __device__ inline line_fit Line_fit(const Matrix3xNd& hits,
     const double c = cm(0, 0);
 
     // COMPUTE LINE PARAMETER
-    line_fit line;
     line.par << -v(0) / v(1),                          // cotan(theta))
         -c * sqrt(sqr(v(0)) + sqr(v(1))) * 1. / v(1);  // Zip
     line.chi2 = abs(chi2);
@@ -1240,7 +1241,6 @@ __host__ __device__ inline line_fit Line_fit(const Matrix3xNd& hits,
 #if RFIT_DEBUG
     printIt(&line.cov, "Line cov:");
 #endif
-    return line;
 }
 
 /*!
@@ -1289,12 +1289,15 @@ inline helix_fit Helix_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, co
     VectorNd rad = (hits.block(0, 0, 2, n).colwise().norm());
 
     // Fast_fit gives back (X0, Y0, R, theta) w/o errors, using only 3 points.
-    const Vector4d fast_fit = Fast_fit(hits);
+    Vector4d fast_fit;
+    Fast_fit(hits, fast_fit);
 
-    circle_fit circle = Circle_fit(hits.block(0, 0, 2, n),
-                                   hits_cov.block(0, 0, 2 * n, 2 * n),
-                                   fast_fit, rad, B, error);
-    line_fit line = Line_fit(hits, hits_cov, circle, fast_fit, B, error);
+    circle_fit circle;
+    Circle_fit(hits.block(0, 0, 2, n),
+               hits_cov.block(0, 0, 2 * n, 2 * n),
+               fast_fit, rad, B, circle, error);
+    line_fit line;
+    Line_fit(hits, hits_cov, circle, fast_fit, B, line, error);
 
     par_uvrtopak(circle, B, error);
 
