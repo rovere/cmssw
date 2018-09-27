@@ -68,7 +68,7 @@ void kernelFastFitAllHits(GPU::SimpleVector<Quadruplet> * foundNtuplets,
       }
     }
   }
-  fast_fit[helix_start] = Rfit::Fast_fit(hits[helix_start]);
+  Rfit::Fast_fit(hits[helix_start], fast_fit[helix_start]);
 }
 
 __global__
@@ -95,10 +95,9 @@ void kernelCircleFitAllHits(GPU::SimpleVector<Quadruplet> * foundNtuplets,
 
   Rfit::VectorNd rad = (hits[helix_start].block(0, 0, 2, n).colwise().norm());
 
-  circle_fit[helix_start] =
-      Rfit::Circle_fit(hits[helix_start].block(0, 0, 2, n),
-                       hits_cov[helix_start].block(0, 0, 2 * n, 2 * n),
-                       fast_fit[helix_start], rad, B, true);
+  Rfit::Circle_fit(hits[helix_start].block(0, 0, 2, n),
+                   hits_cov[helix_start].block(0, 0, 2 * n, 2 * n),
+                   fast_fit[helix_start], rad, B, circle_fit[helix_start], true);
 
 #ifdef GPU_DEBUG
   printf("kernelCircleFitAllHits circle.par(0): %d %f\n", helix_start, circle_fit[helix_start].par(0));
@@ -127,7 +126,7 @@ void kernelLineFitAllHits(GPU::SimpleVector<Quadruplet> * foundNtuplets,
          blockDim.x, blockIdx.x, threadIdx.x, helix_start, foundNtuplets->size());
 #endif
 
-  line_fit[helix_start] = Rfit::Line_fit(hits[helix_start], hits_cov[helix_start], circle_fit[helix_start], fast_fit[helix_start], B, true);
+  Rfit::Line_fit(hits[helix_start], hits_cov[helix_start], circle_fit[helix_start], fast_fit[helix_start], B, line_fit[helix_start], true);
 
   par_uvrtopak(circle_fit[helix_start], B, true);
 
