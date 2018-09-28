@@ -128,10 +128,8 @@ __host__ __device__ inline void computeRadLenEff(const Vector4d& fast_fit,
     theta = atan(fast_fit(3));
     // atan returns values in [-pi/2, pi/2], we need [0, pi]
     theta = theta < 0. ? theta + M_PI : theta;
-    radlen_eff = X_barrel / std::abs(sin(theta));
     in_forward = (theta <= 0.398 or theta >= 2.743);
-    if (in_forward)
-      radlen_eff = X_forward / std::abs(cos(theta));
+    radlen_eff = (in_forward*X_forward + (!in_forward)*X_barrel)/(in_forward*(std::abs(cos(theta))) + (!in_forward)*std::abs(sin(theta)));
     assert(radlen_eff > 0.);
     double p_t = fast_fit(2) * B;
     // We have also to correct the radiation lenght in the x-y plane. Since we
@@ -181,13 +179,20 @@ __host__ __device__ inline void Scatter_cov_line(Matrix2Nd& cov_sz,
               printf("Scatter_cov_line - sig2:%f, theta: %f\n", sig2, theta);
               printf("Scatter_cov_line - Adding to element %d, %d value %f\n", n + k, n + l, (s_arcs(k) - s_arcs(i)) * (s_arcs(l) - s_arcs(i)) * sig2 / sqr(sqr(sin(theta))));
 #endif
-              if (in_forward) {
+              cov_sz(k + (!in_forward) * n, l + (!in_forward) * n) += sig2 * (
+                in_forward*((z_values(k) - z_values(i)) * (z_values(l) - z_values(i))) +
+                (!in_forward)*((s_arcs(k) - s_arcs(i)) * (s_arcs(l) - s_arcs(i)))) /
+                (in_forward*(sqr(sqr(cos(theta)))) + (!in_forward)*(sqr(sqr(sin(theta)))));
+                cov_sz(l + (!in_forward) * n, k + (!in_forward) * n) = cov_sz(k + (!in_forward) * n, l + (!in_forward) * n);
+                /**
+                if (in_forward) {
                 cov_sz(k, l) += (z_values(k) - z_values(i)) * (z_values(l) - z_values(i)) * sig2 / sqr(sqr(cos(theta)));
                 cov_sz(l, k) = cov_sz(k, l);
-              } else {
+                } else {
                 cov_sz(n + k, n + l) += (s_arcs(k) - s_arcs(i)) * (s_arcs(l) - s_arcs(i)) * sig2 / sqr(sqr(sin(theta)));
                 cov_sz(n + l, n + k) = cov_sz(n + k, n + l);
-              }
+                }
+                */
             }
         }
     }
@@ -257,11 +262,7 @@ __host__ __device__ inline MatrixNd Scatter_cov_rad(const Matrix2xNd& p2D,
         {
             for (u_int i = 0; i < std::min(k, l); ++i)
             {
-              if (in_forward) {
-                scatter_cov_rad(k, l) += (rad(k) - rad(i)) * (rad(l) - rad(i)) * sig2 / sqr(cos(theta));
-              } else {
-                scatter_cov_rad(k, l) += (rad(k) - rad(i)) * (rad(l) - rad(i)) * sig2 / sqr(sin(theta));
-              }
+              scatter_cov_rad(k, l) += (rad(k) - rad(i)) * (rad(l) - rad(i)) * sig2 / (in_forward*sqr(cos(theta)) + (!in_forward)*sqr(sin(theta)));
               scatter_cov_rad(l, k) = scatter_cov_rad(k, l);
             }
         }
