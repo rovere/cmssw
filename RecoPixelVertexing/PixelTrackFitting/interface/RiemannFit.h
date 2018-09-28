@@ -659,6 +659,40 @@ __host__ __device__ inline void Fast_fit(const Matrix3xNd& hits, Vector4d & resu
 #endif
 }
 
+__host__ __device__ inline void ComputeCircleWeights(const MatrixNd & hits2D,
+                                                     const Vector4d & fast_fit,
+                                                     const VectorNd & rad,
+                                                     const double B,
+                                                     Matrix2Nd & hits_cov2D,
+                                                     MatrixNd & G,
+                                                     VectorNd & weight,
+                                                     double & renorm)
+{
+  MatrixNd cov_rad;
+  cov_rad = cov_carttorad_prefit(hits2D, hits_cov2D, fast_fit, rad);
+  printIt(&cov_rad, "circle_fit - cov_rad:");
+
+  MatrixNd scatter_cov_rad = Scatter_cov_rad(hits2D, fast_fit, rad, B);
+  printIt(&scatter_cov_rad, "circle_fit - scatter_cov_rad:");
+  printIt(&hits2D, "circle_fit - hits2D bis:");
+#if RFIT_DEBUG
+  printf("Address of hits2D: a) %p\n", &hits2D);
+#endif
+  hits_cov2D += cov_radtocart(hits2D, scatter_cov_rad, rad);
+  printIt(&hits_cov2D, "circle_fit - hits_cov2D:");
+  cov_rad += scatter_cov_rad;
+  printIt(&cov_rad, "circle_fit - cov_rad:");
+  Matrix4d cov_rad4 = cov_rad;
+  Matrix4d G4;
+  G4 = cov_rad4.inverse();
+  printIt(&G4, "circle_fit - G4:");
+  renorm = G4.sum();
+  G4 *= 1. / renorm;
+  printIt(&G4, "circle_fit - G4:");
+  G = G4;
+  Weight_circle(G, weight);
+}
+
 /*!
     \brief Fit a generic number of 2D points with a circle using Riemann-Chernov
     algorithm. Covariance matrix of fitted parameter is optionally computed.
@@ -692,12 +726,12 @@ __host__ __device__ inline void Fast_fit(const Matrix3xNd& hits, Vector4d & resu
 */
 
 __host__ __device__ inline void Circle_fit(const Matrix2xNd& hits2D,
-                                                 const Matrix2Nd& hits_cov2D,
-                                                 const Vector4d& fast_fit,
-                                                 const VectorNd& rad,
-                                                 const double B,
-                                                 circle_fit & circle,
-                                                 const bool error = true)
+                                           const Matrix2Nd& hits_cov2D,
+                                           const Vector4d& fast_fit,
+                                           const VectorNd& rad,
+                                           const double B,
+                                           circle_fit & circle,
+                                           const bool error = true)
 {
 #if RFIT_DEBUG
     printf("circle_fit - enter\n");
@@ -715,34 +749,11 @@ __host__ __device__ inline void Circle_fit(const Matrix2xNd& hits2D,
     VectorNd weight;
     MatrixNd G;
     double renorm;
-    {
-        MatrixNd cov_rad;
-        cov_rad = cov_carttorad_prefit(hits2D, V, fast_fit, rad);
-        printIt(&cov_rad, "circle_fit - cov_rad:");
-        // cov_rad = cov_carttorad(hits2D, V);
+    ComputeCircleWeights(hits2D, fast_fit, rad, B, V, G, weight, renorm);
 
-        MatrixNd scatter_cov_rad = Scatter_cov_rad(hits2D, fast_fit, rad, B);
-        printIt(&scatter_cov_rad, "circle_fit - scatter_cov_rad:");
-        printIt(&hits2D, "circle_fit - hits2D bis:");
 #if RFIT_DEBUG
-        printf("Address of hits2D: a) %p\n", &hits2D);
-#endif
-        V += cov_radtocart(hits2D, scatter_cov_rad, rad);
-        printIt(&V, "circle_fit - V:");
-        cov_rad += scatter_cov_rad;
-        printIt(&cov_rad, "circle_fit - cov_rad:");
-        Matrix4d cov_rad4 = cov_rad;
-        Matrix4d G4;
-        G4 = cov_rad4.inverse();
-        printIt(&G4, "circle_fit - G4:");
-        renorm = G4.sum();
-        G4 *= 1. / renorm;
-        printIt(&G4, "circle_fit - G4:");
-        G = G4;
-        Weight_circle(G, weight);
-    }
     printIt(&weight, "circle_fit - weight:");
-
+#endif
     // SPACE TRANSFORMATION
 #if RFIT_DEBUG
     printf("circle_fit - SPACE TRANSFORMATION\n");
