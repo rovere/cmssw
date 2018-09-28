@@ -659,6 +659,212 @@ __host__ __device__ inline void Fast_fit(const Matrix3xNd& hits, Vector4d & resu
 #endif
 }
 
+__host__ __device__ inline void ComputeCircleParametersAndErrors(const Matrix2xNd & hits2D,
+                                                                 const Vector2Nd & mc,
+                                                                 const Matrix2Nd & V,
+                                                                 const Matrix3xNd &p3D,
+                                                                 const VectorNd & weight,
+                                                                 const Vector3d & v,
+                                                                 const Vector3d r0,
+                                                                 const Matrix3d & A,
+                                                                 const Vector2d & centroid,
+                                                                 ArrayNd * Vcs_p,//[2][2],
+                                                                 MatrixNd *C_p,//[3][3],
+                                                                 double renorm,
+                                                                 double chi2,
+                                                                 circle_fit & circle)
+{
+#if RFIT_DEBUG
+  printf("circle_fit - ERROR PRPAGATION ACTIVATED\n");
+#endif
+  u_int n = hits2D.cols();
+  const double q = mc.squaredNorm();
+  const double s = sqrt(n * 1./q);
+  const double s_inv = 1./s;    // auxiliary quantities
+  Matrix<double, 1, 1> cm;
+  cm = -v.transpose() * r0;
+  const double c = cm(0, 0);
+  const double h = sqrt(1. - sqr(v(2)) - 4. * c * v(2));
+  const double v2x2_inv = 1. / (2. * v(2));
+  // COMPUTE CIRCLE PARAMETER
+
+  // auxiliary quantities
+  Vector3d par_uvr_;  // used in error propagation
+  par_uvr_ << -v(0) * v2x2_inv, -v(1) * v2x2_inv, h * v2x2_inv;
+
+  circle.par << par_uvr_(0) * s_inv + centroid(0), par_uvr_(1) * s_inv + centroid(1), par_uvr_(2) * s_inv;
+  circle.q = Charge(hits2D, circle.par);
+  circle.chi2 = std::abs(chi2) * renorm * 1. / sqr(2 * v(2) * par_uvr_(2) * s);
+
+  ArrayNd(&Vcs)[2][2] = *reinterpret_cast<ArrayNd(*)[2][2]>(Vcs_p);
+  {
+    Matrix<double, 1, 1> cm;
+    cm = mc.transpose() * V * mc;
+    double val = cm(0, 0);
+    const Matrix2Nd Vcs_ = sqr(s) * V + sqr(sqr(s)) * 1. / (4. * q * n) *
+      (2. * V.squaredNorm() + 4. * val) *  // mc.transpose() * V * mc) *
+      mc * mc.transpose();
+    Vcs[0][0] = Vcs_.block(0, 0, n, n);
+    Vcs[0][1] = Vcs_.block(0, n, n, n);
+    Vcs[1][1] = Vcs_.block(n, n, n, n);
+    Vcs[1][0] = Vcs[0][1].transpose();
+#if RFIT_DEBUG
+    printIt(&Vcs, "circle_fit - Vcs:");
+#endif
+  }
+
+  MatrixNd(&C)[3][3] = *reinterpret_cast<MatrixNd(*)[3][3]>(C_p);
+  {
+    const ArrayNd t0 = (VectorXd::Constant(n, 1.) * p3D.row(0));
+    const ArrayNd t1 = (VectorXd::Constant(n, 1.) * p3D.row(1));
+    const ArrayNd t00 = p3D.row(0).transpose() * p3D.row(0);
+    const ArrayNd t01 = p3D.row(0).transpose() * p3D.row(1);
+    const ArrayNd t11 = p3D.row(1).transpose() * p3D.row(1);
+    const ArrayNd t10 = t01.transpose();
+    C[0][0] = Vcs[0][0];
+    C[0][1] = Vcs[0][1];
+    C[0][2] = 2. * (Vcs[0][0] * t0 + Vcs[0][1] * t1);
+    C[1][1] = Vcs[1][1];
+    C[1][2] = 2. * (Vcs[1][0] * t0 + Vcs[1][1] * t1);
+    C[2][2] = 2. * (Vcs[0][0] * Vcs[0][0] + Vcs[0][0] * Vcs[0][1] + Vcs[1][1] * Vcs[1][0] +
+        Vcs[1][1] * Vcs[1][1]) +
+      4. * (Vcs[0][0] * t00 + Vcs[0][1] * t01 + Vcs[1][0] * t10 + Vcs[1][1] * t11);
+  }
+#if RFIT_DEBUG
+  printIt(&C[0][0], "circle_fit - C[0][0]:");
+#endif
+
+  Matrix3d C0;  // cov matrix of center of gravity (r0.x,r0.y,r0.z)
+  for (u_int i = 0; i < 3; ++i)
+  {
+    for (u_int j = i; j < 3; ++j)
+    {
+      Matrix<double, 1, 1> tmp;
+      tmp = weight.transpose() * C[i][j] * weight;
+      const double val = tmp(0, 0);
+      C0(i, j) = val;  //weight.transpose() * C[i][j] * weight;
+      C0(j, i) = C0(i, j);
+    }
+  }
+  printIt(&C0, "circle_fit - C0:");
+
+  const MatrixNd W = weight * weight.transpose();
+  const MatrixNd H = MatrixXd::Identity(n, n).rowwise() - weight.transpose();
+  const MatrixNx3d s_v = H * p3D.transpose();
+  printIt(&W, "circle_fit - W:");
+  printIt(&H, "circle_fit - H:");
+  printIt(&s_v, "circle_fit - s_v:");
+
+  MatrixNd D_[3][3];  // cov(s_v)
+  {
+    D_[0][0] = (H * C[0][0] * H.transpose()).cwiseProduct(W);
+    D_[0][1] = (H * C[0][1] * H.transpose()).cwiseProduct(W);
+    D_[0][2] = (H * C[0][2] * H.transpose()).cwiseProduct(W);
+    D_[1][1] = (H * C[1][1] * H.transpose()).cwiseProduct(W);
+    D_[1][2] = (H * C[1][2] * H.transpose()).cwiseProduct(W);
+    D_[2][2] = (H * C[2][2] * H.transpose()).cwiseProduct(W);
+    D_[1][0] = D_[0][1].transpose();
+    D_[2][0] = D_[0][2].transpose();
+    D_[2][1] = D_[1][2].transpose();
+  }
+  printIt(&D_[0][0], "circle_fit - D_[0][0]:");
+
+  constexpr u_int nu[6][2] = {{0, 0}, {0, 1}, {0, 2}, {1, 1}, {1, 2}, {2, 2}};
+
+  Matrix6d E;  // cov matrix of the 6 independent elements of A
+  for (u_int a = 0; a < 6; ++a)
+  {
+    const u_int i = nu[a][0], j = nu[a][1];
+    for (u_int b = a; b < 6; ++b)
+    {
+      const u_int k = nu[b][0], l = nu[b][1];
+      VectorNd t0(n);
+      VectorNd t1(n);
+      if (l == k)
+      {
+        t0 = 2. * D_[j][l] * s_v.col(l);
+        if (i == j)
+          t1 = t0;
+        else
+          t1 = 2. * D_[i][l] * s_v.col(l);
+      }
+      else
+      {
+        t0 = D_[j][l] * s_v.col(k) + D_[j][k] * s_v.col(l);
+        if (i == j)
+          t1 = t0;
+        else
+          t1 = D_[i][l] * s_v.col(k) + D_[i][k] * s_v.col(l);
+      }
+
+      if (i == j)
+      {
+        Matrix<double, 1, 1> cm;
+        cm = s_v.col(i).transpose() * (t0 + t1);
+        const double val = cm(0, 0);
+        E(a, b) = 0. + val;
+      }
+      else
+      {
+        Matrix<double, 1, 1> cm;
+        cm = (s_v.col(i).transpose() * t0) + (s_v.col(j).transpose() * t1);
+        const double val = cm(0, 0);
+        E(a, b) = 0. + val;  //(s_v.col(i).transpose() * t0) + (s_v.col(j).transpose() * t1);
+      }
+      if (b != a)
+        E(b, a) = E(a, b);
+    }
+  }
+  printIt(&E, "circle_fit - E:");
+
+  Matrix<double, 3, 6> J2;  // Jacobian of min_eigen() (numerically computed)
+  for (u_int a = 0; a < 6; ++a)
+  {
+    const u_int i = nu[a][0], j = nu[a][1];
+    Matrix3d Delta = Matrix3d::Zero();
+    Delta(i, j) = Delta(j, i) = abs(A(i, j) * d);
+    J2.col(a) = min_eigen3D_fast(A + Delta);
+    const int sign = (J2.col(a)(2) > 0) ? 1 : -1;
+    J2.col(a) = (J2.col(a) * sign - v) / Delta(i, j);
+  }
+  printIt(&J2, "circle_fit - J2:");
+
+  Matrix4d Cvc;  // joint cov matrix of (v0,v1,v2,c)
+  {
+    Matrix3d t0 = J2 * E * J2.transpose();
+    Vector3d t1 = -t0 * r0;
+    Cvc.block(0, 0, 3, 3) = t0;
+    Cvc.block(0, 3, 3, 1) = t1;
+    Cvc.block(3, 0, 1, 3) = t1.transpose();
+    Matrix<double, 1, 1> cm1;
+    //      Matrix<double, 1, 1> cm2;
+    Matrix<double, 1, 1> cm3;
+    cm1 = (v.transpose() * C0 * v);
+    //      cm2 = (C0.cwiseProduct(t0)).sum();
+    cm3 = (r0.transpose() * t0 * r0);
+    const double val = cm1(0, 0) + (C0.cwiseProduct(t0)).sum() + cm3(0, 0);
+    Cvc(3, 3) = val;
+    // (v.transpose() * C0 * v) + (C0.cwiseProduct(t0)).sum() + (r0.transpose() * t0 * r0);
+  }
+  printIt(&Cvc, "circle_fit - Cvc:");
+
+  Matrix<double, 3, 4> J3;  // Jacobian (v0,v1,v2,c)->(X0,Y0,R)
+  {
+    const double t = 1. / h;
+    J3 << -v2x2_inv, 0, v(0) * sqr(v2x2_inv) * 2., 0, 0, -v2x2_inv, v(1) * sqr(v2x2_inv) * 2., 0,
+       0, 0, -h * sqr(v2x2_inv) * 2. - (2. * c + v(2)) * v2x2_inv * t, -t;
+  }
+  printIt(&J3, "circle_fit - J3:");
+
+  const RowVector2Nd Jq = mc.transpose() * s * 1. / n;  // var(q)
+  printIt(&Jq, "circle_fit - Jq:");
+
+  Matrix3d cov_uvr = J3 * Cvc * J3.transpose() * sqr(s_inv)  // cov(X0,Y0,R)
+    + (par_uvr_ * par_uvr_.transpose()) * (Jq * V * Jq.transpose());
+
+  circle.cov = cov_uvr;
+}
+
 __host__ __device__ inline void ComputeCircleWeights(const MatrixNd & hits2D,
                                                      const Vector4d & fast_fit,
                                                      const VectorNd & rad,
@@ -730,6 +936,8 @@ __host__ __device__ inline void Circle_fit(const Matrix2xNd& hits2D,
                                            const Vector4d& fast_fit,
                                            const VectorNd& rad,
                                            const double B,
+                                           ArrayNd * Vcs,//[2][2],    // for error/covariance computation
+                                           MatrixNd * C,//[3][3],     // for error/covariance computation
                                            circle_fit & circle,
                                            const bool error = true)
 {
@@ -739,12 +947,12 @@ __host__ __device__ inline void Circle_fit(const Matrix2xNd& hits2D,
     // INITIALIZATION
     Matrix2Nd V = hits_cov2D;
     u_int n = hits2D.cols();
+#if RFIT_DEBUG
     printIt(&hits2D, "circle_fit - hits2D:");
     printIt(&hits_cov2D, "circle_fit - hits_cov2D:");
-
-#if RFIT_DEBUG
     printf("circle_fit - WEIGHT COMPUTATION\n");
 #endif
+
     // WEIGHT COMPUTATION
     VectorNd weight;
     MatrixNd G;
@@ -753,20 +961,15 @@ __host__ __device__ inline void Circle_fit(const Matrix2xNd& hits2D,
 
 #if RFIT_DEBUG
     printIt(&weight, "circle_fit - weight:");
-#endif
     // SPACE TRANSFORMATION
-#if RFIT_DEBUG
     printf("circle_fit - SPACE TRANSFORMATION\n");
-#endif
-
-    // center
-#if RFIT_DEBUG
     printf("Address of hits2D: b) %p\n", &hits2D);
 #endif
-    const Vector2d h_ = hits2D.rowwise().mean();  // centroid
-    printIt(&h_, "circle_fit - h_:");
+
+    const Vector2d centroid = hits2D.rowwise().mean();  // centroid
+    printIt(&centroid, "circle_fit - centroid:");
     Matrix3xNd p3D(3, n);
-    p3D.block(0, 0, 2, n) = hits2D.colwise() - h_;
+    p3D.block(0, 0, 2, n) = hits2D.colwise() - centroid;
     printIt(&p3D, "circle_fit - p3D: a)");
     Vector2Nd mc(2 * n);  // centered hits, used in error computation
     mc << p3D.row(0).transpose(), p3D.row(1).transpose();
@@ -811,221 +1014,16 @@ __host__ __device__ inline void Circle_fit(const Matrix2xNd& hits2D,
 #if RFIT_DEBUG
     printf("circle_fit - AFTER MIN_EIGEN 1\n");
 #endif
-    Matrix<double, 1, 1> cm;
-#if RFIT_DEBUG
-    printf("circle_fit - AFTER MIN_EIGEN 2\n");
-#endif
-    cm = -v.transpose() * r0;
-#if RFIT_DEBUG
-    printf("circle_fit - AFTER MIN_EIGEN 3\n");
-#endif
-    const double c = cm(0, 0);
-    //  const double c = -v.transpose() * r0;
+
+    ComputeCircleParametersAndErrors(hits2D, mc, V, p3D, weight,
+                                     v, r0, A, centroid,
+                                     Vcs, C, renorm, chi2, circle);
 
 #if RFIT_DEBUG
-    printf("circle_fit - COMPUTE CIRCLE PARAMETER\n");
-#endif
-    // COMPUTE CIRCLE PARAMETER
-
-    // auxiliary quantities
-    const double h = sqrt(1. - sqr(v(2)) - 4. * c * v(2));
-    const double v2x2_inv = 1. / (2. * v(2));
-    const double s_inv = 1. / s;
-    Vector3d par_uvr_;  // used in error propagation
-    par_uvr_ << -v(0) * v2x2_inv, -v(1) * v2x2_inv, h * v2x2_inv;
-
-    circle.par << par_uvr_(0) * s_inv + h_(0), par_uvr_(1) * s_inv + h_(1), par_uvr_(2) * s_inv;
-    circle.q = Charge(hits2D, circle.par);
-    circle.chi2 = abs(chi2) * renorm * 1. / sqr(2 * v(2) * par_uvr_(2) * s);
     printIt(&circle.par, "circle_fit - CIRCLE PARAMETERS:");
     printIt(&circle.cov, "circle_fit - CIRCLE COVARIANCE:");
-#if RFIT_DEBUG
-    printf("circle_fit - CIRCLE CHARGE: %ld\n", circle.q);
-#endif
-
-#if RFIT_DEBUG
-    printf("circle_fit - ERROR PROPAGATION\n");
-#endif
-    // ERROR PROPAGATION
-    if (error)
-    {
-#if RFIT_DEBUG
-        printf("circle_fit - ERROR PRPAGATION ACTIVATED\n");
-#endif
-        ArrayNd Vcs_[2][2];  // cov matrix of center & scaled points
-#if RFIT_DEBUG
-        printf("circle_fit - ERROR PRPAGATION ACTIVATED 2\n");
-#endif
-        {
-            Matrix<double, 1, 1> cm;
-            Matrix<double, 1, 1> cm2;
-            cm = mc.transpose() * V * mc;
-            //      cm2 = mc * mc.transpose();
-            const double c = cm(0, 0);
-            //      const double c2 = cm2(0,0);
-            const Matrix2Nd Vcs = sqr(s) * V + sqr(sqr(s)) * 1. / (4. * q * n) *
-                                                   (2. * V.squaredNorm() + 4. * c) *  // mc.transpose() * V * mc) *
-                                                   mc * mc.transpose();
-            printIt(&Vcs, "circle_fit - Vcs:");
-            Vcs_[0][0] = Vcs.block(0, 0, n, n);
-            Vcs_[0][1] = Vcs.block(0, n, n, n);
-            Vcs_[1][1] = Vcs.block(n, n, n, n);
-            Vcs_[1][0] = Vcs_[0][1].transpose();
-            printIt(&Vcs, "circle_fit - Vcs:");
-        }
-
-        MatrixNd C[3][3];  // cov matrix of 3D transformed points
-        {
-            const ArrayNd t0 = (VectorXd::Constant(n, 1.) * p3D.row(0));
-            const ArrayNd t1 = (VectorXd::Constant(n, 1.) * p3D.row(1));
-            const ArrayNd t00 = p3D.row(0).transpose() * p3D.row(0);
-            const ArrayNd t01 = p3D.row(0).transpose() * p3D.row(1);
-            const ArrayNd t11 = p3D.row(1).transpose() * p3D.row(1);
-            const ArrayNd t10 = t01.transpose();
-            C[0][0] = Vcs_[0][0];
-            C[0][1] = Vcs_[0][1];
-            C[0][2] = 2. * (Vcs_[0][0] * t0 + Vcs_[0][1] * t1);
-            C[1][1] = Vcs_[1][1];
-            C[1][2] = 2. * (Vcs_[1][0] * t0 + Vcs_[1][1] * t1);
-            C[2][2] = 2. * (Vcs_[0][0] * Vcs_[0][0] + Vcs_[0][0] * Vcs_[0][1] + Vcs_[1][1] * Vcs_[1][0] +
-                            Vcs_[1][1] * Vcs_[1][1]) +
-                      4. * (Vcs_[0][0] * t00 + Vcs_[0][1] * t01 + Vcs_[1][0] * t10 + Vcs_[1][1] * t11);
-        }
-        printIt(&C[0][0], "circle_fit - C[0][0]:");
-
-        Matrix3d C0;  // cov matrix of center of gravity (r0.x,r0.y,r0.z)
-        for (u_int i = 0; i < 3; ++i)
-        {
-            for (u_int j = i; j < 3; ++j)
-            {
-                Matrix<double, 1, 1> tmp;
-                tmp = weight.transpose() * C[i][j] * weight;
-                const double c = tmp(0, 0);
-                C0(i, j) = c;  //weight.transpose() * C[i][j] * weight;
-                C0(j, i) = C0(i, j);
-            }
-        }
-        printIt(&C0, "circle_fit - C0:");
-
-        const MatrixNd W = weight * weight.transpose();
-        const MatrixNd H = MatrixXd::Identity(n, n).rowwise() - weight.transpose();
-        const MatrixNx3d s_v = H * p3D.transpose();
-        printIt(&W, "circle_fit - W:");
-        printIt(&H, "circle_fit - H:");
-        printIt(&s_v, "circle_fit - s_v:");
-
-        MatrixNd D_[3][3];  // cov(s_v)
-        {
-            D_[0][0] = (H * C[0][0] * H.transpose()).cwiseProduct(W);
-            D_[0][1] = (H * C[0][1] * H.transpose()).cwiseProduct(W);
-            D_[0][2] = (H * C[0][2] * H.transpose()).cwiseProduct(W);
-            D_[1][1] = (H * C[1][1] * H.transpose()).cwiseProduct(W);
-            D_[1][2] = (H * C[1][2] * H.transpose()).cwiseProduct(W);
-            D_[2][2] = (H * C[2][2] * H.transpose()).cwiseProduct(W);
-            D_[1][0] = D_[0][1].transpose();
-            D_[2][0] = D_[0][2].transpose();
-            D_[2][1] = D_[1][2].transpose();
-        }
-        printIt(&D_[0][0], "circle_fit - D_[0][0]:");
-
-        constexpr u_int nu[6][2] = {{0, 0}, {0, 1}, {0, 2}, {1, 1}, {1, 2}, {2, 2}};
-
-        Matrix6d E;  // cov matrix of the 6 independent elements of A
-        for (u_int a = 0; a < 6; ++a)
-        {
-            const u_int i = nu[a][0], j = nu[a][1];
-            for (u_int b = a; b < 6; ++b)
-            {
-                const u_int k = nu[b][0], l = nu[b][1];
-                VectorNd t0(n);
-                VectorNd t1(n);
-                if (l == k)
-                {
-                    t0 = 2. * D_[j][l] * s_v.col(l);
-                    if (i == j)
-                        t1 = t0;
-                    else
-                        t1 = 2. * D_[i][l] * s_v.col(l);
-                }
-                else
-                {
-                    t0 = D_[j][l] * s_v.col(k) + D_[j][k] * s_v.col(l);
-                    if (i == j)
-                        t1 = t0;
-                    else
-                        t1 = D_[i][l] * s_v.col(k) + D_[i][k] * s_v.col(l);
-                }
-
-                if (i == j)
-                {
-                    Matrix<double, 1, 1> cm;
-                    cm = s_v.col(i).transpose() * (t0 + t1);
-                    const double c = cm(0, 0);
-                    E(a, b) = 0. + c;
-                }
-                else
-                {
-                    Matrix<double, 1, 1> cm;
-                    cm = (s_v.col(i).transpose() * t0) + (s_v.col(j).transpose() * t1);
-                    const double c = cm(0, 0);
-                    E(a, b) = 0. + c;  //(s_v.col(i).transpose() * t0) + (s_v.col(j).transpose() * t1);
-                }
-                if (b != a)
-                    E(b, a) = E(a, b);
-            }
-        }
-        printIt(&E, "circle_fit - E:");
-
-        Matrix<double, 3, 6> J2;  // Jacobian of min_eigen() (numerically computed)
-        for (u_int a = 0; a < 6; ++a)
-        {
-            const u_int i = nu[a][0], j = nu[a][1];
-            Matrix3d Delta = Matrix3d::Zero();
-            Delta(i, j) = Delta(j, i) = abs(A(i, j) * d);
-            J2.col(a) = min_eigen3D_fast(A + Delta);
-            const int sign = (J2.col(a)(2) > 0) ? 1 : -1;
-            J2.col(a) = (J2.col(a) * sign - v) / Delta(i, j);
-        }
-        printIt(&J2, "circle_fit - J2:");
-
-        Matrix4d Cvc;  // joint cov matrix of (v0,v1,v2,c)
-        {
-            Matrix3d t0 = J2 * E * J2.transpose();
-            Vector3d t1 = -t0 * r0;
-            Cvc.block(0, 0, 3, 3) = t0;
-            Cvc.block(0, 3, 3, 1) = t1;
-            Cvc.block(3, 0, 1, 3) = t1.transpose();
-            Matrix<double, 1, 1> cm1;
-            //      Matrix<double, 1, 1> cm2;
-            Matrix<double, 1, 1> cm3;
-            cm1 = (v.transpose() * C0 * v);
-            //      cm2 = (C0.cwiseProduct(t0)).sum();
-            cm3 = (r0.transpose() * t0 * r0);
-            const double c = cm1(0, 0) + (C0.cwiseProduct(t0)).sum() + cm3(0, 0);
-            Cvc(3, 3) = c;
-            // (v.transpose() * C0 * v) + (C0.cwiseProduct(t0)).sum() + (r0.transpose() * t0 * r0);
-        }
-        printIt(&Cvc, "circle_fit - Cvc:");
-
-        Matrix<double, 3, 4> J3;  // Jacobian (v0,v1,v2,c)->(X0,Y0,R)
-        {
-            const double t = 1. / h;
-            J3 << -v2x2_inv, 0, v(0) * sqr(v2x2_inv) * 2., 0, 0, -v2x2_inv, v(1) * sqr(v2x2_inv) * 2., 0,
-                0, 0, -h * sqr(v2x2_inv) * 2. - (2. * c + v(2)) * v2x2_inv * t, -t;
-        }
-        printIt(&J3, "circle_fit - J3:");
-
-        const RowVector2Nd Jq = mc.transpose() * s * 1. / n;  // var(q)
-        printIt(&Jq, "circle_fit - Jq:");
-
-        Matrix3d cov_uvr = J3 * Cvc * J3.transpose() * sqr(s_inv)  // cov(X0,Y0,R)
-                           + (par_uvr_ * par_uvr_.transpose()) * (Jq * V * Jq.transpose());
-
-        circle.cov = cov_uvr;
-    }
-
     printIt(&circle.cov, "Circle cov:");
-#if RFIT_DEBUG
+    printf("circle_fit - CIRCLE CHARGE: %ld\n", circle.q);
     printf("circle_fit - exit\n");
 #endif
 }
@@ -1304,10 +1302,12 @@ inline helix_fit Helix_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, co
     Vector4d fast_fit;
     Fast_fit(hits, fast_fit);
 
+    ArrayNd Vcs[2][2];
+    MatrixNd C[3][3];
     circle_fit circle;
     Circle_fit(hits.block(0, 0, 2, n),
                hits_cov.block(0, 0, 2 * n, 2 * n),
-               fast_fit, rad, B, circle, error);
+               fast_fit, rad, B, &Vcs[0][0], &C[0][0], circle, error);
     line_fit line;
     Line_fit(hits, hits_cov, circle, fast_fit, B, line, error);
 
