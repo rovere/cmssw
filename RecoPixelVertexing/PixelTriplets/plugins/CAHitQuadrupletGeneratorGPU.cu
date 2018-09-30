@@ -72,7 +72,7 @@ void kernelFastFitAllHits(GPU::SimpleVector<Quadruplet> * foundNtuplets,
 }
 
 __global__
-__launch_bounds__(256, 2)
+__launch_bounds__(512, 1)
 void kernelCircleFitAllHits(GPU::SimpleVector<Quadruplet> * foundNtuplets,
     int hits_in_fit,
     float B,
@@ -400,7 +400,7 @@ void CAHitQuadrupletGeneratorGPU::launchKernels(const TrackingRegion &region,
       line_fit_resultsGPU_);
   cudaCheck(cudaGetLastError());
 
-  blockSize = 256;
+  blockSize = 512;
   numberOfBlocks = (maxNumberOfQuadruplets_ + blockSize - 1) / blockSize;
   kernelCircleFitAllHits<<<numberOfBlocks, blockSize, 0, cudaStream>>>(
       d_foundNtupletsVec_[regionIndex], 4, bField_, helix_fit_resultsGPU_,
