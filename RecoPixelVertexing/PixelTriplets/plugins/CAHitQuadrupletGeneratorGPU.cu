@@ -72,6 +72,7 @@ void kernelFastFitAllHits(GPU::SimpleVector<Quadruplet> * foundNtuplets,
 }
 
 __global__
+//__launch_bounds__(128, 4)
 void kernelCircleFitAllHits(GPU::SimpleVector<Quadruplet> * foundNtuplets,
     int hits_in_fit,
     float B,
@@ -80,9 +81,10 @@ void kernelCircleFitAllHits(GPU::SimpleVector<Quadruplet> * foundNtuplets,
     Rfit::Matrix3Nd *hits_cov,
     Rfit::circle_fit *circle_fit,
     Vector4d *fast_fit,
-    Rfit::line_fit *line_fiti, 
+    Rfit::line_fit *line_fit,
     Rfit::ArrayNd * vcs,
-    Rfit::MatrixNd * C)
+    Rfit::MatrixNd * C,
+    Rfit::MatrixNd *D)
 {
   int helix_start = (blockIdx.x * blockDim.x + threadIdx.x);
   if (helix_start >= foundNtuplets->size()) {
@@ -102,6 +104,7 @@ void kernelCircleFitAllHits(GPU::SimpleVector<Quadruplet> * foundNtuplets,
                    fast_fit[helix_start], rad, B, 
                    &vcs[helix_start*4], 
                    &C[helix_start*9], 
+                   &D[helix_start*9],
                    circle_fit[helix_start], 
                    true);
 
@@ -270,6 +273,7 @@ void CAHitQuadrupletGeneratorGPU::deallocateOnGPU()
   cudaFree(helix_fit_resultsGPU_);
   cudaFree(vcs_);
   cudaFree(C_);
+  cudaFree(D_);
 
 }
 
@@ -330,6 +334,9 @@ void CAHitQuadrupletGeneratorGPU::allocateOnGPU()
 
   cudaCheck(cudaMalloc(&C_, 9*sizeof(Rfit::MatrixNd)*maxNumberOfQuadruplets_));
   cudaCheck(cudaMemset(C_, 0x00, 9*sizeof(Rfit::MatrixNd)*maxNumberOfQuadruplets_));
+
+  cudaCheck(cudaMalloc(&D_, 9*sizeof(Rfit::MatrixNd)*maxNumberOfQuadruplets_));
+  cudaCheck(cudaMemset(D_, 0x00, 9*sizeof(Rfit::MatrixNd)*maxNumberOfQuadruplets_));
 }
 
 void CAHitQuadrupletGeneratorGPU::launchKernels(const TrackingRegion &region,
@@ -386,9 +393,11 @@ void CAHitQuadrupletGeneratorGPU::launchKernels(const TrackingRegion &region,
   kernelCircleFitAllHits<<<numberOfBlocks, blockSize, 0, cudaStream>>>(
       d_foundNtupletsVec_[regionIndex], 4, bField_, helix_fit_resultsGPU_,
       hitsGPU_, hits_covGPU_, circle_fit_resultsGPU_, fast_fit_resultsGPU_,
-      line_fit_resultsGPU_, vcs_, C_);
+      line_fit_resultsGPU_, vcs_, C_, D_);
   cudaCheck(cudaGetLastError());
 
+  blockSize = 256;
+  numberOfBlocks = (maxNumberOfQuadruplets_ + blockSize - 1) / blockSize;
   kernelLineFitAllHits<<<numberOfBlocks, blockSize, 0, cudaStream>>>(
       d_foundNtupletsVec_[regionIndex], bField_, helix_fit_resultsGPU_,
       hitsGPU_, hits_covGPU_, circle_fit_resultsGPU_, fast_fit_resultsGPU_,

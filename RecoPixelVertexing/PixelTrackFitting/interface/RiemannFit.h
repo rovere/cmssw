@@ -670,6 +670,7 @@ __host__ __device__ inline void ComputeCircleParametersAndErrors(const Matrix2xN
                                                                  const Vector2d & centroid,
                                                                  ArrayNd * Vcs_p,//[2][2],
                                                                  MatrixNd *C_p,//[3][3],
+                                                                 MatrixNd *D_p,//[3][3],
                                                                  double renorm,
                                                                  double chi2,
                                                                  circle_fit & circle)
@@ -755,19 +756,19 @@ __host__ __device__ inline void ComputeCircleParametersAndErrors(const Matrix2xN
   printIt(&H, "circle_fit - H:");
   printIt(&s_v, "circle_fit - s_v:");
 
-  MatrixNd D_[3][3];  // cov(s_v)
+  MatrixNd(&D)[3][3] = *reinterpret_cast<MatrixNd(*)[3][3]>(D_p);
   {
-    D_[0][0] = (H * C[0][0] * H.transpose()).cwiseProduct(W);
-    D_[0][1] = (H * C[0][1] * H.transpose()).cwiseProduct(W);
-    D_[0][2] = (H * C[0][2] * H.transpose()).cwiseProduct(W);
-    D_[1][1] = (H * C[1][1] * H.transpose()).cwiseProduct(W);
-    D_[1][2] = (H * C[1][2] * H.transpose()).cwiseProduct(W);
-    D_[2][2] = (H * C[2][2] * H.transpose()).cwiseProduct(W);
-    D_[1][0] = D_[0][1].transpose();
-    D_[2][0] = D_[0][2].transpose();
-    D_[2][1] = D_[1][2].transpose();
+    D[0][0] = (H * C[0][0] * H.transpose()).cwiseProduct(W);
+    D[0][1] = (H * C[0][1] * H.transpose()).cwiseProduct(W);
+    D[0][2] = (H * C[0][2] * H.transpose()).cwiseProduct(W);
+    D[1][1] = (H * C[1][1] * H.transpose()).cwiseProduct(W);
+    D[1][2] = (H * C[1][2] * H.transpose()).cwiseProduct(W);
+    D[2][2] = (H * C[2][2] * H.transpose()).cwiseProduct(W);
+    D[1][0] = D[0][1].transpose();
+    D[2][0] = D[0][2].transpose();
+    D[2][1] = D[1][2].transpose();
   }
-  printIt(&D_[0][0], "circle_fit - D_[0][0]:");
+  printIt(&D[0][0], "circle_fit - D[0][0]:");
 
   constexpr u_int nu[6][2] = {{0, 0}, {0, 1}, {0, 2}, {1, 1}, {1, 2}, {2, 2}};
 
@@ -782,19 +783,19 @@ __host__ __device__ inline void ComputeCircleParametersAndErrors(const Matrix2xN
       VectorNd t1(n);
       if (l == k)
       {
-        t0 = 2. * D_[j][l] * s_v.col(l);
+        t0 = 2. * D[j][l] * s_v.col(l);
         if (i == j)
           t1 = t0;
         else
-          t1 = 2. * D_[i][l] * s_v.col(l);
+          t1 = 2. * D[i][l] * s_v.col(l);
       }
       else
       {
-        t0 = D_[j][l] * s_v.col(k) + D_[j][k] * s_v.col(l);
+        t0 = D[j][l] * s_v.col(k) + D[j][k] * s_v.col(l);
         if (i == j)
           t1 = t0;
         else
-          t1 = D_[i][l] * s_v.col(k) + D_[i][k] * s_v.col(l);
+          t1 = D[i][l] * s_v.col(k) + D[i][k] * s_v.col(l);
       }
 
       if (i == j)
@@ -938,6 +939,7 @@ __host__ __device__ inline void Circle_fit(const Matrix2xNd& hits2D,
                                            const double B,
                                            ArrayNd * Vcs,//[2][2],    // for error/covariance computation
                                            MatrixNd * C,//[3][3],     // for error/covariance computation
+                                           MatrixNd * D,//[3][3],     // for error/covariance computation
                                            circle_fit & circle,
                                            const bool error = true)
 {
@@ -1017,7 +1019,7 @@ __host__ __device__ inline void Circle_fit(const Matrix2xNd& hits2D,
 
     ComputeCircleParametersAndErrors(hits2D, mc, V, p3D, weight,
                                      v, r0, A, centroid,
-                                     Vcs, C, renorm, chi2, circle);
+                                     Vcs, C, D, renorm, chi2, circle);
 
 #if RFIT_DEBUG
     printIt(&circle.par, "circle_fit - CIRCLE PARAMETERS:");
@@ -1304,10 +1306,11 @@ inline helix_fit Helix_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, co
 
     ArrayNd Vcs[2][2];
     MatrixNd C[3][3];
+    MatrixNd D[3][3];
     circle_fit circle;
     Circle_fit(hits.block(0, 0, 2, n),
                hits_cov.block(0, 0, 2 * n, 2 * n),
-               fast_fit, rad, B, &Vcs[0][0], &C[0][0], circle, error);
+               fast_fit, rad, B, &Vcs[0][0], &C[0][0], &D[0][0], circle, error);
     line_fit line;
     Line_fit(hits, hits_cov, circle, fast_fit, B, line, error);
 

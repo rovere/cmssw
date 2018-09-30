@@ -63,7 +63,7 @@ KernelCircleFitAllHits(float *hits_and_covariances, int hits_in_fit,
                        int cumulative_size, float B, Rfit::helix_fit *results,
                        Rfit::Matrix3xNd *hits, Rfit::Matrix3Nd *hits_cov,
                        Rfit::circle_fit *circle_fit, Vector4d *fast_fit,
-                       Rfit::line_fit *line_fit, Rfit::ArrayNd * vcs, Rfit::MatrixNd * C)
+                       Rfit::line_fit *line_fit, Rfit::ArrayNd * vcs, Rfit::MatrixNd * C, Rfit::MatrixNd * D)
 {
   // Reshape Eigen components from hits_and_covariances, using proper thread and block indices
   // Perform the fit
@@ -92,6 +92,7 @@ KernelCircleFitAllHits(float *hits_and_covariances, int hits_in_fit,
                    fast_fit[helix_start], rad, B, 
                    &vcs[helix_start*4],
                    &C[helix_start*9], 
+                   &D[helix_start*9],
                    circle_fit[helix_start], true);
 
 #ifdef GPU_DEBUG
@@ -196,6 +197,10 @@ void PixelTrackReconstructionGPU::launchKernelFit(
   cudaCheck(cudaMalloc(&C, 9*sizeof(Rfit::MatrixNd)*numberOfSeeds));
   cudaCheck(cudaMemset(C, 0x00, 9*sizeof(Rfit::MatrixNd)*numberOfSeeds));
 
+  Rfit::MatrixNd * D = nullptr;
+  cudaCheck(cudaMalloc(&D, 9*sizeof(Rfit::MatrixNd)*numberOfSeeds));
+  cudaCheck(cudaMemset(D, 0x00, 9*sizeof(Rfit::MatrixNd)*numberOfSeeds));
+
   KernelFastFitAllHits<<<num_blocks, threads_per_block>>>(
       hits_and_covariancesGPU, hits_in_fit, cumulative_size, B, results,
       hitsGPU, hits_covGPU, circle_fit_resultsGPU, fast_fit_resultsGPU,
@@ -205,7 +210,7 @@ void PixelTrackReconstructionGPU::launchKernelFit(
   KernelCircleFitAllHits<<<num_blocks, threads_per_block>>>(
       hits_and_covariancesGPU, hits_in_fit, cumulative_size, B, results,
       hitsGPU, hits_covGPU, circle_fit_resultsGPU, fast_fit_resultsGPU,
-      line_fit_resultsGPU, vcs, C);
+      line_fit_resultsGPU, vcs, C, D);
   cudaCheck(cudaGetLastError());
 
   KernelLineFitAllHits<<<num_blocks, threads_per_block>>>(
@@ -221,4 +226,5 @@ void PixelTrackReconstructionGPU::launchKernelFit(
   cudaFree(line_fit_resultsGPU);
   cudaFree(vcs);
   cudaFree(C);
+  cudaFree(D);
 }

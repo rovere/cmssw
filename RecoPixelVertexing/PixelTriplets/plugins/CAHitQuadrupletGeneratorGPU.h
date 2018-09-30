@@ -186,6 +186,7 @@ private:
     Rfit::helix_fit * helix_fit_resultsGPU_ = nullptr;
     Rfit::ArrayNd * vcs_ = nullptr;
     Rfit::MatrixNd * C_ = nullptr;
+    Rfit::MatrixNd * D_ = nullptr;
 };
 
 #endif // RecoPixelVertexing_PixelTriplets_plugins_CAHitQuadrupletGeneratorGPU_h
