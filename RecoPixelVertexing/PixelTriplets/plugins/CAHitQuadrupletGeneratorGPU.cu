@@ -72,7 +72,7 @@ void kernelFastFitAllHits(GPU::SimpleVector<Quadruplet> * foundNtuplets,
 }
 
 __global__
-//__launch_bounds__(128, 4)
+__launch_bounds__(256, 2)
 void kernelCircleFitAllHits(GPU::SimpleVector<Quadruplet> * foundNtuplets,
     int hits_in_fit,
     float B,
@@ -82,9 +82,10 @@ void kernelCircleFitAllHits(GPU::SimpleVector<Quadruplet> * foundNtuplets,
     Rfit::circle_fit *circle_fit,
     Vector4d *fast_fit,
     Rfit::line_fit *line_fit,
-    Rfit::ArrayNd * vcs,
+    Rfit::covariancesForCircle * cov)
+/*    Rfit::ArrayNd * vcs,
     Rfit::MatrixNd * C,
-    Rfit::MatrixNd *D)
+    Rfit::MatrixNd *D) */
 {
   int helix_start = (blockIdx.x * blockDim.x + threadIdx.x);
   if (helix_start >= foundNtuplets->size()) {
@@ -102,9 +103,12 @@ void kernelCircleFitAllHits(GPU::SimpleVector<Quadruplet> * foundNtuplets,
   Rfit::Circle_fit(hits[helix_start].block(0, 0, 2, n),
                    hits_cov[helix_start].block(0, 0, 2 * n, 2 * n),
                    fast_fit[helix_start], rad, B, 
+                   cov[helix_start],
+                   /*
                    &vcs[helix_start*4], 
                    &C[helix_start*9], 
                    &D[helix_start*9],
+                   */
                    circle_fit[helix_start], 
                    true);
 
@@ -271,10 +275,12 @@ void CAHitQuadrupletGeneratorGPU::deallocateOnGPU()
   cudaFree(circle_fit_resultsGPU_);
   cudaFree(line_fit_resultsGPU_);
   cudaFree(helix_fit_resultsGPU_);
+  cudaFree(cov_for_circle_);
+  /*
   cudaFree(vcs_);
   cudaFree(C_);
   cudaFree(D_);
-
+  */
 }
 
 void CAHitQuadrupletGeneratorGPU::allocateOnGPU()
@@ -329,6 +335,9 @@ void CAHitQuadrupletGeneratorGPU::allocateOnGPU()
   cudaCheck(cudaMalloc(&helix_fit_resultsGPU_, sizeof(Rfit::helix_fit)*maxNumberOfQuadruplets_));
   cudaCheck(cudaMemset(helix_fit_resultsGPU_, 0x00, sizeof(Rfit::helix_fit)*maxNumberOfQuadruplets_));
 
+  cudaCheck(cudaMalloc(&cov_for_circle_, sizeof(Rfit::covariancesForCircle)*maxNumberOfQuadruplets_));
+  cudaCheck(cudaMemset(cov_for_circle_, 0x00, sizeof(Rfit::covariancesForCircle)*maxNumberOfQuadruplets_));
+  /*
   cudaCheck(cudaMalloc(&vcs_, 4*sizeof(Rfit::ArrayNd)*maxNumberOfQuadruplets_));
   cudaCheck(cudaMemset(vcs_, 0x00, 4*sizeof(Rfit::ArrayNd)*maxNumberOfQuadruplets_));
 
@@ -337,7 +346,8 @@ void CAHitQuadrupletGeneratorGPU::allocateOnGPU()
 
   cudaCheck(cudaMalloc(&D_, 9*sizeof(Rfit::MatrixNd)*maxNumberOfQuadruplets_));
   cudaCheck(cudaMemset(D_, 0x00, 9*sizeof(Rfit::MatrixNd)*maxNumberOfQuadruplets_));
-}
+*/
+  }
 
 void CAHitQuadrupletGeneratorGPU::launchKernels(const TrackingRegion &region,
                                                 int regionIndex, HitsOnCPU const & hh,
@@ -351,7 +361,7 @@ void CAHitQuadrupletGeneratorGPU::launchKernels(const TrackingRegion &region,
 
   auto nhits = hh.nHits;
   assert(nhits <= PixelGPUConstants::maxNumberOfHits);
-  auto blockSize = 64;
+  auto blockSize = 128;
   auto numberOfBlocks = (maxNumberOfDoublets_ + blockSize - 1)/blockSize;
   kernel_connect<<<numberOfBlocks, blockSize, 0, cudaStream>>>(
       d_foundNtupletsVec_[regionIndex], // needed only to be reset, ready for next kernel
@@ -381,7 +391,7 @@ void CAHitQuadrupletGeneratorGPU::launchKernels(const TrackingRegion &region,
 
   // kernel_print_found_ntuplets<<<1, 1, 0, cudaStream>>>(d_foundNtupletsVec_[regionIndex], 10);
 
-  blockSize = 256;
+  blockSize = 768;
   numberOfBlocks = (maxNumberOfQuadruplets_ + blockSize - 1) / blockSize;
 
   kernelFastFitAllHits<<<numberOfBlocks, blockSize, 0, cudaStream>>>(
@@ -390,10 +400,12 @@ void CAHitQuadrupletGeneratorGPU::launchKernels(const TrackingRegion &region,
       line_fit_resultsGPU_);
   cudaCheck(cudaGetLastError());
 
+  blockSize = 256;
+  numberOfBlocks = (maxNumberOfQuadruplets_ + blockSize - 1) / blockSize;
   kernelCircleFitAllHits<<<numberOfBlocks, blockSize, 0, cudaStream>>>(
       d_foundNtupletsVec_[regionIndex], 4, bField_, helix_fit_resultsGPU_,
       hitsGPU_, hits_covGPU_, circle_fit_resultsGPU_, fast_fit_resultsGPU_,
-      line_fit_resultsGPU_, vcs_, C_, D_);
+      line_fit_resultsGPU_, cov_for_circle_);//, vcs_, C_, D_);
   cudaCheck(cudaGetLastError());
 
   blockSize = 256;

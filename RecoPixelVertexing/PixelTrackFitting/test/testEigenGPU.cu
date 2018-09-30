@@ -44,11 +44,14 @@ void kernelFullFit(Rfit::Matrix3xNd * hits,
      creations of the blocks. To be understood and compared against the myriad
      of compilation warnings we have.
      */
+  Rfit::covariancesForCircle cov;
+  /*
   Rfit::ArrayNd Vcs[2][2];
   Rfit::MatrixNd C[3][3];
   Rfit::MatrixNd D[3][3];
+  */
   Rfit::Circle_fit(hits->block(0,0,2,n), hits_cov->block(0, 0, 2 * n, 2 * n),
-      fast_fit, rad, B, &Vcs[0][0], &C[0][0], &D[0][0], (*circle_fit_resultsGPU), errors);
+      fast_fit, rad, B, cov, /*&Vcs[0][0], &C[0][0], &D[0][0],*/ (*circle_fit_resultsGPU), errors);
   /*
   (*circle_fit_resultsGPU) =
     Rfit::Circle_fit(hits2D_local, hits_cov2D_local,
@@ -85,11 +88,14 @@ void kernelCircleFit(Rfit::Matrix3xNd * hits,
   printf("hits_cov(11,11): %f\n", (*hits_cov)(11,11));
   printf("B: %f\n", B);
 #endif
+  Rfit::covariancesForCircle cov;
+  /*
   Rfit::ArrayNd Vcs[2][2];
   Rfit::MatrixNd C[3][3];
   Rfit::MatrixNd D[3][3];
+  */
   Rfit::Circle_fit(hits->block(0,0,2,n), hits_cov->block(0, 0, 2 * n, 2 * n),
-      *fast_fit_input, rad, B, &Vcs[0][0], &C[0][0], &D[0][0], (*circle_fit_resultsGPU), false);
+      *fast_fit_input, rad, B, cov,/*&Vcs[0][0], &C[0][0], &D[0][0],*/ (*circle_fit_resultsGPU), false);
 }
 
 __global__
@@ -163,12 +169,15 @@ void testFit() {
   Rfit::VectorNd rad = (hits.block(0, 0, 2, n).colwise().norm());
 
   Rfit::circle_fit circle_fit_results;
+  Rfit::covariancesForCircle cov;
+  /*
   Rfit::ArrayNd Vcs[2][2];
   Rfit::MatrixNd C[3][3];
   Rfit::MatrixNd D[3][3];
+  */
   Rfit::Circle_fit(hits.block(0, 0, 2, n),
       hits_cov.block(0, 0, 2 * n, 2 * n),
-      fast_fit_results, rad, B, &Vcs[0][0], &C[0][0], &D[0][0], circle_fit_results, false);
+      fast_fit_results, rad, B, cov, /*&Vcs[0][0], &C[0][0], &D[0][0],*/ circle_fit_results, false);
   std::cout << "Fitted values (CircleFit):\n" << circle_fit_results.par << std::endl;
 
   // CIRCLE_FIT GPU
@@ -219,12 +228,15 @@ void testFitOneGo(bool errors, double epsilon=1e-6) {
   Rfit::VectorNd rad = (hits.block(0, 0, 2, n).colwise().norm());
 
   Rfit::circle_fit circle_fit_results;
+  Rfit::covariancesForCircle cov;
+  /*
   Rfit::ArrayNd Vcs[2][2];
   Rfit::MatrixNd C[3][3];
   Rfit::MatrixNd D[3][3];
+  */
   Rfit::Circle_fit(hits.block(0, 0, 2, n), 
       hits_cov.block(0, 0, 2 * n, 2 * n),
-      fast_fit_results, rad, B, &Vcs[0][0], &C[0][0], &D[0][0], circle_fit_results, errors);
+      fast_fit_results, rad, B, cov, /*&Vcs[0][0], &C[0][0], &D[0][0],*/ circle_fit_results, errors);
   // LINE_FIT CPU
   Rfit::line_fit line_fit_results;
   Rfit::Line_fit(hits, hits_cov, circle_fit_results,

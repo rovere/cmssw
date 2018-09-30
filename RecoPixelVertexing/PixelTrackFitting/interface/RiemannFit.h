@@ -85,6 +85,12 @@ struct weights {
   double renorm;
 };
 
+struct covariancesForCircle {
+  ArrayNd Vcs[2][2];
+  MatrixNd C[3][3];
+  MatrixNd D[3][3];
+};
+
 template <class C>
 __host__ __device__ void printIt(C* m, const char* prefix = "")
 {
@@ -674,10 +680,9 @@ __host__ __device__ inline void ComputeCircleParametersAndErrors(const Matrix2xN
                                                                  const Vector3d r0,
                                                                  const Matrix3d & A,
                                                                  const Vector2d & centroid,
-                                                                 ArrayNd * Vcs_p,//[2][2],
-                                                                 MatrixNd *C_p,//[3][3],
-                                                                 MatrixNd *D_p,//[3][3],
-                                                                 double renorm,
+                                                                 ArrayNd(&Vcs_p)[2][2],//[2][2],
+                                                                 MatrixNd(&C_p)[3][3],//[3][3],
+                                                                 MatrixNd(&D_p)[3][3],//[3][3],
                                                                  double chi2,
                                                                  circle_fit & circle)
 {
@@ -941,9 +946,12 @@ __host__ __device__ inline void Circle_fit(const Matrix2xNd& hits2D,
                                            const Vector4d& fast_fit,
                                            const VectorNd& rad,
                                            const double B,
+                                           covariancesForCircle & cov,
+                                           /*
                                            ArrayNd * Vcs,//[2][2],    // for error/covariance computation
                                            MatrixNd * C,//[3][3],     // for error/covariance computation
                                            MatrixNd * D,//[3][3],     // for error/covariance computation
+                                           */
                                            circle_fit & circle,
                                            const bool error = true)
 {
@@ -1021,7 +1029,7 @@ __host__ __device__ inline void Circle_fit(const Matrix2xNd& hits2D,
 
     ComputeCircleParametersAndErrors(hits2D, mc, V, p3D, circle_weight,
                                      v, r0, A, centroid,
-                                     Vcs, C, D, renorm, chi2, circle);
+                                     cov.Vcs, cov.C, cov.D, chi2, circle);
 
 #if RFIT_DEBUG
     printIt(&circle.par, "circle_fit - CIRCLE PARAMETERS:");
@@ -1306,13 +1314,16 @@ inline helix_fit Helix_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, co
     Vector4d fast_fit;
     Fast_fit(hits, fast_fit);
 
+    covariancesForCircle cov;
+    /*
     ArrayNd Vcs[2][2];
     MatrixNd C[3][3];
     MatrixNd D[3][3];
+    */
     circle_fit circle;
     Circle_fit(hits.block(0, 0, 2, n),
                hits_cov.block(0, 0, 2 * n, 2 * n),
-               fast_fit, rad, B, &Vcs[0][0], &C[0][0], &D[0][0], circle, error);
+               fast_fit, rad, B, cov, /*&Vcs[0][0], &C[0][0], &D[0][0],*/ circle, error);
     line_fit line;
     Line_fit(hits, hits_cov, circle, fast_fit, B, line, error);
 
