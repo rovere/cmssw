@@ -79,6 +79,12 @@ struct helix_fit
                 //  VectorXd time;  // TO FIX just for profiling
 } __attribute__((aligned(16)));
 
+struct weights {
+  VectorNd weight;
+  MatrixNd G;
+  double renorm;
+};
+
 template <class C>
 __host__ __device__ void printIt(C* m, const char* prefix = "")
 {
@@ -401,9 +407,9 @@ __host__ __device__ inline MatrixNd cov_carttorad_prefit(const Matrix2xNd& p2D, 
     diagonal cov matrix. Further investigation needed.
 */
 
-__host__ __device__ inline void Weight_circle(const MatrixNd& cov_rad_inv, VectorNd & result)
+__host__ __device__ inline void Weight_circle(weights & weight)
 {
-    result = cov_rad_inv.colwise().sum().transpose();
+    weight.weight = weight.G.colwise().sum().transpose();
 }
 
 /*!
@@ -663,7 +669,7 @@ __host__ __device__ inline void ComputeCircleParametersAndErrors(const Matrix2xN
                                                                  const Vector2Nd & mc,
                                                                  const Matrix2Nd & V,
                                                                  const Matrix3xNd &p3D,
-                                                                 const VectorNd & weight,
+                                                                 const weights & weight,
                                                                  const Vector3d & v,
                                                                  const Vector3d r0,
                                                                  const Matrix3d & A,
@@ -695,7 +701,7 @@ __host__ __device__ inline void ComputeCircleParametersAndErrors(const Matrix2xN
 
   circle.par << par_uvr_(0) * s_inv + centroid(0), par_uvr_(1) * s_inv + centroid(1), par_uvr_(2) * s_inv;
   circle.q = Charge(hits2D, circle.par);
-  circle.chi2 = std::abs(chi2) * renorm * 1. / sqr(2 * v(2) * par_uvr_(2) * s);
+  circle.chi2 = std::abs(chi2) * weight.renorm * 1. / sqr(2 * v(2) * par_uvr_(2) * s);
 
   ArrayNd(&Vcs)[2][2] = *reinterpret_cast<ArrayNd(*)[2][2]>(Vcs_p);
   {
@@ -741,7 +747,7 @@ __host__ __device__ inline void ComputeCircleParametersAndErrors(const Matrix2xN
     for (u_int j = i; j < 3; ++j)
     {
       Matrix<double, 1, 1> tmp;
-      tmp = weight.transpose() * C[i][j] * weight;
+      tmp = weight.weight.transpose() * C[i][j] * weight.weight;
       const double val = tmp(0, 0);
       C0(i, j) = val;  //weight.transpose() * C[i][j] * weight;
       C0(j, i) = C0(i, j);
@@ -749,8 +755,8 @@ __host__ __device__ inline void ComputeCircleParametersAndErrors(const Matrix2xN
   }
   printIt(&C0, "circle_fit - C0:");
 
-  const MatrixNd W = weight * weight.transpose();
-  const MatrixNd H = MatrixXd::Identity(n, n).rowwise() - weight.transpose();
+  const MatrixNd W = weight.weight * weight.weight.transpose();
+  const MatrixNd H = MatrixXd::Identity(n, n).rowwise() - weight.weight.transpose();
   const MatrixNx3d s_v = H * p3D.transpose();
   printIt(&W, "circle_fit - W:");
   printIt(&H, "circle_fit - H:");
@@ -871,9 +877,7 @@ __host__ __device__ inline void ComputeCircleWeights(const MatrixNd & hits2D,
                                                      const VectorNd & rad,
                                                      const double B,
                                                      Matrix2Nd & hits_cov2D,
-                                                     MatrixNd & G,
-                                                     VectorNd & weight,
-                                                     double & renorm)
+                                                     weights & weight)
 {
   MatrixNd cov_rad;
   cov_rad = cov_carttorad_prefit(hits2D, hits_cov2D, fast_fit, rad);
@@ -893,11 +897,11 @@ __host__ __device__ inline void ComputeCircleWeights(const MatrixNd & hits2D,
   Matrix4d G4;
   G4 = cov_rad4.inverse();
   printIt(&G4, "circle_fit - G4:");
-  renorm = G4.sum();
-  G4 *= 1. / renorm;
+  weight.renorm = G4.sum();
+  G4 *= 1. / weight.renorm;
   printIt(&G4, "circle_fit - G4:");
-  G = G4;
-  Weight_circle(G, weight);
+  weight.G = G4;
+  Weight_circle(weight);
 }
 
 /*!
@@ -956,13 +960,11 @@ __host__ __device__ inline void Circle_fit(const Matrix2xNd& hits2D,
 #endif
 
     // WEIGHT COMPUTATION
-    VectorNd weight;
-    MatrixNd G;
-    double renorm;
-    ComputeCircleWeights(hits2D, fast_fit, rad, B, V, G, weight, renorm);
+    weights circle_weight;
+    ComputeCircleWeights(hits2D, fast_fit, rad, B, V, circle_weight);
 
 #if RFIT_DEBUG
-    printIt(&weight, "circle_fit - weight:");
+    printIt(&circle_weight.weight, "circle_fit - weight:");
     // SPACE TRANSFORMATION
     printf("circle_fit - SPACE TRANSFORMATION\n");
     printf("Address of hits2D: b) %p\n", &hits2D);
@@ -993,9 +995,9 @@ __host__ __device__ inline void Circle_fit(const Matrix2xNd& hits2D,
 
     // compute
     Matrix3d A = Matrix3d::Zero();
-    const Vector3d r0 = p3D * weight;  // center of gravity
+    const Vector3d r0 = p3D * circle_weight.weight;  // center of gravity
     const Matrix3xNd X = p3D.colwise() - r0;
-    A = X * G * X.transpose();
+    A = X * circle_weight.G * X.transpose();
     printIt(&A, "circle_fit - A:");
 
 #if RFIT_DEBUG
@@ -1017,7 +1019,7 @@ __host__ __device__ inline void Circle_fit(const Matrix2xNd& hits2D,
     printf("circle_fit - AFTER MIN_EIGEN 1\n");
 #endif
 
-    ComputeCircleParametersAndErrors(hits2D, mc, V, p3D, weight,
+    ComputeCircleParametersAndErrors(hits2D, mc, V, p3D, circle_weight,
                                      v, r0, A, centroid,
                                      Vcs, C, D, renorm, chi2, circle);
 
@@ -1136,19 +1138,19 @@ __host__ __device__ inline void Line_fit(const Matrix3xNd& hits,
 #endif
     // We are interested only in the errors in the rotated s-axis which, in our
     // formalism, are in the upper square nxn matrix.
-    Matrix4d G, G4;
+    weights line_weight;
+    Matrix4d G4;
     G4 = (cov_with_ms.block(0, 0, n, n)).inverse();
 #if RFIT_DEBUG
     printIt(&G4, "line_fit - cov_with_ms.block(0, 0, n, n).inverse():");
 #endif
-    double renorm = G4.sum();
-    G4 *= 1. / renorm;
+    line_weight.renorm = G4.sum();
+    G4 *= 1. / line_weight.renorm;
 #if RFIT_DEBUG
     printIt(&G4, "line_fit - G4:");
 #endif
-    G = G4;
-    VectorNd weight;
-    Weight_circle(G, weight);
+    line_weight.G = G4;
+    Weight_circle(line_weight);
 
 
     VectorNd err2_inv = cov_with_ms.block(0, 0, n, n).diagonal();
@@ -1167,12 +1169,12 @@ __host__ __device__ inline void Line_fit(const Matrix3xNd& hits,
 
     // compute
     // r0 represents the weighted mean of "x" and "y".
-    const Vector2d r0 = p2D * weight;
+    const Vector2d r0 = p2D * line_weight.weight;
     // This is the X  vector that will be used to build the
     // scatter matrix S = X^T * X
     const Matrix2xNd X = p2D.colwise() - r0;
     Matrix2d A = Matrix2d::Zero();
-    A = X * G * X.transpose();
+    A = X * line_weight.G * X.transpose();
 //    for (u_int i = 0; i < n; ++i)
 //    {
 //        A += err2_inv(i) * (X.col(i) * X.col(i).transpose());
@@ -1217,7 +1219,7 @@ __host__ __device__ inline void Line_fit(const Matrix3xNd& hits,
         {
           // The norm is taken from Chernov, properly adapted to the weights case.
             double norm = v.transpose() * A * v;
-            norm /= weight.sum();
+            norm /= line_weight.weight.sum();
 #if RFIT_DEBUG
             printf("Line_fit - norm:    %e\n", norm);
 #endif
@@ -1225,7 +1227,7 @@ __host__ __device__ inline void Line_fit(const Matrix3xNd& hits,
             C(0, 0) = sig2 * v1_2;
             C(1, 1) = sig2 * v0_2;
             C(0, 1) = C(1, 0) = -sig2 * v(0) * v(1);
-            const VectorNd weight_2 = (weight).array().square();
+            const VectorNd weight_2 = (line_weight.weight).array().square();
             const Vector2d C0(weight_2.dot(x_err2), weight_2.dot(y_err2));
             C.block(0, 2, 2, 1) = C.block(2, 0, 1, 2).transpose() = -C.block(0, 0, 2, 2) * r0;
             Matrix<double, 1, 1> tmp = (r0.transpose() * C.block(0, 0, 2, 2) * r0);
