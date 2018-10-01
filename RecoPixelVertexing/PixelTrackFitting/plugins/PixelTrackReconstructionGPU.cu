@@ -57,9 +57,60 @@ KernelFastFitAllHits(float *hits_and_covariances,
   Rfit::Fast_fit(hits[helix_start], fast_fit[helix_start]);
 }
 
+__global__
+void kernelComputeCircleWeights(int hits_in_fit, int cumulative_size, float B,
+    Rfit::Matrix3xNd *hits,
+    Rfit::Matrix3Nd *hits_cov,
+    Vector4d *fast_fit,
+    Rfit::covariancesForCircle * cov)
+{
+  int start = (blockIdx.x * blockDim.x + threadIdx.x) * hits_in_fit * 12;
+  int helix_start = (blockIdx.x * blockDim.x + threadIdx.x);
+  if (start >= cumulative_size) {
+    return;
+  }
+
+#ifdef GPU_DEBUG
+  printf("blockDim.x: %d, blockIdx.x: %d, threadIdx.x: %d, helix_start: %d, cumulative_size: %d\n",
+         blockDim.x, blockIdx.x, threadIdx.x, helix_start, cumulative_size);
+#endif
+  auto n = hits[helix_start].cols();
+
+  Rfit::VectorNd rad = (hits[helix_start].block(0, 0, 2, n).colwise().norm());
+
+  cov[helix_start].V.resize(2 * n, 2 * n);
+  cov[helix_start].V = hits_cov[helix_start].block(0, 0, 2 * n, 2 * n);
+  Rfit::printIt(&cov[helix_start].V, "kernelComputeCircleWeights: ");
+  Rfit::ComputeCircleWeights(hits[helix_start].block(0, 0, 2, n),
+      fast_fit[helix_start], rad, B, cov[helix_start]);
+}
+
+__global__
+void kernelCircleFitComputeCircleParametersAndErrors( int hits_in_fit, int cumulative_size,
+    Rfit::Matrix3xNd *hits,
+    Rfit::circle_fit *circle_fit,
+    Rfit::covariancesForCircle * cov)
+{
+  int helix_start = (blockIdx.x * blockDim.x + threadIdx.x);
+  if (helix_start >= cumulative_size) {
+    return;
+  }
+
+#ifdef GPU_DEBUG
+  printf("blockDim.x: %d, blockIdx.x: %d, threadIdx.x: %d, helix_start: %d, cumulative_size: %d\n",
+         blockDim.x, blockIdx.x, threadIdx.x, helix_start, foundNtuplets->size());
+#endif
+  auto n = hits[helix_start].cols();
+
+  Rfit::ComputeCircleParametersAndErrors(hits[helix_start].block(0, 0, 2, n),
+                                         cov[helix_start], 
+                                         circle_fit[helix_start]);
+
+}
+  
 __global__ void
 __launch_bounds__(256, 2)
-KernelCircleFitAllHits(float *hits_and_covariances, int hits_in_fit,
+KernelCircleFitAllHits(int hits_in_fit,
                        int cumulative_size, float B, Rfit::helix_fit *results,
                        Rfit::Matrix3xNd *hits, Rfit::Matrix3Nd *hits_cov,
                        Rfit::circle_fit *circle_fit, Vector4d *fast_fit,
@@ -110,7 +161,7 @@ KernelCircleFitAllHits(float *hits_and_covariances, int hits_in_fit,
 }
 
 __global__ void
-KernelLineFitAllHits(float *hits_and_covariances, int hits_in_fit,
+KernelLineFitAllHits(int hits_in_fit,
                      int cumulative_size, float B, Rfit::helix_fit *results,
                      Rfit::Matrix3xNd *hits, Rfit::Matrix3Nd *hits_cov,
                      Rfit::circle_fit *circle_fit, Vector4d *fast_fit,
@@ -173,20 +224,20 @@ void PixelTrackReconstructionGPU::launchKernelFit(
   auto numberOfSeeds = cumulative_size / (hits_in_fit * 12);
 
   Rfit::Matrix3xNd *hitsGPU;
-  cudaCheck(cudaMalloc(&hitsGPU, 48 * numberOfSeeds * sizeof(Rfit::Matrix3xNd(3, 4))));
-  cudaCheck(cudaMemset(hitsGPU, 0x00, 48 * numberOfSeeds * sizeof(Rfit::Matrix3xNd(3, 4))));
+  cudaCheck(cudaMalloc(&hitsGPU, numberOfSeeds * sizeof(Rfit::Matrix3xNd(3, 4))));
+  cudaCheck(cudaMemset(hitsGPU, 0x00, numberOfSeeds * sizeof(Rfit::Matrix3xNd(3, 4))));
 
   Rfit::Matrix3Nd *hits_covGPU = nullptr;
-  cudaCheck(cudaMalloc(&hits_covGPU, 48 * numberOfSeeds * sizeof(Rfit::Matrix3Nd(12, 12))));
-  cudaCheck(cudaMemset(hits_covGPU, 0x00, 48 * numberOfSeeds * sizeof(Rfit::Matrix3Nd(12, 12))));
+  cudaCheck(cudaMalloc(&hits_covGPU, numberOfSeeds * sizeof(Rfit::Matrix3Nd(12, 12))));
+  cudaCheck(cudaMemset(hits_covGPU, 0x00, numberOfSeeds * sizeof(Rfit::Matrix3Nd(12, 12))));
 
   Vector4d *fast_fit_resultsGPU = nullptr;
-  cudaCheck(cudaMalloc(&fast_fit_resultsGPU, 48 * numberOfSeeds * sizeof(Vector4d)));
-  cudaCheck(cudaMemset(fast_fit_resultsGPU, 0x00, 48 * numberOfSeeds * sizeof(Vector4d)));
+  cudaCheck(cudaMalloc(&fast_fit_resultsGPU, numberOfSeeds * sizeof(Vector4d)));
+  cudaCheck(cudaMemset(fast_fit_resultsGPU, 0x00, numberOfSeeds * sizeof(Vector4d)));
 
   Rfit::circle_fit *circle_fit_resultsGPU = nullptr;
-  cudaCheck(cudaMalloc(&circle_fit_resultsGPU, 48 * numberOfSeeds * sizeof(Rfit::circle_fit)));
-  cudaCheck(cudaMemset(circle_fit_resultsGPU, 0x00, 48 * numberOfSeeds * sizeof(Rfit::circle_fit)));
+  cudaCheck(cudaMalloc(&circle_fit_resultsGPU, numberOfSeeds * sizeof(Rfit::circle_fit)));
+  cudaCheck(cudaMemset(circle_fit_resultsGPU, 0x00, numberOfSeeds * sizeof(Rfit::circle_fit)));
 
   Rfit::line_fit *line_fit_resultsGPU = nullptr;
   cudaCheck(cudaMalloc(&line_fit_resultsGPU, numberOfSeeds * sizeof(Rfit::line_fit)));
@@ -216,14 +267,24 @@ void PixelTrackReconstructionGPU::launchKernelFit(
       line_fit_resultsGPU);
   cudaCheck(cudaGetLastError());
 
+  kernelComputeCircleWeights<<<num_blocks, threads_per_block>>>(
+      4, cumulative_size, B,
+      hitsGPU, hits_covGPU, fast_fit_resultsGPU, cov_for_circle);
+  cudaCheck(cudaGetLastError());
+
   KernelCircleFitAllHits<<<num_blocks, threads_per_block>>>(
-      hits_and_covariancesGPU, hits_in_fit, cumulative_size, B, results,
+      hits_in_fit, cumulative_size, B, results,
       hitsGPU, hits_covGPU, circle_fit_resultsGPU, fast_fit_resultsGPU,
       line_fit_resultsGPU, cov_for_circle),//vcs, C, D);
   cudaCheck(cudaGetLastError());
 
+  kernelCircleFitComputeCircleParametersAndErrors<<<num_blocks, threads_per_block>>>(
+      hits_in_fit, cumulative_size, hitsGPU, circle_fit_resultsGPU, cov_for_circle
+      );
+  cudaCheck(cudaGetLastError());
+
   KernelLineFitAllHits<<<num_blocks, threads_per_block>>>(
-      hits_and_covariancesGPU, hits_in_fit, cumulative_size, B, results,
+      hits_in_fit, cumulative_size, B, results,
       hitsGPU, hits_covGPU, circle_fit_resultsGPU, fast_fit_resultsGPU,
       line_fit_resultsGPU);
   cudaCheck(cudaGetLastError());

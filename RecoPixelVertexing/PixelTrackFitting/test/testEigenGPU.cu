@@ -7,6 +7,7 @@
 #include "HeterogeneousCore/CUDAUtilities/interface/cudaCheck.h"
 
 #include "test_common.h"
+#include <cuda_runtime.h>
 
 using namespace Eigen;
 
@@ -44,14 +45,20 @@ void kernelFullFit(Rfit::Matrix3xNd * hits,
      creations of the blocks. To be understood and compared against the myriad
      of compilation warnings we have.
      */
-  Rfit::covariancesForCircle cov;
   /*
   Rfit::ArrayNd Vcs[2][2];
   Rfit::MatrixNd C[3][3];
   Rfit::MatrixNd D[3][3];
   */
+  Rfit::covariancesForCircle cov;
+  cov.V.resize( 2 * n, 2 * n);
+  cov.V = hits_cov->block(0, 0, 2 * n, 2 * n);
+  hits2D_local.resize(2, n);
+  Rfit::ComputeCircleWeights(hits2D_local,
+      fast_fit, rad, B, cov);
   Rfit::Circle_fit(hits->block(0,0,2,n), hits_cov->block(0, 0, 2 * n, 2 * n),
       fast_fit, rad, B, cov, /*&Vcs[0][0], &C[0][0], &D[0][0],*/ (*circle_fit_resultsGPU), errors);
+  Rfit::ComputeCircleParametersAndErrors(hits->block(0,0,2,n), cov, (*circle_fit_resultsGPU));
   /*
   (*circle_fit_resultsGPU) =
     Rfit::Circle_fit(hits2D_local, hits_cov2D_local,
@@ -88,12 +95,14 @@ void kernelCircleFit(Rfit::Matrix3xNd * hits,
   printf("hits_cov(11,11): %f\n", (*hits_cov)(11,11));
   printf("B: %f\n", B);
 #endif
-  Rfit::covariancesForCircle cov;
   /*
   Rfit::ArrayNd Vcs[2][2];
   Rfit::MatrixNd C[3][3];
   Rfit::MatrixNd D[3][3];
   */
+  Rfit::covariancesForCircle cov;
+  cov.V.resize(2 * n, 2 * n);
+  cov.V = hits_cov->block(0, 0, 2 * n, 2 * n);
   Rfit::Circle_fit(hits->block(0,0,2,n), hits_cov->block(0, 0, 2 * n, 2 * n),
       *fast_fit_input, rad, B, cov,/*&Vcs[0][0], &C[0][0], &D[0][0],*/ (*circle_fit_resultsGPU), false);
 }
@@ -170,6 +179,8 @@ void testFit() {
 
   Rfit::circle_fit circle_fit_results;
   Rfit::covariancesForCircle cov;
+  cov.V.resize( 2 * n, 2 * n);
+  cov.V = hits_cov.block(0, 0, 2 * n, 2 * n);
   /*
   Rfit::ArrayNd Vcs[2][2];
   Rfit::MatrixNd C[3][3];
@@ -229,15 +240,19 @@ void testFitOneGo(bool errors, double epsilon=1e-6) {
 
   Rfit::circle_fit circle_fit_results;
   Rfit::covariancesForCircle cov;
+  cov.V.resize( 2 * n, 2 * n);
+  cov.V = hits_cov.block(0, 0, 2 * n, 2 * n);
   /*
   Rfit::ArrayNd Vcs[2][2];
   Rfit::MatrixNd C[3][3];
   Rfit::MatrixNd D[3][3];
   */
+  Rfit::ComputeCircleWeights(hits.block(0, 0, 2, n), fast_fit_results, rad, B, cov);
   Rfit::Circle_fit(hits.block(0, 0, 2, n), 
       hits_cov.block(0, 0, 2 * n, 2 * n),
       fast_fit_results, rad, B, cov, /*&Vcs[0][0], &C[0][0], &D[0][0],*/ circle_fit_results, errors);
   // LINE_FIT CPU
+  Rfit::ComputeCircleParametersAndErrors(hits.block(0, 0, 2, n), cov, circle_fit_results);
   Rfit::line_fit line_fit_results;
   Rfit::Line_fit(hits, hits_cov, circle_fit_results,
       fast_fit_results, B, line_fit_results, errors);
@@ -284,9 +299,8 @@ void testFitOneGo(bool errors, double epsilon=1e-6) {
 
 int main (int argc, char * argv[]) {
 //  testFit();
-  std::cout << "TEST FIT, NO ERRORS" << std::endl;
-  testFitOneGo(false);
-
+  cudaDeviceSetLimit(cudaLimitStackSize, 32*1024);
+  cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 8*1024);
   std::cout << "TEST FIT, ERRORS AND SCATTER" << std::endl;
   testFitOneGo(true, 1e-5);
 
