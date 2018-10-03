@@ -45,11 +45,6 @@ void kernelFullFit(Rfit::Matrix3xNd * hits,
      creations of the blocks. To be understood and compared against the myriad
      of compilation warnings we have.
      */
-  /*
-  Rfit::ArrayNd Vcs[2][2];
-  Rfit::MatrixNd C[3][3];
-  Rfit::MatrixNd D[3][3];
-  */
   Rfit::covariancesForCircle cov;
   cov.V.resize( 2 * n, 2 * n);
   cov.V = hits_cov->block(0, 0, 2 * n, 2 * n);
@@ -95,11 +90,7 @@ void kernelCircleFit(Rfit::Matrix3xNd * hits,
   printf("hits_cov(11,11): %f\n", (*hits_cov)(11,11));
   printf("B: %f\n", B);
 #endif
-  /*
-  Rfit::ArrayNd Vcs[2][2];
-  Rfit::MatrixNd C[3][3];
-  Rfit::MatrixNd D[3][3];
-  */
+
   Rfit::covariancesForCircle cov;
   cov.V.resize(2 * n, 2 * n);
   cov.V = hits_cov->block(0, 0, 2 * n, 2 * n);
@@ -181,11 +172,7 @@ void testFit() {
   Rfit::covariancesForCircle cov;
   cov.V.resize( 2 * n, 2 * n);
   cov.V = hits_cov.block(0, 0, 2 * n, 2 * n);
-  /*
-  Rfit::ArrayNd Vcs[2][2];
-  Rfit::MatrixNd C[3][3];
-  Rfit::MatrixNd D[3][3];
-  */
+
   Rfit::Circle_fit(hits.block(0, 0, 2, n),
       hits_cov.block(0, 0, 2 * n, 2 * n),
       fast_fit_results, rad, B, cov, /*&Vcs[0][0], &C[0][0], &D[0][0],*/ circle_fit_results, false);
@@ -242,11 +229,7 @@ void testFitOneGo(bool errors, double epsilon=1e-6) {
   Rfit::covariancesForCircle cov;
   cov.V.resize( 2 * n, 2 * n);
   cov.V = hits_cov.block(0, 0, 2 * n, 2 * n);
-  /*
-  Rfit::ArrayNd Vcs[2][2];
-  Rfit::MatrixNd C[3][3];
-  Rfit::MatrixNd D[3][3];
-  */
+
   Rfit::ComputeCircleWeights(hits.block(0, 0, 2, n), fast_fit_results, rad, B, cov);
   Rfit::Circle_fit(hits.block(0, 0, 2, n), 
       hits_cov.block(0, 0, 2 * n, 2 * n),
@@ -298,7 +281,6 @@ void testFitOneGo(bool errors, double epsilon=1e-6) {
 }
 
 int main (int argc, char * argv[]) {
-//  testFit();
   cudaDeviceSetLimit(cudaLimitStackSize, 32*1024);
   cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 8*1024);
   std::cout << "TEST FIT, ERRORS AND SCATTER" << std::endl;

@@ -141,9 +141,6 @@ void kernelCircleFitAllHits(GPU::SimpleVector<Quadruplet> * foundNtuplets,
     Vector4d *fast_fit,
     Rfit::line_fit *line_fit,
     Rfit::covariancesForCircle * cov)
-/*    Rfit::ArrayNd * vcs,
-    Rfit::MatrixNd * C,
-    Rfit::MatrixNd *D) */
 {
   int helix_start = (blockIdx.x * blockDim.x + threadIdx.x);
   if (helix_start >= foundNtuplets->size()) {
@@ -162,11 +159,6 @@ void kernelCircleFitAllHits(GPU::SimpleVector<Quadruplet> * foundNtuplets,
                    hits_cov[helix_start].block(0, 0, 2 * n, 2 * n),
                    fast_fit[helix_start], rad, B, 
                    cov[helix_start],
-                   /*
-                   &vcs[helix_start*4], 
-                   &C[helix_start*9], 
-                   &D[helix_start*9],
-                   */
                    circle_fit[helix_start], 
                    true);
 
@@ -332,11 +324,6 @@ void CAHitQuadrupletGeneratorGPU::deallocateOnGPU()
   cudaFree(line_fit_resultsGPU_);
   cudaFree(helix_fit_resultsGPU_);
   cudaFree(cov_for_circle_);
-  /*
-  cudaFree(vcs_);
-  cudaFree(C_);
-  cudaFree(D_);
-  */
 }
 
 void CAHitQuadrupletGeneratorGPU::allocateOnGPU()
@@ -393,17 +380,7 @@ void CAHitQuadrupletGeneratorGPU::allocateOnGPU()
 
   cudaCheck(cudaMalloc(&cov_for_circle_, sizeof(Rfit::covariancesForCircle)*maxNumberOfQuadruplets_));
   cudaCheck(cudaMemset(cov_for_circle_, 0x00, sizeof(Rfit::covariancesForCircle)*maxNumberOfQuadruplets_));
-  /*
-  cudaCheck(cudaMalloc(&vcs_, 4*sizeof(Rfit::ArrayNd)*maxNumberOfQuadruplets_));
-  cudaCheck(cudaMemset(vcs_, 0x00, 4*sizeof(Rfit::ArrayNd)*maxNumberOfQuadruplets_));
-
-  cudaCheck(cudaMalloc(&C_, 9*sizeof(Rfit::MatrixNd)*maxNumberOfQuadruplets_));
-  cudaCheck(cudaMemset(C_, 0x00, 9*sizeof(Rfit::MatrixNd)*maxNumberOfQuadruplets_));
-
-  cudaCheck(cudaMalloc(&D_, 9*sizeof(Rfit::MatrixNd)*maxNumberOfQuadruplets_));
-  cudaCheck(cudaMemset(D_, 0x00, 9*sizeof(Rfit::MatrixNd)*maxNumberOfQuadruplets_));
-*/
-  }
+}
 
 void CAHitQuadrupletGeneratorGPU::launchKernels(const TrackingRegion &region,
                                                 int regionIndex, HitsOnCPU const & hh,

@@ -247,20 +247,6 @@ void PixelTrackReconstructionGPU::launchKernelFit(
   cudaCheck(cudaMalloc(&cov_for_circle, sizeof(Rfit::covariancesForCircle)*numberOfSeeds));
   cudaCheck(cudaMemset(cov_for_circle, 0x00, sizeof(Rfit::covariancesForCircle)*numberOfSeeds));
 
-  /*
-  Rfit::ArrayNd * vcs = nullptr;
-  cudaCheck(cudaMalloc(&vcs, 4*sizeof(Rfit::ArrayNd)*numberOfSeeds));
-  cudaCheck(cudaMemset(vcs, 0x00, 4*sizeof(Rfit::ArrayNd)*numberOfSeeds));
-
-  Rfit::MatrixNd * C = nullptr;
-  cudaCheck(cudaMalloc(&C, 9*sizeof(Rfit::MatrixNd)*numberOfSeeds));
-  cudaCheck(cudaMemset(C, 0x00, 9*sizeof(Rfit::MatrixNd)*numberOfSeeds));
-
-  Rfit::MatrixNd * D = nullptr;
-  cudaCheck(cudaMalloc(&D, 9*sizeof(Rfit::MatrixNd)*numberOfSeeds));
-  cudaCheck(cudaMemset(D, 0x00, 9*sizeof(Rfit::MatrixNd)*numberOfSeeds));
-  */
-
   KernelFastFitAllHits<<<num_blocks, threads_per_block>>>(
       hits_and_covariancesGPU, hits_in_fit, cumulative_size, B, results,
       hitsGPU, hits_covGPU, circle_fit_resultsGPU, fast_fit_resultsGPU,
@@ -295,9 +281,4 @@ void PixelTrackReconstructionGPU::launchKernelFit(
   cudaFree(circle_fit_resultsGPU);
   cudaFree(line_fit_resultsGPU);
   cudaFree(cov_for_circle);
-  /*
-  cudaFree(vcs);
-  cudaFree(C);
-  cudaFree(D);
-  */
 }
