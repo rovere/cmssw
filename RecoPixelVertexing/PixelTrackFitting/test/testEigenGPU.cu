@@ -52,7 +52,7 @@ void kernelFullFit(Rfit::Matrix3xNd * hits,
   Rfit::ComputeCircleWeights(hits2D_local,
       fast_fit, rad, B, cov);
   Rfit::Circle_fit(hits->block(0,0,2,n), hits_cov->block(0, 0, 2 * n, 2 * n),
-      fast_fit, rad, B, cov, /*&Vcs[0][0], &C[0][0], &D[0][0],*/ (*circle_fit_resultsGPU), errors);
+      fast_fit, rad, B, cov, (*circle_fit_resultsGPU), errors);
   Rfit::ComputeCircleParametersAndErrors(hits->block(0,0,2,n), cov, (*circle_fit_resultsGPU));
   /*
   (*circle_fit_resultsGPU) =
@@ -95,7 +95,7 @@ void kernelCircleFit(Rfit::Matrix3xNd * hits,
   cov.V.resize(2 * n, 2 * n);
   cov.V = hits_cov->block(0, 0, 2 * n, 2 * n);
   Rfit::Circle_fit(hits->block(0,0,2,n), hits_cov->block(0, 0, 2 * n, 2 * n),
-      *fast_fit_input, rad, B, cov,/*&Vcs[0][0], &C[0][0], &D[0][0],*/ (*circle_fit_resultsGPU), false);
+      *fast_fit_input, rad, B, cov, (*circle_fit_resultsGPU), false);
 }
 
 __global__
@@ -175,7 +175,7 @@ void testFit() {
 
   Rfit::Circle_fit(hits.block(0, 0, 2, n),
       hits_cov.block(0, 0, 2 * n, 2 * n),
-      fast_fit_results, rad, B, cov, /*&Vcs[0][0], &C[0][0], &D[0][0],*/ circle_fit_results, false);
+      fast_fit_results, rad, B, cov,  circle_fit_results, false);
   std::cout << "Fitted values (CircleFit):\n" << circle_fit_results.par << std::endl;
 
   // CIRCLE_FIT GPU
@@ -233,7 +233,7 @@ void testFitOneGo(bool errors, double epsilon=1e-6) {
   Rfit::ComputeCircleWeights(hits.block(0, 0, 2, n), fast_fit_results, rad, B, cov);
   Rfit::Circle_fit(hits.block(0, 0, 2, n), 
       hits_cov.block(0, 0, 2 * n, 2 * n),
-      fast_fit_results, rad, B, cov, /*&Vcs[0][0], &C[0][0], &D[0][0],*/ circle_fit_results, errors);
+      fast_fit_results, rad, B, cov,  circle_fit_results, errors);
   // LINE_FIT CPU
   Rfit::ComputeCircleParametersAndErrors(hits.block(0, 0, 2, n), cov, circle_fit_results);
   Rfit::line_fit line_fit_results;

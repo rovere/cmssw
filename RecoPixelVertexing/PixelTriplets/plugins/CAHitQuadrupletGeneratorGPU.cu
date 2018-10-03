@@ -167,7 +167,9 @@ void kernelCircleFitAllHits(GPU::SimpleVector<Quadruplet> * foundNtuplets,
   printf("kernelCircleFitAllHits circle.par(1): %d %f\n", helix_start, circle_fit[helix_start].par(1));
   printf("kernelCircleFitAllHits circle.par(2): %d %f\n", helix_start, circle_fit[helix_start].par(2));
 #endif
-}__global__
+}
+
+__global__
 void kernelLineFitAllHits(GPU::SimpleVector<Quadruplet> * foundNtuplets,
     float B,
     Rfit::helix_fit *results,
