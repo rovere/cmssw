@@ -87,8 +87,11 @@ struct weights {
 
 struct covariancesForCircle {
   ArrayNd Vcs[2][2];
-  MatrixNd C[3][3];
-  MatrixNd D[3][3];
+  //  Temporary remove the matrices from global memory and bring them back onto
+  //  the kernel stack to gain a factor of 2 in timing, keeping the same number
+  //  of registers.
+  //  MatrixNd C[3][3];
+  //  MatrixNd D[3][3];
   Matrix2Nd V;
   Matrix3d A;
   Vector3d eigen_vector;
@@ -711,10 +714,21 @@ __host__ __device__ inline void ComputeCircleParametersAndErrors(const Matrix2xN
   double q = 0.;
   double s = 0.;
 
+  /* Spin-lock for testing concurrent kernel execution
+  clock_t start = clock();
+  clock_t now;
+  for (;;) {
+      now = clock();
+        clock_t cycles = now > start ? now - start : now + (0xffffffff - start);
+          if (cycles >= 100000000) {
+                break;
+                  }
+  }
+  // Write to global memory to avoid compiler optimisation.
+  circle.chi2 = now;
+  */
   circleFitUtilities(hits2D, centroid, p3D, mc, q, s);
 
-//  const double q = mc.squaredNorm();
-//  const double s = sqrt(n * 1./q);
   const double s_inv = 1./s;    // auxiliary quantities
 #if RFIT_DEBUG
   printf("ComputeCircleParametersAndErrors - ERROR PROPAGATION ACTIVATED 1\n");
@@ -764,7 +778,8 @@ __host__ __device__ inline void ComputeCircleParametersAndErrors(const Matrix2xN
 #endif
   }
 
-  MatrixNd(&C)[3][3] = cov.C; /* *reinterpret_cast<MatrixNd(*)[3][3]>(C_p);*/
+//  MatrixNd(&C)[3][3] = cov.C; /* *reinterpret_cast<MatrixNd(*)[3][3]>(C_p);*/
+  MatrixNd C[3][3];
   {
     const ArrayNd t0 = (VectorXd::Constant(n, 1.) * p3D.row(0));
     const ArrayNd t1 = (VectorXd::Constant(n, 1.) * p3D.row(1));
@@ -806,7 +821,8 @@ __host__ __device__ inline void ComputeCircleParametersAndErrors(const Matrix2xN
   printIt(&H, "ComputeCircleParametersAndErrors - H:");
   printIt(&s_v, "ComputeCircleParametersAndErrors - s_v:");
 
-  MatrixNd(&D)[3][3] = cov.D; /* *reinterpret_cast<MatrixNd(*)[3][3]>(D_p); */
+//  MatrixNd(&D)[3][3] = cov.D; /* *reinterpret_cast<MatrixNd(*)[3][3]>(D_p); */
+  MatrixNd D[3][3];
   {
     D[0][0] = (H * C[0][0] * H.transpose()).cwiseProduct(W);
     D[0][1] = (H * C[0][1] * H.transpose()).cwiseProduct(W);
