@@ -86,13 +86,16 @@ void kernelComputeCircleWeights(int hits_in_fit, int cumulative_size, float B,
 }
 
 __global__
-void kernelCircleFitComputeCircleParametersAndErrors( int hits_in_fit, int cumulative_size,
+void kernelCircleFitComputeCircleParametersAndErrors(
+    int hits_in_fit,
+    int cumulative_size,
     Rfit::Matrix3xNd *hits,
     Rfit::circle_fit *circle_fit,
     Rfit::covariancesForCircle * cov)
 {
+  int start = (blockIdx.x * blockDim.x + threadIdx.x) * hits_in_fit * 12;
   int helix_start = (blockIdx.x * blockDim.x + threadIdx.x);
-  if (helix_start >= cumulative_size) {
+  if (start >= cumulative_size) {
     return;
   }
 
@@ -103,11 +106,11 @@ void kernelCircleFitComputeCircleParametersAndErrors( int hits_in_fit, int cumul
   auto n = hits[helix_start].cols();
 
   Rfit::ComputeCircleParametersAndErrors(hits[helix_start].block(0, 0, 2, n),
-                                         cov[helix_start], 
+                                         cov[helix_start],
                                          circle_fit[helix_start]);
 
 }
-  
+
 __global__ void
 __launch_bounds__(256, 2)
 KernelCircleFitAllHits(int hits_in_fit,
@@ -140,13 +143,8 @@ KernelCircleFitAllHits(int hits_in_fit,
 
   Rfit::Circle_fit(hits[helix_start].block(0, 0, 2, n),
                    hits_cov[helix_start].block(0, 0, 2 * n, 2 * n),
-                   fast_fit[helix_start], rad, B, 
+                   fast_fit[helix_start], rad, B,
                    cov[helix_start],
-                   /*
-                   &vcs[helix_start*4],
-                   &C[helix_start*9], 
-                   &D[helix_start*9],
-                   */
                    circle_fit[helix_start], true);
 
 #ifdef GPU_DEBUG
@@ -219,7 +217,7 @@ void PixelTrackReconstructionGPU::launchKernelFit(
     float *hits_and_covariancesGPU, int cumulative_size, int hits_in_fit,
     float B, Rfit::helix_fit *results)
 {
-  const dim3 threads_per_block(32, 1);
+  const dim3 threads_per_block(256, 1);
   int num_blocks = cumulative_size / (hits_in_fit * 12) / threads_per_block.x + 1;
   auto numberOfSeeds = cumulative_size / (hits_in_fit * 12);
 
@@ -254,19 +252,18 @@ void PixelTrackReconstructionGPU::launchKernelFit(
   cudaCheck(cudaGetLastError());
 
   kernelComputeCircleWeights<<<num_blocks, threads_per_block>>>(
-      4, cumulative_size, B,
+      hits_in_fit, cumulative_size, B,
       hitsGPU, hits_covGPU, fast_fit_resultsGPU, cov_for_circle);
   cudaCheck(cudaGetLastError());
 
   KernelCircleFitAllHits<<<num_blocks, threads_per_block>>>(
       hits_in_fit, cumulative_size, B, results,
       hitsGPU, hits_covGPU, circle_fit_resultsGPU, fast_fit_resultsGPU,
-      line_fit_resultsGPU, cov_for_circle),//vcs, C, D);
+      line_fit_resultsGPU, cov_for_circle);
   cudaCheck(cudaGetLastError());
 
   kernelCircleFitComputeCircleParametersAndErrors<<<num_blocks, threads_per_block>>>(
-      hits_in_fit, cumulative_size, hitsGPU, circle_fit_resultsGPU, cov_for_circle
-      );
+      hits_in_fit, cumulative_size, hitsGPU, circle_fit_resultsGPU, cov_for_circle);
   cudaCheck(cudaGetLastError());
 
   KernelLineFitAllHits<<<num_blocks, threads_per_block>>>(
