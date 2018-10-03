@@ -136,7 +136,7 @@ Vector5d True_par(const Matrix<double, 6, 1>& gen_par, const int& charge, const 
   circle_fit circle;
   circle.par << x0, y0, gen_par(4);
   circle.q = 1;
-  Rfit::par_uvrtopak(circle, B_field, false);
+  Rfit::transformCircleParamsToTrackRepresentation(circle, B_field, false);
   true_par.block(0, 0, 3, 1) = circle.par;
   true_par(3) = 1 / tan(gen_par(5) * pi / 180);
   const int dir = ((gen_par(0) - cos(true_par(0) - pi / 2) * true_par(1)) * (gen_par(1) - y0) -

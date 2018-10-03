@@ -190,7 +190,7 @@ KernelLineFitAllHits(int hits_in_fit,
   Rfit::Line_fit(hits[helix_start], hits_cov[helix_start],
                  circle_fit[helix_start], fast_fit[helix_start], B, line_fit[helix_start], true);
 
-  par_uvrtopak(circle_fit[helix_start], B, true);
+  transformCircleParamsToTrackRepresentation(circle_fit[helix_start], B, true);
 
   // Grab helix_fit from the proper location in the output vector
   Rfit::helix_fit &helix = results[helix_start];

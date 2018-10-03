@@ -169,15 +169,15 @@ __host__ __device__ inline void computeRadLenEff(const Vector4d& fast_fit,
     and forward cases.
 
  */
-__host__ __device__ inline void Scatter_cov_line(Matrix2Nd& cov_sz,
-                                                 const Vector4d& fast_fit,
-                                                 VectorNd const& s_arcs,
-                                                 VectorNd const& z_values,
-                                                 const double B,
-                                                 Matrix2Nd &results)
+__host__ __device__ inline void computeMultipleScatteringCovarianceSZPlane(Matrix2Nd& cov_sz,
+                                                                           const Vector4d& fast_fit,
+                                                                           VectorNd const& s_arcs,
+                                                                           VectorNd const& z_values,
+                                                                           const double B,
+                                                                           Matrix2Nd &results)
 {
 #if RFIT_DEBUG
-    Rfit::printIt(&s_arcs, "Scatter_cov_line - s_arcs: ");
+    Rfit::printIt(&s_arcs, "computeMultipleScatteringCovarianceSZPlane - s_arcs: ");
 #endif
     u_int n = s_arcs.rows();
     double p_t = fast_fit(2) * B;
@@ -195,10 +195,10 @@ __host__ __device__ inline void Scatter_cov_line(Matrix2Nd& cov_sz,
             for (u_int i = 0; i < std::min(k, l); ++i)
             {
 #if RFIT_DEBUG
-              printf("Scatter_cov_line - B: %f\n", B);
-              printf("Scatter_cov_line - radlen_eff: %f, p_t: %f, p2: %f\n", radlen_eff, p_t, p_2);
-              printf("Scatter_cov_line - sig2:%f, theta: %f\n", sig2, theta);
-              printf("Scatter_cov_line - Adding to element %d, %d value %f\n", n + k, n + l, (s_arcs(k) - s_arcs(i)) * (s_arcs(l) - s_arcs(i)) * sig2 / sqr(sqr(sin(theta))));
+              printf("computeMultipleScatteringCovarianceSZPlane - B: %f\n", B);
+              printf("computeMultipleScatteringCovarianceSZPlane - radlen_eff: %f, p_t: %f, p2: %f\n", radlen_eff, p_t, p_2);
+              printf("computeMultipleScatteringCovarianceSZPlane - sig2:%f, theta: %f\n", sig2, theta);
+              printf("computeMultipleScatteringCovarianceSZPlane - Adding to element %d, %d value %f\n", n + k, n + l, (s_arcs(k) - s_arcs(i)) * (s_arcs(l) - s_arcs(i)) * sig2 / sqr(sqr(sin(theta))));
 #endif
               cov_sz(k + (!in_forward) * n, l + (!in_forward) * n) += sig2 * (
                 in_forward*((z_values(k) - z_values(i)) * (z_values(l) - z_values(i))) +
@@ -218,7 +218,7 @@ __host__ __device__ inline void Scatter_cov_line(Matrix2Nd& cov_sz,
         }
     }
 #if RFIT_DEBUG
-    Rfit::printIt(&cov_sz, "Scatter_cov_line - cov_sz: ");
+    Rfit::printIt(&cov_sz, "computeMultipleScatteringCovarianceSZPlane - cov_sz: ");
 #endif
     Matrix2Nd rot = MatrixXd::Zero(2 * n, 2 * n);
     for (u_int i = 0; i < n; ++i) {
@@ -233,7 +233,7 @@ __host__ __device__ inline void Scatter_cov_line(Matrix2Nd& cov_sz,
     }
 
 #if RFIT_DEBUG
-    Rfit::printIt(&rot, "Scatter_cov_line - rot: ");
+    Rfit::printIt(&rot, "computeMultipleScatteringCovarianceSZPlane - rot: ");
 #endif
 
     results = rot*cov_sz*rot.transpose();
@@ -259,10 +259,10 @@ __host__ __device__ inline void Scatter_cov_line(Matrix2Nd& cov_sz,
 
  */
 // X in input TO FIX
-__host__ __device__ inline MatrixNd Scatter_cov_rad(const Matrix2xNd& p2D,
-                                                    const Vector4d& fast_fit,
-                                                    VectorNd const& rad,
-                                                    double B)
+__host__ __device__ inline MatrixNd computeMultipleScatteringCovarianceXYPlane(const Matrix2xNd& p2D,
+                                                                               const Vector4d& fast_fit,
+                                                                               VectorNd const& rad,
+                                                                               double B)
 {
     u_int n = p2D.cols();
     double p_t = fast_fit(2) * B;
@@ -286,7 +286,7 @@ __host__ __device__ inline MatrixNd Scatter_cov_rad(const Matrix2xNd& p2D,
         }
     }
 #if RFIT_DEBUG
-    Rfit::printIt(&scatter_cov_rad, "Scatter_cov_rad - scatter_cov_rad: ");
+    Rfit::printIt(&scatter_cov_rad, "computeMultipleScatteringCovarianceXYPlane - scatter_cov_rad: ");
 #endif
     return scatter_cov_rad;
 }
@@ -301,18 +301,18 @@ __host__ __device__ inline MatrixNd Scatter_cov_rad(const Matrix2xNd& p2D,
     \return cov_cart covariance matrix in Cartesian coordinates.
 */
 
-__host__ __device__ inline Matrix2Nd cov_radtocart(const Matrix2xNd& p2D,
+__host__ __device__ inline Matrix2Nd transformCovarianceFromRadialToCartesian(const Matrix2xNd& p2D,
                                                    const MatrixNd& cov_rad,
                                                    const VectorNd& rad)
 {
 #if RFIT_DEBUG
     printf("Address of p2D: %p\n", &p2D);
 #endif
-    printIt(&p2D, "cov_radtocart - p2D:");
+    printIt(&p2D, "transformCovarianceFromRadialToCartesian - p2D:");
     u_int n = p2D.cols();
     Matrix2Nd cov_cart = MatrixXd::Zero(2 * n, 2 * n);
     VectorNd rad_inv = rad.cwiseInverse();
-    printIt(&rad_inv, "cov_radtocart - rad_inv:");
+    printIt(&rad_inv, "transformCovarianceFromRadialToCartesian - rad_inv:");
     for (u_int i = 0; i < n; ++i)
     {
         for (u_int j = i; j < n; ++j)
@@ -344,9 +344,9 @@ __host__ __device__ inline Matrix2Nd cov_radtocart(const Matrix2xNd& p2D,
 
     \warning correlation between different point are not computed.
 */
-__host__ __device__ inline MatrixNd cov_carttorad(const Matrix2xNd& p2D,
-                                                  const Matrix2Nd& cov_cart,
-                                                  const VectorNd& rad)
+__host__ __device__ inline MatrixNd transformCovarianceFromCartesianToRadial(const Matrix2xNd& p2D,
+                                                                             const Matrix2Nd& cov_cart,
+                                                                             const VectorNd& rad)
 {
     u_int n = p2D.cols();
     MatrixNd cov_rad = MatrixXd::Zero(n, n);
@@ -380,9 +380,11 @@ __host__ __device__ inline MatrixNd cov_carttorad(const Matrix2xNd& p2D,
 
 */
 
-__host__ __device__ inline MatrixNd cov_carttorad_prefit(const Matrix2xNd& p2D, const Matrix2Nd& cov_cart,
-                                                         const Vector4d& fast_fit,
-                                                         const VectorNd& rad)
+__host__ __device__ inline MatrixNd transformCovarianceFromCartesianToRadial_prefit(
+    const Matrix2xNd& p2D,
+    const Matrix2Nd& cov_cart,
+    const Vector4d& fast_fit,
+    const VectorNd& rad)
 {
     u_int n = p2D.cols();
     MatrixNd cov_rad = MatrixXd::Zero(n, n);
@@ -467,7 +469,10 @@ __host__ __device__ inline int64_t Charge(const Matrix2xNd& p2D, const Vector3d&
     \param error flag for errors computation.
 */
 
-__host__ __device__ inline void par_uvrtopak(circle_fit& circle, const double B, const bool error)
+__host__ __device__ inline void transformCircleParamsToTrackRepresentation(
+    circle_fit& circle,
+    const double B,
+    const bool error)
 {
     Vector3d par_pak;
     const double temp0 = circle.par.head(2).squaredNorm();
@@ -500,8 +505,10 @@ __host__ __device__ inline void par_uvrtopak(circle_fit& circle, const double B,
     \return x_err2 squared errors in the x axis.
 */
 
-__host__ __device__ inline VectorNd X_err2(const Matrix3Nd& V, const circle_fit& circle, const MatrixNx5d& J,
-                                           const bool error, u_int n)
+__host__ __device__ inline VectorNd getSquaredErrorsOnX(const Matrix3Nd& V,
+                                                        const circle_fit& circle,
+                                                        const MatrixNx5d& J,
+                                                        const bool error, u_int n)
 {
     VectorNd x_err2(n);
     for (u_int i = 0; i < n; ++i)
@@ -681,7 +688,8 @@ __host__ __device__ inline void circleFitUtilities(const Matrix2xNd & hits2D,
                                                    Matrix3xNd & p3D,
                                                    Vector2Nd &mc,
                                                    double & q,
-                                                   double & s) {
+                                                   double & s)
+{
   auto n = hits2D.cols();
   centroid = hits2D.rowwise().mean();  // centroid
   printIt(&centroid, "circle_fit - centroid:");
@@ -958,16 +966,16 @@ __host__ __device__ inline void ComputeCircleWeights(const MatrixNd & hits2D,
   printIt(&hits2D, "ComputeCircleWeights - hits2D:");
   printIt(&cov.V, "ComputeCircleWeights - cov.V:");
 #endif
-  cov_rad = cov_carttorad_prefit(hits2D, cov.V, fast_fit, rad);
+  cov_rad = transformCovarianceFromCartesianToRadial_prefit(hits2D, cov.V, fast_fit, rad);
   printIt(&cov_rad, "ComputeCircleWeights - cov_rad:");
 
-  MatrixNd scatter_cov_rad = Scatter_cov_rad(hits2D, fast_fit, rad, B);
+  MatrixNd scatter_cov_rad = computeMultipleScatteringCovarianceXYPlane(hits2D, fast_fit, rad, B);
   printIt(&scatter_cov_rad, "ComputeCircleWeights - scatter_cov_rad:");
   printIt(&hits2D, "ComputeCircleWeights - hits2D bis:");
 #if RFIT_DEBUG
   printf("Address of hits2D: a) %p\n", &hits2D);
 #endif
-  cov.V += cov_radtocart(hits2D, scatter_cov_rad, rad);
+  cov.V += transformCovarianceFromRadialToCartesian(hits2D, scatter_cov_rad, rad);
   printIt(&cov.V, "ComputeCircleWeights - hits_cov2D:");
   cov_rad += scatter_cov_rad;
   printIt(&cov_rad, "ComputeCircleWeights - cov_rad:");
@@ -1020,11 +1028,6 @@ __host__ __device__ inline void Circle_fit(const Matrix2xNd& hits2D,
                                            const VectorNd& rad,
                                            const double B,
                                            covariancesForCircle & cov,
-                                           /*
-                                           ArrayNd * Vcs,//[2][2],    // for error/covariance computation
-                                           MatrixNd * C,//[3][3],     // for error/covariance computation
-                                           MatrixNd * D,//[3][3],     // for error/covariance computation
-                                           */
                                            circle_fit & circle,
                                            const bool error = true)
 {
@@ -1188,7 +1191,7 @@ __host__ __device__ inline void Line_fit(const Matrix3xNd& hits,
 
     // WEIGHT COMPUTATION
     Matrix2Nd cov_sz = MatrixXd::Zero(2 * n, 2 * n);
-    VectorNd x_err2 = X_err2(hits_cov, circle, Jx, error, n);
+    VectorNd x_err2 = getSquaredErrorsOnX(hits_cov, circle, Jx, error, n);
     VectorNd y_err2 = hits_cov.block(2 * n, 2 * n, n, n).diagonal();
     cov_sz.block(0, 0, n, n) = x_err2.asDiagonal();
     cov_sz.block(n, n, n, n) = y_err2.asDiagonal();
@@ -1196,7 +1199,7 @@ __host__ __device__ inline void Line_fit(const Matrix3xNd& hits,
     printIt(&cov_sz, "line_fit - cov_sz:");
 #endif
     Matrix2Nd cov_with_ms = MatrixXd::Zero(2*n, 2*n);
-    Scatter_cov_line(cov_sz, fast_fit, p2D.row(0), p2D.row(1), B, cov_with_ms);
+    computeMultipleScatteringCovarianceSZPlane(cov_sz, fast_fit, p2D.row(0), p2D.row(1), B, cov_with_ms);
 #if RFIT_DEBUG
     printIt(&cov_with_ms, "line_fit - cov_with_ms: ");
 #endif
@@ -1389,7 +1392,7 @@ inline helix_fit Helix_fit(const Matrix3xNd& hits, const Matrix3Nd& hits_cov, co
     line_fit line;
     Line_fit(hits, hits_cov, circle, fast_fit, B, line, error);
 
-    par_uvrtopak(circle, B, error);
+    transformCircleParamsToTrackRepresentation(circle, B, error);
 
     helix_fit helix;
     helix.par << circle.par, line.par;
