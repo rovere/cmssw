@@ -230,23 +230,6 @@ void MatchCandidateBenchmark::fillOne(const reco::Candidate& cand,
       delta_eta_VS_et_->Fill(matchedCand.pt(), cand.eta() - matchedCand.eta());
     if (delta_phi_VS_et_)
       delta_phi_VS_et_->Fill(matchedCand.pt(), cand.phi() - matchedCand.phi());
-    /*
-    // TProfile
-    if (profile_delta_et_Over_et_VS_et_) {
-      profile_delta_et_Over_et_VS_et_->Fill( matchedCand.pt(), (cand.pt() -
-    matchedCand.pt())/matchedCand.pt() );
-      profileRMS_delta_et_Over_et_VS_et_->Fill( matchedCand.pt(), (cand.pt() -
-    matchedCand.pt())/matchedCand.pt() ); } if (profile_delta_et_VS_et_) {
-      profile_delta_et_VS_et_->Fill( matchedCand.pt(), cand.pt() -
-    matchedCand.pt() ); profileRMS_delta_et_VS_et_->Fill( matchedCand.pt(),
-    cand.pt() - matchedCand.pt() ); } if (profile_delta_eta_VS_et_) {
-      profile_delta_eta_VS_et_->Fill( matchedCand.pt(), cand.eta() -
-    matchedCand.eta() ); profileRMS_delta_eta_VS_et_->Fill( matchedCand.pt(),
-    cand.eta() - matchedCand.eta() ); } if (profile_delta_phi_VS_et_) {
-      profile_delta_phi_VS_et_->Fill( matchedCand.pt(), cand.phi() -
-    matchedCand.phi() ); profileRMS_delta_phi_VS_et_->Fill( matchedCand.pt(),
-    cand.phi() - matchedCand.phi() ); }
-    */
   }
 }
 
