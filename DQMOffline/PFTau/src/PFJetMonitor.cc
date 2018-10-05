@@ -60,7 +60,20 @@ void PFJetMonitor::setParameters( const edm::ParameterSet & parameterSet) {
 	    parameterSet.getParameter<double>("phiMax") );
 
   candBench_.setParameters(mode_);
+  candBench_.setRange( parameterSet.getParameter<double>("ptMin"),
+      parameterSet.getParameter<double>("ptMax"),
+      parameterSet.getParameter<double>("etaMin"),
+      parameterSet.getParameter<double>("etaMax"),
+      parameterSet.getParameter<double>("phiMin"),
+      parameterSet.getParameter<double>("phiMax"));
+
   matchCandBench_.setParameters(mode_);
+  matchCandBench_.setRange( parameterSet.getParameter<double>("ptMin"),
+      parameterSet.getParameter<double>("ptMax"),
+      parameterSet.getParameter<double>("etaMin"),
+      parameterSet.getParameter<double>("etaMax"),
+      parameterSet.getParameter<double>("phiMin"),
+      parameterSet.getParameter<double>("phiMax"));
 }
 
 //

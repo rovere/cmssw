@@ -80,14 +80,12 @@ template< class T, class C>
       [&](uint32_t i, uint32_t j) {
       return jetCollection[i].pt() < jetCollection[j].pt();
       });
-  // We cannot loop over sorted indices 'cause that will spoil the matching
-  // index association.
-  for(uint32_t i=0; i<jetCollection.size(); ++i) {
+  for(uint32_t i=0; i < sorted_pt_indices.size(); ++i) {
     // If we want only the 2 pt-leading jets, now that they are orderd, simply
     // check if the index is either in the first or second location of the
     // sorted indices: if not, bail out.
-    if ( onlyTwoJets_ && sorted_pt_indices.size() > 1 and
-        (i != sorted_pt_indices[0] and i != sorted_pt_indices[1]) ) continue;
+    if ( onlyTwoJets_ && i > 1)
+      break;
 
     const reco::Jet& jet = jetCollection[i];
 
