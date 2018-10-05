@@ -24,15 +24,6 @@ class PFJetMonitor : public Benchmark {
 
   ~PFJetMonitor() override;
 
-  /// set the parameters locally
-  void setParameters(float dRMax, bool matchCharge, Benchmark::Mode mode,
-		     float ptmin, float ptmax, float etamin, float etamax, float phimin, float phimax,
-		     bool fracHistoFlag=true);
-
-  void setParameters(float dRMax, bool onlyTwoJets, bool matchCharge, Benchmark::Mode mode,
-		     float ptmin, float ptmax, float etamin, float etamax, float phimin, float phimax,
-		     bool fracHistoFlag=true);
-
   /// set the parameters accessing them from ParameterSet
   void setParameters( const edm::ParameterSet& parameterSet);
 
