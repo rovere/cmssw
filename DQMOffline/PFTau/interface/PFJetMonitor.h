@@ -70,37 +70,6 @@ class PFJetMonitor : public Benchmark {
 };
 
 #include "DQMOffline/PFTau/interface/Matchers.h"
-template< class T, class C>
-  void PFJetMonitor::fill(const T& jetCollection,
-			const C& matchedJetCollection, float& minVal, float& maxVal) {
-  
-  
-  std::vector<int> matchIndices;
-  PFB::match( jetCollection, matchedJetCollection, matchIndices, matchCharge_, dRMax_ );
-  
-  for (unsigned int i = 0; i < (jetCollection).size(); i++) {
-    const reco::Jet& jet = jetCollection[i];
-    
-    if( !isInRange(jet.pt(), jet.eta(), jet.phi() ) ) continue;
-    
-    int iMatch = matchIndices[i];
-    assert(iMatch< static_cast<int>(matchedJetCollection.size()));
-    
-    if( iMatch != -1 ) {
-      const reco::Candidate& matchedJet = matchedJetCollection[ iMatch ];
-      if( !isInRange( matchedJet.pt(), matchedJet.eta(), matchedJet.phi() ) ) continue;
-      float ptRes = (jet.pt() - matchedJet.pt())/matchedJet.pt();
-      
-      if (ptRes > maxVal) maxVal = ptRes;
-      if (ptRes < minVal) minVal = ptRes;
-      
-      candBench_.fillOne(jet);
-      matchCandBench_.fillOne(jet, matchedJetCollection[ iMatch ]);
-      if (createPFractionHistos_ && histogramBooked_) fillOne(jet, matchedJetCollection[ iMatch ]);
-    }
-  }
-}
-
 
 template< class T, class C>
   void PFJetMonitor::fill(const T& jetCollection,
