@@ -205,6 +205,10 @@ void MatchCandidateBenchmark::setup(DQMStore::IBooker& b,
                  dphiPS.getParameter<double>("xMin"),
                  dphiPS.getParameter<double>("xMax"));
     }
+    eta_min_barrel_ = dptOvptPS.getParameter<double>("BREtaMin");
+    eta_max_barrel_ = dptOvptPS.getParameter<double>("BREtaMax");
+    eta_min_endcap_ = dptOvptPS.getParameter<double>("EREtaMin");
+    eta_max_endcap_ = dptOvptPS.getParameter<double>("EREtaMax");
     histogramBooked_ = true;
   }
 }
@@ -236,6 +240,13 @@ void MatchCandidateBenchmark::fillOne(const reco::Candidate& cand,
   }
 }
 
+bool MatchCandidateBenchmark::inEtaRange(double value, bool inBarrel) {
+  if (inBarrel) {
+    return std::abs(value) >= eta_min_barrel_ && std::abs(value) <= eta_max_barrel_;
+  }
+  return std::abs(value) >= eta_min_endcap_ && std::abs(value) <= eta_max_endcap_;
+}
+
 void MatchCandidateBenchmark::fillOne(const reco::Candidate& cand,
                                       const reco::Candidate& matchedCand,
                                       const edm::ParameterSet& parameterSet) {
@@ -245,16 +256,17 @@ void MatchCandidateBenchmark::fillOne(const reco::Candidate& cand,
 
     edm::ParameterSet dptOvptPS = parameterSet.getParameter<edm::ParameterSet>(
         "DeltaPtOvPtHistoParameter");
+
     if (matchedCand.pt() > ptBins_.at(0)) {  // underflow problem
       if (delta_et_Over_et_VS_et_)
         delta_et_Over_et_VS_et_->Fill(
             matchedCand.pt(),
             (cand.pt() - matchedCand.pt()) / matchedCand.pt());
-      if (BRdelta_et_Over_et_VS_et_)
+      if (BRdelta_et_Over_et_VS_et_ and inBarrelRange(matchedCand.eta()))
         BRdelta_et_Over_et_VS_et_->Fill(
             matchedCand.pt(),
             (cand.pt() - matchedCand.pt()) / matchedCand.pt());
-      if (ERdelta_et_Over_et_VS_et_)
+      if (ERdelta_et_Over_et_VS_et_ and inEndcapRange(matchedCand.eta()))
         ERdelta_et_Over_et_VS_et_->Fill(
             matchedCand.pt(),
             (cand.pt() - matchedCand.pt()) / matchedCand.pt());
