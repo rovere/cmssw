@@ -16,36 +16,32 @@ class PFJetMonitor : public Benchmark {
 
  public:
 
-  
-  PFJetMonitor( float dRMax = 0.3, bool matchCharge = true, 
-		Benchmark::Mode mode=Benchmark::DEFAULT); 
-  
+
+  PFJetMonitor( float dRMax = 0.3, bool matchCharge = true,
+		Benchmark::Mode mode=Benchmark::DEFAULT);
+
   ~PFJetMonitor() override;
-  
+
   /// set the parameters locally
   void setParameters(float dRMax, bool matchCharge, Benchmark::Mode mode,
 		     float ptmin, float ptmax, float etamin, float etamax, float phimin, float phimax,
 		     bool fracHistoFlag=true);
-  
+
   void setParameters(float dRMax, bool onlyTwoJets, bool matchCharge, Benchmark::Mode mode,
 		     float ptmin, float ptmax, float etamin, float etamax, float phimin, float phimax,
 		     bool fracHistoFlag=true);
-  
+
   /// set the parameters accessing them from ParameterSet
   void setParameters( const edm::ParameterSet& parameterSet);
-  
+
   /// set directory (to use in ROOT)
   void setDirectory(TDirectory* dir) override;
 
   /// book histograms
   void setup(DQMStore::IBooker& b);
   void setup(DQMStore::IBooker& b, const edm::ParameterSet & parameterSet);
-  
+
   /// fill histograms with all particle
-  template< class T, class C>
-    void fill(const T& jetCollection, const C& matchedJetCollection,
-	      float& minVal, float& maxVal);
-  
   template< class T, class C>
     void fill(const T& candidateCollection, const C& matchedCandCollection,
 	      float& minVal, float& maxVal, float& jetpT,
