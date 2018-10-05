@@ -56,10 +56,6 @@ class Benchmark{
   }
 
   bool isInRange(float pt, float eta, float phi) const {
-    std::cout << ptMin_ << " " << ptMax_
-      << etaMin_ << " " << etaMax_
-      << phiMin_ << " " << phiMax_
-      << std::endl;
     return (pt>ptMin_ && pt<ptMax_ && eta>etaMin_ && eta<etaMax_ && phi>phiMin_ && phi<phiMax_);
   }
 
