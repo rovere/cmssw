@@ -56,7 +56,11 @@ class Benchmark{
   }
 
   bool isInRange(float pt, float eta, float phi) const {
-    return (pt>ptMin_ && pt<ptMax_ && std::abs(eta)>std::abs(etaMin_) && std::abs(eta)<std::abs(etaMax_) && phi>phiMin_ && phi<phiMax_);
+    std::cout << ptMin_ << " " << ptMax_
+      << etaMin_ << " " << etaMax_
+      << phiMin_ << " " << phiMax_
+      << std::endl;
+    return (pt>ptMin_ && pt<ptMax_ && eta>etaMin_ && eta<etaMax_ && phi>phiMin_ && phi<phiMax_);
   }
 
   virtual void setDirectory(TDirectory* dir);
