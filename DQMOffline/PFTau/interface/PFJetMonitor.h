@@ -75,43 +75,43 @@ template< class T, class C>
   void PFJetMonitor::fill(const T& jetCollection,
 			  const C& matchedJetCollection, float& minVal, float& maxVal, float& jetpT,
 			  const edm::ParameterSet & parameterSet) {
-  
+
   std::vector<int> matchIndices;
   PFB::match( jetCollection, matchedJetCollection, matchIndices, matchCharge_, dRMax_ );
-  // now matchIndices[i] stores the j-th closest matched jet 
+  // now matchIndices[i] stores the j-th closest matched jet
 
   for( unsigned i=0; i<jetCollection.size(); ++i) {
     // Count the number of jets with a larger energy = pT
     unsigned int highJets = 0;
     for( unsigned j=0; j<jetCollection.size(); ++j) {
       if (j != i && jetCollection[j].pt() > jetCollection[i].pt()) highJets++;
-    }    
+    }
     if ( onlyTwoJets_ && highJets > 1 ) continue;
 
     const reco::Jet& jet = jetCollection[i];
-    
+
     if( !isInRange(jet.pt(), jet.eta(), jet.phi() ) ) continue;
-    
+
     int iMatch = matchIndices[i];
     assert( iMatch < static_cast<int>(matchedJetCollection.size()) );
-    
+
     if( iMatch != -1 ) {
       const reco::Candidate& matchedJet = matchedJetCollection[ iMatch ];
       if ( !isInRange( matchedJet.pt(), matchedJet.eta(), matchedJet.phi() ) ) continue;
-      
+
       float ptRes = (jet.pt() - matchedJet.pt()) / matchedJet.pt();
-      
+
       jetpT = jet.pt();
       if (ptRes > maxVal) maxVal = ptRes;
       if (ptRes < minVal) minVal = ptRes;
-      
+
       candBench_.fillOne(jet);  // fill pt eta phi and charge histos for MATCHED candidate jet
       matchCandBench_.fillOne(jet, matchedJetCollection[iMatch], parameterSet);  // fill delta_x_VS_y histos for matched couple
       if (createPFractionHistos_ && histogramBooked_) fillOne(jet, matchedJetCollection[iMatch]);  // book and fill delta_frac_VS_frac histos for matched couple
     }
-        
+
     for( unsigned j=0; j<matchedJetCollection.size(); ++j)  // for DeltaR spectrum
       if (deltaR_) deltaR_->Fill( reco::deltaR( jetCollection[i], matchedJetCollection[j] ) ) ;
   } // end loop on jetCollection
 }
-#endif 
+#endif
