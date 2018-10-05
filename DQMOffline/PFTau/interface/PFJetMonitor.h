@@ -9,6 +9,8 @@
 #include "DataFormats/JetReco/interface/BasicJetCollection.h"
 
 #include <vector>
+#include <numeric>   // std::iota
+#include <algorithm> // std::sort
 
 #include <TH1.h>  //needed by the deltaR->Fill() call
 
@@ -80,13 +82,21 @@ template< class T, class C>
   PFB::match( jetCollection, matchedJetCollection, matchIndices, matchCharge_, dRMax_ );
   // now matchIndices[i] stores the j-th closest matched jet
 
-  for( unsigned i=0; i<jetCollection.size(); ++i) {
-    // Count the number of jets with a larger energy = pT
-    unsigned int highJets = 0;
-    for( unsigned j=0; j<jetCollection.size(); ++j) {
-      if (j != i && jetCollection[j].pt() > jetCollection[i].pt()) highJets++;
-    }
-    if ( onlyTwoJets_ && highJets > 1 ) continue;
+  std::vector<uint32_t> sorted_pt_indices(jetCollection.size());
+  std::iota(std::begin(sorted_pt_indices), std::end(sorted_pt_indices), 0);
+  // Sort the vector of indices using the pt() as ordering variable
+  std::sort(std::begin(sorted_pt_indices), std::end(sorted_pt_indices),
+      [&](uint32_t i, uint32_t j) {
+      return jetCollection[i].pt() < jetCollection[j].pt();
+      });
+  // We cannot loop over sorted indices 'cause that will spoil the matching
+  // index association.
+  for(uint32_t i=0; i<jetCollection.size(); ++i) {
+    // If we want only the 2 pt-leading jets, now that they are orderd, simply
+    // check if the index is either in the first or second location of the
+    // sorted indices: if not, bail out.
+    if ( onlyTwoJets_ && sorted_pt_indices.size() > 1 and
+        (i != sorted_pt_indices[0] and i != sorted_pt_indices[1]) ) continue;
 
     const reco::Jet& jet = jetCollection[i];
 
@@ -96,7 +106,7 @@ template< class T, class C>
     assert( iMatch < static_cast<int>(matchedJetCollection.size()) );
 
     if( iMatch != -1 ) {
-      const reco::Candidate& matchedJet = matchedJetCollection[ iMatch ];
+      const reco::Jet& matchedJet = matchedJetCollection[ iMatch ];
       if ( !isInRange( matchedJet.pt(), matchedJet.eta(), matchedJet.phi() ) ) continue;
 
       float ptRes = (jet.pt() - matchedJet.pt()) / matchedJet.pt();
@@ -106,8 +116,8 @@ template< class T, class C>
       if (ptRes < minVal) minVal = ptRes;
 
       candBench_.fillOne(jet);  // fill pt eta phi and charge histos for MATCHED candidate jet
-      matchCandBench_.fillOne(jet, matchedJetCollection[iMatch], parameterSet);  // fill delta_x_VS_y histos for matched couple
-      if (createPFractionHistos_ && histogramBooked_) fillOne(jet, matchedJetCollection[iMatch]);  // book and fill delta_frac_VS_frac histos for matched couple
+      matchCandBench_.fillOne(jet, matchedJet, parameterSet);  // fill delta_x_VS_y histos for matched couple
+      if (createPFractionHistos_ && histogramBooked_) fillOne(jet, matchedJet);  // book and fill delta_frac_VS_frac histos for matched couple
     }
 
     for( unsigned j=0; j<matchedJetCollection.size(); ++j)  // for DeltaR spectrum
