@@ -1,18 +1,16 @@
 #ifndef RecoLocalTracker_SiPixelClusterizer_plugins_gpuClustering_h
 #define RecoLocalTracker_SiPixelClusterizer_plugins_gpuClustering_h
 
-
 // #define CLUS_LIMIT_LOOP
 
-#include <cassert>
 #include <cstdint>
 #include <cstdio>
 
-#include "gpuClusteringConstants.h"
 #include "Geometry/TrackerGeometryBuilder/interface/phase1PixelTopology.h"
-
 #include "HeterogeneousCore/CUDAUtilities/interface/HistoContainer.h"
+#include "HeterogeneousCore/CUDAUtilities/interface/cuda_assert.h"
 
+#include "gpuClusteringConstants.h"
 
 namespace gpuClustering {
 
@@ -198,7 +196,7 @@ namespace gpuClustering {
         printf("# loops %d\n",nloops);
 #endif
 
-    __shared__ int foundClusters;
+    __shared__ unsigned int foundClusters;
     foundClusters = 0;
     __syncthreads();
 
@@ -208,7 +206,7 @@ namespace gpuClustering {
         if (id[i] == InvId)                 // skip invalid pixels
           continue;
         if (clusterId[i] == i) {
-          auto old = atomicAdd(&foundClusters, 1);
+          auto old = atomicInc(&foundClusters, 0xffffffff);
           clusterId[i] = -(old + 1);
         }
       }

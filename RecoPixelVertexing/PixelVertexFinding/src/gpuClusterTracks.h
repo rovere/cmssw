@@ -1,14 +1,13 @@
 #ifndef RecoPixelVertexing_PixelVertexFinding_clusterTracks_H
 #define RecoPixelVertexing_PixelVertexFinding_clusterTracks_H
 
-#include<cstdint>
-#include<cmath>
 #include <algorithm>
-#include<cassert>
+#include <cmath>
+#include <cstdint>
 
 #include "HeterogeneousCore/CUDAUtilities/interface/HistoContainer.h"
+#include "HeterogeneousCore/CUDAUtilities/interface/cuda_assert.h"
 #include "HeterogeneousCore/CUDAUtilities/interface/radixSort.h"
-
 
 #include "gpuVertexFinder.h"
 
@@ -184,7 +183,7 @@ namespace gpuVertexFinder {
     }
     
     
-    __shared__ int foundClusters;
+    __shared__ unsigned int foundClusters;
     foundClusters = 0;
     __syncthreads();
     
@@ -193,7 +192,7 @@ namespace gpuVertexFinder {
     for (int i = threadIdx.x; i < nt; i += blockDim.x) {
       if (iv[i] == i) {
 	if  (nn[i]>=minT) {
-	  auto old = atomicAdd(&foundClusters, 1);
+	  auto old = atomicInc(&foundClusters, 0xffffffff);
 	  iv[i] = -(old + 1);
 	  zv[old]=0;
 	  wv[old]=0;
