@@ -216,7 +216,7 @@ void SimPFProducer::produce(edm::StreamID, edm::Event& evt, const edm::EventSetu
       if( ( (pdgId == 22 || pdgId == 11) &&  clusterRef->energy() >  neutralEMThreshold_) ||
 	  clusterRef->energy() > neutralHADThreshold_ ) {
 	good_simclusters.push_back(isc);
-	etot += clusterRef->energy();
+	etot += clusterRef->correctedEnergy();
 	pttot += clusterRef->pt();
 	auto bec = std::make_unique<reco::PFBlockElementCluster>(clusterRef,reco::PFBlockElement::HGCAL);
 	block.addElement(bec.get());
@@ -300,6 +300,7 @@ void SimPFProducer::produce(edm::StreamID, edm::Event& evt, const edm::EventSetu
     // bind to cluster if there is one and try to gather conversions, etc
     for( const auto& match : matches ) {
       uint64_t hash = hashSimInfo(*(match.first));
+      // Check if this specific track left any hits/simclusters in HGCAL
       if( hashToSimCluster.count(hash) ) {
 	auto simcKey = hashToSimCluster[hash];
 
@@ -358,7 +359,7 @@ void SimPFProducer::produce(edm::StreamID, edm::Event& evt, const edm::EventSetu
     // remove tracks already used by muons
     if( MuonTrackToGeneralTrack.count(itk) || absPdgId == 13)
       candidates->pop_back();
-  }
+  }  // end loop over reco tracks
 
   // now loop over the non-collected clusters in blocks
   // and turn them into neutral hadrons or photons
@@ -371,6 +372,7 @@ void SimPFProducer::produce(edm::StreamID, edm::Event& evt, const edm::EventSetu
       const auto& simtruth = SimClustersTruth[ref.key()];
       reco::PFCandidate::ParticleType part_type;
       if( !usedSimCluster[ref.key()] ) {
+        usedSimCluster[ref.key()] = true;
 	auto absPdgId = std::abs(simtruth.pdgId());
 	switch( absPdgId ) {
 	case 11:
@@ -396,27 +398,22 @@ void SimPFProducer::produce(edm::StreamID, edm::Event& evt, const edm::EventSetu
 
 void SimPFProducer::rescaleCandidates(reco::PFCandidateCollection * candidates,
     const std::vector<reco::PFBlock> &theblocks) const {
-  std::vector<bool> usedBlocks(theblocks.size(), false);
   for (auto & c : *candidates) {
     std::cout << c << std::endl;
     float clusters_energy = 0.;
     auto const & elements_in_block = c.elementsInBlocks();
     for(unsigned i=0; i < elements_in_block.size(); i++) {
       auto blockRef = elements_in_block[i].first;
-      if (!usedBlocks[blockRef.key()]) {
-        usedBlocks[blockRef.key()] = true;
-        const auto& elements = theblocks[blockRef.key()].elements();
-        for( const auto& elem : elements ) {
-          const auto& ref = elem.clusterRef();
-          std::cout << "Block b: " << blockRef.key()
-            << " element e: " << i << " "
-            << *ref << std::endl;
-          clusters_energy += ref->correctedEnergy();
-        } // end of elements
-      }
-    } // end of elements/blocks
-    if (clusters_energy > 0.)
+      auto element_index = elements_in_block[i].second;
+      const auto& elem = theblocks[blockRef.key()].elements()[element_index];
+      const auto& ref = elem.clusterRef();
+      clusters_energy += ref->correctedEnergy();
+    } // end of elements within blocks
+    if (clusters_energy > 0.) {
+      std::cout << "Rescaling momentum of candidate type: " << c.particleId() << " by: " << clusters_energy/c.energy()
+        << " from energy: " << c.energy() << " to: " << clusters_energy << std::endl;
       c.rescaleMomentum(clusters_energy/c.energy());
+    }
     std::cout << "Corrected pfcandidate: " << c << std::endl;
   } // end of candidates
 }
