@@ -216,7 +216,7 @@ void SimPFProducer::produce(edm::StreamID, edm::Event& evt, const edm::EventSetu
       if( ( (pdgId == 22 || pdgId == 11) &&  clusterRef->energy() >  neutralEMThreshold_) ||
 	  clusterRef->energy() > neutralHADThreshold_ ) {
 	good_simclusters.push_back(isc);
-	etot += clusterRef->correctedEnergy();
+	etot += clusterRef->energy();
 	pttot += clusterRef->pt();
 	auto bec = std::make_unique<reco::PFBlockElementCluster>(clusterRef,reco::PFBlockElement::HGCAL);
 	block.addElement(bec.get());
@@ -382,8 +382,8 @@ void SimPFProducer::produce(edm::StreamID, edm::Event& evt, const edm::EventSetu
 	default:
 	  part_type = reco::PFCandidate::h0;
 	}
-	const auto three_mom = (ref->position() - math::XYZPoint(0,0,0)).unit()*ref->correctedEnergy();
-	math::XYZTLorentzVector clu_p4(three_mom.x(),three_mom.y(),three_mom.z(),ref->correctedEnergy());
+	const auto three_mom = (ref->position() - math::XYZPoint(0,0,0)).unit()*ref->energy();
+	math::XYZTLorentzVector clu_p4(three_mom.x(),three_mom.y(),three_mom.z(),ref->energy());
 	candidates->emplace_back(0, clu_p4, part_type);
 	auto& candidate = candidates->back();
 	candidate.addElementInBlock(blref,elem.index());
@@ -407,7 +407,7 @@ void SimPFProducer::rescaleCandidates(reco::PFCandidateCollection * candidates,
       auto element_index = elements_in_block[i].second;
       const auto& elem = theblocks[blockRef.key()].elements()[element_index];
       const auto& ref = elem.clusterRef();
-      clusters_energy += ref->correctedEnergy();
+      clusters_energy += ref->energy();
     } // end of elements within blocks
     if (clusters_energy > 0.) {
       std::cout << "Rescaling momentum of candidate type: " << c.particleId() << " by: " << clusters_energy/c.energy()
