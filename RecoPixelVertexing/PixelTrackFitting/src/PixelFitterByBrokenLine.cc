@@ -1,5 +1,6 @@
-#include "RecoPixelVertexing/PixelTrackFitting/interface/PixelFitterByRiemannParaboloid.h"
-#include "RecoPixelVertexing/PixelTrackFitting/interface/RiemannFit.h"
+
+#include "RecoPixelVertexing/PixelTrackFitting/interface/PixelFitterByBrokenLine.h"
+#include "RecoPixelVertexing/PixelTrackFitting/interface/BrokenLine.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
@@ -31,17 +32,14 @@
 using namespace std;
 
 
-PixelFitterByRiemannParaboloid::PixelFitterByRiemannParaboloid(const edm::EventSetup* es,
-                                                               const MagneticField* field,
-                                                               bool useErrors,
-                                                               bool useMultipleScattering)
-    : es_(es), field_(field),
-    useErrors_(useErrors), useMultipleScattering_(useMultipleScattering) {}
+PixelFitterByBrokenLine::PixelFitterByBrokenLine(const edm::EventSetup* es,
+                                                               const MagneticField* field)
+    : es_(es), field_(field) {}
 
-std::unique_ptr<reco::Track> PixelFitterByRiemannParaboloid::run(
+std::unique_ptr<reco::Track> PixelFitterByBrokenLine::run(
     const std::vector<const TrackingRecHit*>& hits, const TrackingRegion& region) const {
 
-  using namespace Rfit;
+  using namespace BrokenLine;
 
   std::unique_ptr<reco::Track> ret;
 
@@ -62,25 +60,25 @@ std::unique_ptr<reco::Track> PixelFitterByRiemannParaboloid::run(
 
   float bField = 1 / PixelRecoUtilities::fieldInInvGev(*es_);
 
-  Matrix<double, 3, Dynamic, 0, 3, max_nop> riemannHits(3, nhits);
+  Matrix<double, 3, Dynamic, 0, 3, max_nop> brokenLineHits(3, nhits);
 
-  Matrix<double, Dynamic, Dynamic, 0, 3 * max_nop, 3 * max_nop> riemannHits_cov =
+  Matrix<double, Dynamic, Dynamic, 0, 3 * max_nop, 3 * max_nop> brokenLineHits_cov =
       MatrixXd::Zero(3 * nhits, 3 * nhits);
 
   for (unsigned int i = 0; i < nhits; ++i) {
-    riemannHits.col(i) << points[i].x(), points[i].y(), points[i].z();
+    brokenLineHits.col(i) << points[i].x(), points[i].y(), points[i].z();
 
     const auto& errorMatrix = errors[i].matrix4D();
 
     for (auto j = 0; j < 3; ++j) {
       for (auto l = 0; l < 3; ++l) {
-        riemannHits_cov(i + j * nhits, i + l * nhits) = errorMatrix(j, l);
+        brokenLineHits_cov(i + j * nhits, i + l * nhits) = errorMatrix(j, l);
       }
     }
   }
 
-  helix_fit fittedTrack = Rfit::Helix_fit(riemannHits, riemannHits_cov, bField, useErrors_);
-
+  helix_fit fittedTrack = BrokenLine::Helix_fit(brokenLineHits, brokenLineHits_cov, bField);
+  
   int iCharge = fittedTrack.q;
 
   // parameters are:
@@ -107,7 +105,7 @@ std::unique_ptr<reco::Track> PixelFitterByRiemannParaboloid::run(
   float errValCotTheta = std::sqrt(fittedTrack.cov(3, 3));
   float errValZip = std::sqrt(fittedTrack.cov(4, 4));
 
-  float chi2 = fittedTrack.chi2_line + fittedTrack.chi2_circle;
+  float chi2 = (fittedTrack.chi2_line + fittedTrack.chi2_circle);
 
   PixelTrackBuilder builder;
   Measurement1D phi(valPhi, errValPhi);
