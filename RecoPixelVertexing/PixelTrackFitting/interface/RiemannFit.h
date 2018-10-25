@@ -45,7 +45,7 @@ struct circle_fit
       |cov(X0,X0)|cov(Y0,X0)|cov( R,X0)| \n
       |cov(X0,Y0)|cov(Y0,Y0)|cov( R,Y0)| \n
       |cov(X0, R)|cov(Y0, R)|cov( R, R)|
-  */
+      */
     int64_t q;  //!< particle charge
     double chi2 = 0.0;
 };
@@ -76,7 +76,6 @@ struct helix_fit
     double chi2_line = 0.0;
     Vector4d fast_fit;
     int64_t q;  //!< particle charge
-                //  VectorXd time;  // TO FIX just for profiling
 } __attribute__((aligned(16)));
 
 template <class C>
@@ -117,6 +116,34 @@ __host__ __device__ inline double cross2D(const Vector2d& a, const Vector2d& b)
     return a.x() * b.y() - a.y() * b.x();
 }
 
+/*!
+ * Compute the Radiation length in the uniform hypothesis
+ *
+ * The Pixel detector, barrel and forward, is considered as an omogeneous
+ * cilinder of material, whose radiation lengths has been derived from the TDR
+ * plot that show that 16cm correspon to 0.06 radiation lengths. Therefore one
+ * radiation length corresponds to 16cm/0.06 =~ 267 cm. All radiation lengths
+ * are computed using this unique number, in both regions, barrel and endcap.
+ *
+ * \param length_values vector of incremental distances that will be translated
+ * into radiation length equivalent. The radiation length are computed
+ * incrementally and with respect to the previous length.
+ *
+ * \return incremental radiation lengths that correspond to each segment.
+ */
+
+__host__ __device__ inline
+void computeRadLenUniformMaterial(const VectorNd &length_values,
+    VectorNd & rad_lengths) {
+  // Radiation length of the pixel detector in the uniform assumption, with
+  // 0.06 rad_len at 16 cm
+  double XX_0 = 16.f/(0.06);
+  u_int n = length_values.rows();
+  rad_lengths(0) = length_values(0)/XX_0;
+  for (u_int j = 1; j < n; ++j) {
+    rad_lengths(j) = std::abs(length_values(j)-length_values(j-1))/XX_0;
+  }
+}
 
 __host__ __device__ inline void computeRadLenEff(const Vector4d& fast_fit,
                                                  const double B,
@@ -162,34 +189,17 @@ __host__ __device__ inline MatrixNd Scatter_cov_line(Matrix2Nd& cov_sz,
     u_int n = s_arcs.rows();
     double p_t = fast_fit(2) * B;
     double p_2 = p_t * p_t * (1. + 1. / (fast_fit(3) * fast_fit(3)));
-    double radlen_eff = 0.;
-    double theta = 0.;
-    bool in_forward = false;
-    computeRadLenEff(fast_fit, B, radlen_eff, theta, in_forward);
-
-    const double sig2 = .000225 / p_2 * sqr(1 + 0.038 * log(radlen_eff)) * radlen_eff;
-    for (u_int k = 0; k < n; ++k)
-    {
-        for (u_int l = k; l < n; ++l)
-        {
-            for (u_int i = 0; i < std::min(k, l); ++i)
-            {
-#if RFIT_DEBUG
-              printf("Scatter_cov_line - B: %f\n", B);
-              printf("Scatter_cov_line - radlen_eff: %f, p_t: %f, p2: %f\n", radlen_eff, p_t, p_2);
-              printf("Scatter_cov_line - sig2:%f, theta: %f\n", sig2, theta);
-              printf("Scatter_cov_line - Adding to element %d, %d value %f\n", n + k, n + l, (s_arcs(k) - s_arcs(i)) * (s_arcs(l) - s_arcs(i)) * sig2 / sqr(sqr(sin(theta))));
-#endif
-              if (in_forward) {
-                cov_sz(k, l) += (z_values(k) - z_values(i)) * (z_values(l) - z_values(i)) * sig2 / sqr(sqr(cos(theta)));
-                cov_sz(l, k) = cov_sz(k, l);
-              } else {
-                cov_sz(n + k, n + l) += (s_arcs(k) - s_arcs(i)) * (s_arcs(l) - s_arcs(i)) * sig2 / sqr(sqr(sin(theta)));
-                cov_sz(n + l, n + k) = cov_sz(n + k, n + l);
-              }
-            }
-        }
-    }
+    double theta = atan(fast_fit(3));
+    theta = theta < 0. ? theta + M_PI :  theta;
+    VectorNd rad_lengths_S(n);
+    // See documentation at http://eigen.tuxfamily.org/dox/group__TutorialArrayClass.html
+    // Basically, to perform cwise operations on Matrices and Vectors, you need
+    // to transform them into Array-like objects.
+    VectorNd S_values = s_arcs.array() * s_arcs.array() + z_values.array() * z_values.array();
+    S_values = S_values.array().sqrt();
+    computeRadLenUniformMaterial(S_values, rad_lengths_S);
+    VectorNd sig2_S(n);
+    sig2_S = .000225 / p_2 * (1.f + 0.038 * rad_lengths_S.array().log()).abs2() * rad_lengths_S.array();
 #if RFIT_DEBUG
     Rfit::printIt(&cov_sz, "Scatter_cov_line - cov_sz: ");
 #endif
@@ -210,6 +220,17 @@ __host__ __device__ inline MatrixNd Scatter_cov_line(Matrix2Nd& cov_sz,
 #endif
 
     Matrix2Nd tmp = rot*cov_sz*rot.transpose();
+    for (u_int k = 0; k < n; ++k)
+    {
+      for (u_int l = k; l < n; ++l)
+      {
+        for (u_int i = 0; i < std::min(k, l); ++i)
+        {
+          tmp(k, l) += std::abs(S_values(k) - S_values(i)) * std::abs(S_values(l) - S_values(i)) * sig2_S(i);
+          tmp(l, k) = tmp(k, l);
+        }
+      }
+    }
     // We are interested only in the errors in the rotated s -axis which, in
     // our formalism, are in the upper square matrix.
 #if RFIT_DEBUG
@@ -231,7 +252,6 @@ __host__ __device__ inline MatrixNd Scatter_cov_line(Matrix2Nd& cov_sz,
 
     \warning input points must be ordered radially from the detector center
     (from inner layer to outer ones; points on the same layer must ordered too).
-    \bug currently works only for points in the barrel.
 
     \details Only the tangential component is computed (the radial one is
     negligible).
@@ -246,24 +266,32 @@ __host__ __device__ inline MatrixNd Scatter_cov_rad(const Matrix2xNd& p2D,
     u_int n = p2D.cols();
     double p_t = fast_fit(2) * B;
     double p_2 = p_t * p_t * (1. + 1. / (fast_fit(3) * fast_fit(3)));
-    double radlen_eff = 0.;
-    double theta = 0.;
-    bool in_forward = false;
-    computeRadLenEff(fast_fit, B, radlen_eff, theta, in_forward);
+    double theta = atan(fast_fit(3));
+    theta = theta < 0. ? theta + M_PI :  theta;
+    VectorNd s_values(n);
+    VectorNd rad_lengths(n);
+    const Vector2d o(fast_fit(0), fast_fit(1));
 
+    // associated Jacobian, used in weights and errors computation
+    for (u_int i = 0; i < n; ++i)
+    {  // x
+        Vector2d p = p2D.block(0, i, 2, 1) - o;
+        const double cross = cross2D(-o, p);
+        const double dot = (-o).dot(p);
+        const double atan2_ = atan2(cross, dot);
+        s_values(i) = std::abs(atan2_ * fast_fit(2));
+    }
+    computeRadLenUniformMaterial(s_values*sqrt(1. + 1./(fast_fit(3)*fast_fit(3))), rad_lengths);
     MatrixNd scatter_cov_rad = MatrixXd::Zero(n, n);
-    const double sig2 = .000225 / p_2 * sqr(1 + 0.038 * log(radlen_eff)) * radlen_eff;
+    VectorNd sig2(n);
+    sig2 = .000225 / p_2 * (1.f + 0.038 * rad_lengths.array().log()).abs2() * rad_lengths.array();
     for (u_int k = 0; k < n; ++k)
     {
         for (u_int l = k; l < n; ++l)
         {
             for (u_int i = 0; i < std::min(k, l); ++i)
             {
-              if (in_forward) {
-                scatter_cov_rad(k, l) += (rad(k) - rad(i)) * (rad(l) - rad(i)) * sig2 / sqr(cos(theta));
-              } else {
-                scatter_cov_rad(k, l) += (rad(k) - rad(i)) * (rad(l) - rad(i)) * sig2 / sqr(sin(theta));
-              }
+              scatter_cov_rad(k, l) += (rad(k) - rad(i)) * (rad(l) - rad(i)) * sig2(i) / (sqr(sin(theta)));
               scatter_cov_rad(l, k) = scatter_cov_rad(k, l);
             }
         }
