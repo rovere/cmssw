@@ -428,23 +428,6 @@ __host__ __device__ inline VectorNd Weight_circle(const MatrixNd& cov_rad_inv)
 }
 
 /*!
-    \brief Compute the points' weights' vector for the line fit (ODR).
-    Results from a pre-fit is needed in order to take the orthogonal (to the
-    line) component of the errors.
-
-    \param x_err2 squared errors in the x axis.
-    \param y_err2 squared errors in the y axis.
-    \param tan_theta tangent of theta (angle between y axis and line).
-
-    \return weight points' weights' vector for the line fit (ODR).
-*/
-
-__host__ __device__ inline VectorNd Weight_line(const ArrayNd& x_err2, const ArrayNd& y_err2, const double& tan_theta)
-{
-    return (1. + sqr(tan_theta)) * 1. / (x_err2 + y_err2 * sqr(tan_theta));
-}
-
-/*!
     \brief Find particle q considering the  sign of cross product between
     particles velocity (estimated by the first 2 hits) and the vector radius
     between the first hit and the center of the fitted circle.
@@ -486,40 +469,6 @@ __host__ __device__ inline void par_uvrtopak(circle_fit& circle, const double B,
         circle.cov = J4 * circle.cov * J4.transpose();
     }
     circle.par = par_pak;
-}
-
-/*!
-    \brief Compute the error propagation to obtain the square errors in the
-    x axis for the line fit. If errors have not been computed in the circle fit
-    than an'approximation is made.
-    Further information in attached documentation.
-
-    \param V hits' covariance matrix.
-    \param circle result of the previous circle fit (only the covariance matrix
-    is needed) TO FIX
-    \param J Jacobian of the transformation producing x values.
-    \param error flag for error computation.
-
-    \return x_err2 squared errors in the x axis.
-*/
-
-__host__ __device__ inline VectorNd X_err2(const Matrix3Nd& V, const circle_fit& circle, const MatrixNx5d& J,
-                                           const bool error, u_int n)
-{
-    VectorNd x_err2(n);
-    for (u_int i = 0; i < n; ++i)
-    {
-        Matrix5d Cov = MatrixXd::Zero(5, 5);
-        if (0)
-            Cov.block(0, 0, 3, 3) = circle.cov;
-        Cov(3, 3) = V(i, i);
-        Cov(4, 4) = V(i + n, i + n);
-        Cov(3, 4) = Cov(4, 3) = V(i, i + n);
-        Eigen::Matrix<double, 1, 1> tmp;
-        tmp = J.row(i) * Cov * J.row(i).transpose().eval();
-        x_err2(i) = tmp(0, 0);
-    }
-    return x_err2;
 }
 
 /*!
@@ -1148,10 +1097,6 @@ __host__ __device__ inline line_fit Line_fit_odr(const Matrix3xNd& hits,
     p2D.row(1) = hits.row(2);
 
     // WEIGHT COMPUTATION
-//    VectorNd x_err2 = X_err2(hits_cov, circle, Jx, error, n);
-//    VectorNd y_err2 = hits_cov.block(2 * n, 2 * n, n, n).diagonal();
-//    cov_sz.block(0, 0, n, n) = x_err2.asDiagonal();
-//    cov_sz.block(n, n, n, n) = y_err2.asDiagonal();
 #if RFIT_DEBUG
     printIt(&cov_sz, "line_fit - cov_sz:");
 #endif
@@ -1236,17 +1181,6 @@ __host__ __device__ inline line_fit Line_fit_odr(const Matrix3xNd& hits,
             C(2, 2) = sig2 * (v(0)*r0(1)-v(1)*r0(0))*(v(0)*r0(1)-v(1)*r0(0)) + (sig2/n)*(A(0,0)+A(1,1));
             C(0, 2) = C(2, 0) = sig2*(v(0)*r0(1)-v(1)*r0(0))*v(1);
             C(1, 2) = C(2, 1) = - sig2*(v(0)*r0(1)-v(1)*r0(0))*v(0);
-            /*
-            const VectorNd weight_2 = (weight).array().square();
-            Vector4d x_err2;
-            x_err2 << .5, .5, .5, .5;
-            Vector4d y_err2;
-            y_err2 << .5, .5, .5, .5;
-            const Vector2d C0(weight_2.dot(x_err2), weight_2.dot(y_err2));
-            C.block(0, 2, 2, 1) = C.block(2, 0, 1, 2).transpose() = -C.block(0, 0, 2, 2) * r0;
-            Matrix<double, 1, 1> tmp = (r0.transpose() * C.block(0, 0, 2, 2) * r0);
-            C(2, 2) = v0_2 * C0(0) + v1_2 * C0(1) + C0(0) * C(0, 0) + C0(1) * C(1, 1) + tmp(0, 0);
-            */
         }
 #if RFIT_DEBUG
         printIt(&C, "line_fit - C:");

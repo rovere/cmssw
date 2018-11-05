@@ -10,7 +10,7 @@
 #include <TH1F.h>
 
 #include "RecoPixelVertexing/PixelTrackFitting/interface/RiemannFit.h"
-#include "RecoPixelVertexing/PixelTrackFitting/interface/BrokenLine.h"
+//#include "RecoPixelVertexing/PixelTrackFitting/interface/BrokenLine.h"
 
 using namespace std;
 using namespace Eigen;
@@ -374,9 +374,7 @@ void test_helix_fit() {
   Matrix3xNd hits;
   Matrix3Nd hits_cov;
   std::array<helix_fit, iteration> helixRiemann_fit;
-  std::array<BrokenLine::helix_fit, iteration> helixBrokenLine_fit;
-//  unique_ptr<helix_fit[]> helixRiemann_fit(new helix_fit[iteration]);
-//  unique_ptr<BrokenLine::helix_fit[]> helixBrokenLine_fit(new BrokenLine::helix_fit[iteration]);
+//  std::array<BrokenLine::helix_fit, iteration> helixBrokenLine_fit;
 
   std::cout << "\nTrue parameters: "
     << "phi: " << true_par(0) << " "
@@ -395,7 +393,7 @@ void test_helix_fit() {
     //      gen.hits.col(2) << 7.25991010666, 7.74653434753, 30.6931324005;
     //      gen.hits.col(3) << 8.99161434174, 9.54262828827, 38.1338043213;
     helixRiemann_fit[i] = Rfit::Helix_fit(gen.hits, gen.hits_cov, B_field, return_err);
-    helixBrokenLine_fit[i] = BrokenLine::Helix_fit(gen.hits, gen.hits_cov, B_field);
+//    helixBrokenLine_fit[i] = BrokenLine::Helix_fit(gen.hits, gen.hits_cov, B_field);
 
     std::cout << std::endl;
     /*
@@ -419,7 +417,7 @@ void test_helix_fit() {
         */
   }
   computePull(helixRiemann_fit, "Riemann", n_, iteration, true_par);
-  computePull(helixBrokenLine_fit, "BrokenLine", n_, iteration, true_par);
+//  computePull(helixBrokenLine_fit, "BrokenLine", n_, iteration, true_par);
 }
 
 int main() {
