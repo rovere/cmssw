@@ -66,6 +66,8 @@ HGCalLayerClusterProducer::HGCalLayerClusterProducer(const edm::ParameterSet &ps
   timeOffset(ps.getParameter<double>("timeOffset")),
   verbosity((HGCalImagingAlgo::VerbosityLevel)ps.getUntrackedParameter<unsigned int>("verbosity",3)){
   double ecut = ps.getParameter<double>("ecut");
+  bool splitFullHaloClusters = ps.getParameter<bool>("splitFullHaloClusters");
+  double ecut_miplike = ps.getParameter<double>("ecut_miplike");
   std::vector<double> vecDeltas = ps.getParameter<std::vector<double> >("deltac");
   double kappa = ps.getParameter<double>("kappa");
   std::vector<double> dEdXweights = ps.getParameter<std::vector<double> >("dEdXweights");
@@ -96,9 +98,20 @@ HGCalLayerClusterProducer::HGCalLayerClusterProducer(const edm::ParameterSet &ps
 
   if(doSharing){
     double showerSigma =  ps.getParameter<double>("showerSigma");
-    algo = std::make_unique<HGCalImagingAlgo>(vecDeltas, kappa, ecut, showerSigma, algoId, dependSensor, dEdXweights, thicknessCorrection, fcPerMip, fcPerEle, nonAgedNoises, noiseMip, verbosity);
+    algo = std::make_unique<HGCalImagingAlgo>(vecDeltas, kappa, ecut,
+                                              splitFullHaloClusters, ecut_miplike,
+                                              showerSigma, algoId,
+                                              dependSensor, dEdXweights,
+                                              thicknessCorrection, fcPerMip,
+                                              fcPerEle, nonAgedNoises,
+                                              noiseMip, verbosity);
   }else{
-    algo = std::make_unique<HGCalImagingAlgo>(vecDeltas, kappa, ecut, algoId, dependSensor, dEdXweights, thicknessCorrection, fcPerMip, fcPerEle, nonAgedNoises, noiseMip, verbosity);
+    algo = std::make_unique<HGCalImagingAlgo>(vecDeltas, kappa, ecut,
+                                              splitFullHaloClusters, ecut_miplike,
+                                              algoId, dependSensor, dEdXweights,
+                                              thicknessCorrection, fcPerMip,
+                                              fcPerEle, nonAgedNoises,
+                                              noiseMip, verbosity);
   }
 
   produces<std::vector<float> >("InitialLayerClustersMask");
@@ -122,6 +135,8 @@ void HGCalLayerClusterProducer::fillDescriptions(edm::ConfigurationDescriptions&
   });
   desc.add<bool>("dependSensor", true);
   desc.add<double>("ecut", 3.0);
+  desc.add<bool>("splitFullHaloClusters", true);
+  desc.add<double>("ecut_miplike", 10.0);
   desc.add<double>("kappa", 9.0);
   desc.add<std::string>("timeClname", "timeLayerCluster");
   desc.add<double>("timeOffset",0.0);
