@@ -68,6 +68,8 @@ HGCalLayerClusterProducer::HGCalLayerClusterProducer(const edm::ParameterSet &ps
   double ecut = ps.getParameter<double>("ecut");
   bool promote_single_nodes  = ps.getParameter<bool>("promote_single_nodes");
   bool splitFullHaloClusters = ps.getParameter<bool>("splitFullHaloClusters");
+  bool apply_cutoff_distance = ps.getParameter<bool>("apply_cutoff_distance");
+  double cutoff_distance = ps.getParameter<double>("cutoff_distance");
   double ecut_miplike = ps.getParameter<double>("ecut_miplike");
   std::vector<double> vecDeltas = ps.getParameter<std::vector<double> >("deltac");
   double kappa = ps.getParameter<double>("kappa");
@@ -101,6 +103,8 @@ HGCalLayerClusterProducer::HGCalLayerClusterProducer(const edm::ParameterSet &ps
     double showerSigma =  ps.getParameter<double>("showerSigma");
     algo = std::make_unique<HGCalImagingAlgo>(vecDeltas, kappa, ecut,
                                               splitFullHaloClusters, promote_single_nodes,
+                                              apply_cutoff_distance,
+                                              cutoff_distance,
                                               ecut_miplike,
                                               showerSigma, algoId,
                                               dependSensor, dEdXweights,
@@ -110,6 +114,8 @@ HGCalLayerClusterProducer::HGCalLayerClusterProducer(const edm::ParameterSet &ps
   }else{
     algo = std::make_unique<HGCalImagingAlgo>(vecDeltas, kappa, ecut,
                                               splitFullHaloClusters, promote_single_nodes,
+                                              apply_cutoff_distance,
+                                              cutoff_distance,
                                               ecut_miplike,
                                               algoId, dependSensor, dEdXweights,
                                               thicknessCorrection, fcPerMip,
@@ -140,6 +146,8 @@ void HGCalLayerClusterProducer::fillDescriptions(edm::ConfigurationDescriptions&
   desc.add<double>("ecut", 3.0);
   desc.add<bool>("splitFullHaloClusters", false);
   desc.add<bool>("promote_single_nodes", false);
+  desc.add<bool>("apply_cutoff_distance", false);
+  desc.add<double>("cutoff_distance", 15.);
   desc.add<double>("ecut_miplike", 10.0);
   desc.add<double>("kappa", 9.0);
   desc.add<std::string>("timeClname", "timeLayerCluster");
