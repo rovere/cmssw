@@ -149,7 +149,7 @@ process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic', '')
 # Path and EndPath definitions
 process.raw2digi_step = cms.Path(process.RawToDigi)
 process.L1Reco_step = cms.Path(process.L1Reco)
-# process.reconstruction_step = cms.Path(process.reconstruction)
+process.reconstruction_step = cms.Path(process.reconstruction)
 process.recosim_step = cms.Path(process.recosim)
 process.Flag_trackingFailureFilter = cms.Path(process.goodVertices+process.trackingFailureFilter)
 process.Flag_goodVertices = cms.Path(process.primaryVertexFilter)
@@ -208,34 +208,75 @@ process.MINIAODSIMoutput_step = cms.EndPath(process.MINIAODSIMoutput)
 process.DQMoutput_step = cms.EndPath(process.DQMoutput)
 
 
+#from ticl_iterations import TICL_iterations
+from ticl_iterations import TICL_iterations_withReco
+#process = TICL_iterations_withReco(process)
+#process.schedule= cms.Schedule(process.raw2digi_step,process.L1Reco_step,process.TICL, process.FEVTDEBUGHLToutput_step)
 
-
-
-from RecoLocalCalo.HGCalRecProducers.HGCalUncalibRecHit_cfi import *
-from RecoLocalCalo.HGCalRecProducers.HGCalRecHit_cfi import *
-
-# patch particle flow clusters for HGC into local reco sequence
-# (for now until global reco is going with some sort of clustering)
-from RecoParticleFlow.PFClusterProducer.particleFlowRecHitHGC_cff import *
-from RecoParticleFlow.PFClusterProducer.particleFlowClusterHGC_cfi import *
-from RecoLocalCalo.HGCalRecProducers.hgcalLayerClusters_cff import hgcalLayerClusters
-
-
-from RecoHGCal.TICL.Tracksters_cfi import Tracksters
-from RecoHGCal.TICL.FilteredLayerClusters_cfi import FilteredLayerClusters
-
-process.Tracksters = Tracksters.clone()
-process.HGCalUncalibRecHit = HGCalUncalibRecHit
-process.HGCalRecHit = HGCalRecHit
-process.hgcalLayerClusters = hgcalLayerClusters
-process.FilteredLayerClusters = FilteredLayerClusters.clone()
-process.TICL = cms.Path(process.HGCalUncalibRecHit+process.HGCalRecHit+process.hgcalLayerClusters+ process.FilteredLayerClusters+ process.Tracksters )
-process.schedule= cms.Schedule(process.raw2digi_step,process.L1Reco_step,process.TICL, process.FEVTDEBUGHLToutput_step)
 # Schedule definition
-# process.schedule = cms.Schedule(process.raw2digi_step,process.L1Reco_step,process.reconstruction_step,process.recosim_step,process.Flag_HBHENoiseFilter,process.Flag_HBHENoiseIsoFilter,process.Flag_CSCTightHaloFilter,process.Flag_CSCTightHaloTrkMuUnvetoFilter,process.Flag_CSCTightHalo2015Filter,process.Flag_globalTightHalo2016Filter,process.Flag_globalSuperTightHalo2016Filter,process.Flag_HcalStripHaloFilter,process.Flag_hcalLaserEventFilter,process.Flag_EcalDeadCellTriggerPrimitiveFilter,process.Flag_EcalDeadCellBoundaryEnergyFilter,process.Flag_ecalBadCalibFilter,process.Flag_goodVertices,process.Flag_eeBadScFilter,process.Flag_ecalLaserCorrFilter,process.Flag_trkPOGFilters,process.Flag_chargedHadronTrackResolutionFilter,process.Flag_muonBadTrackFilter,process.Flag_BadChargedCandidateFilter,process.Flag_BadPFMuonFilter,process.Flag_BadChargedCandidateSummer16Filter,process.Flag_BadPFMuonSummer16Filter,process.Flag_trkPOG_manystripclus53X,process.Flag_trkPOG_toomanystripclus53X,process.Flag_trkPOG_logErrorTooManyClusters,process.Flag_METFilters,process.prevalidation_step,process.prevalidation_step1,process.prevalidation_step2,process.prevalidation_step3,process.prevalidation_step4,process.prevalidation_step5,process.prevalidation_step6,process.validation_step,process.validation_step1,process.validation_step2,process.validation_step3,process.validation_step4,process.validation_step5,process.validation_step6,process.validation_step7,process.validation_step8,process.dqmoffline_step,process.dqmoffline_1_step,process.dqmoffline_2_step,process.dqmoffline_3_step,process.dqmoffline_4_step,process.dqmoffline_5_step,process.dqmoffline_6_step,process.dqmofflineOnPAT_step,process.dqmofflineOnPAT_1_step,process.FEVTDEBUGHLToutput_step,process.MINIAODSIMoutput_step,process.DQMoutput_step)
-# process.schedule.associate(process.patTask)
-# from PhysicsTools.PatAlgos.tools.helpers import associatePatAlgosToolsTask
-# associatePatAlgosToolsTask(process)
+process.schedule = cms.Schedule(process.raw2digi_step,
+process.L1Reco_step,
+process.reconstruction_step,
+#process.TICL,
+process.recosim_step,
+#process.Flag_HBHENoiseFilter,
+#process.Flag_HBHENoiseIsoFilter,
+#process.Flag_CSCTightHaloFilter,
+#process.Flag_CSCTightHaloTrkMuUnvetoFilter,
+#process.Flag_CSCTightHalo2015Filter,
+#process.Flag_globalTightHalo2016Filter,
+#process.Flag_globalSuperTightHalo2016Filter,
+#process.Flag_HcalStripHaloFilter,
+#process.Flag_hcalLaserEventFilter,
+#process.Flag_EcalDeadCellTriggerPrimitiveFilter,
+#process.Flag_EcalDeadCellBoundaryEnergyFilter,
+#process.Flag_ecalBadCalibFilter,
+#process.Flag_goodVertices,
+#process.Flag_eeBadScFilter,
+#process.Flag_ecalLaserCorrFilter,
+#process.Flag_trkPOGFilters,
+#process.Flag_chargedHadronTrackResolutionFilter,
+#process.Flag_muonBadTrackFilter,
+#process.Flag_BadChargedCandidateFilter,
+#process.Flag_BadPFMuonFilter,
+#process.Flag_BadChargedCandidateSummer16Filter,
+#process.Flag_BadPFMuonSummer16Filter,
+#process.Flag_trkPOG_manystripclus53X,
+#process.Flag_trkPOG_toomanystripclus53X,
+#process.Flag_trkPOG_logErrorTooManyClusters,
+#process.Flag_METFilters,
+#process.prevalidation_step,
+#process.prevalidation_step1,
+#process.prevalidation_step2,
+#process.prevalidation_step3,
+#process.prevalidation_step4,
+#process.prevalidation_step5,
+#process.prevalidation_step6,
+#process.validation_step,
+#process.validation_step1,
+#process.validation_step2,
+#process.validation_step3,
+#process.validation_step4,
+#process.validation_step5,
+#process.validation_step6,
+#process.validation_step7,
+#process.validation_step8,
+#process.dqmoffline_step,
+#process.dqmoffline_1_step,
+#process.dqmoffline_2_step,
+#process.dqmoffline_3_step,
+#process.dqmoffline_4_step,
+#process.dqmoffline_5_step,
+#process.dqmoffline_6_step,
+#process.dqmofflineOnPAT_step,
+#process.dqmofflineOnPAT_1_step,
+process.FEVTDEBUGHLToutput_step,
+#process.MINIAODSIMoutput_step,
+#process.DQMoutput_step
+)
+#process.schedule.associate(process.patTask)
+#from PhysicsTools.PatAlgos.tools.helpers import associatePatAlgosToolsTask
+#associatePatAlgosToolsTask(process)
 
 #Setup FWK for multithreaded
 process.options.numberOfThreads=cms.untracked.uint32(4)
@@ -252,7 +293,7 @@ from SimGeneral.MixingModule.fullMixCustomize_cff import setCrossingFrameOn
 # End of customisation functions
 #do not add changes to your config after this point (unless you know what you are doing)
 from FWCore.ParameterSet.Utilities import convertToUnscheduled
-#process=convertToUnscheduled(process)
+process=convertToUnscheduled(process)
 
 
 # customisation of the process.
