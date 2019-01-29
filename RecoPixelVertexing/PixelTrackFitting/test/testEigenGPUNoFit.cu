@@ -6,8 +6,6 @@
 #include "test_common.h"
 #include "HeterogeneousCore/CUDAUtilities/interface/cudaCheck.h"
 
-#include "HeterogeneousCore/CUDAUtilities/interface/exitSansCUDADevices.h"
-
 using namespace Eigen;
 
 using Matrix5d = Matrix<double, 5, 5>;
