@@ -378,11 +378,13 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
       // std::cout << lcLayerId << " " << lcId << " " << c.first << " " << c.second << " " << numberOfNoiseHitsInLC << std::endl;
     }
     float totalCPEnergyOnLayer = 0.f;
-    if(maxCPId_byEnergy >=0 and clusters[lcId].energy()>0.f)
-    {
+    if(maxCPId_byEnergy >=0) {
       totalCPEnergyOnLayer = cPOnLayer[maxCPId_byEnergy][lcLayerId].energy;
-      energyFractionOfLCinCP = maxEnergySharedLCandCP/clusters[lcId].energy();
       energyFractionOfCPinLC = maxEnergySharedLCandCP/totalCPEnergyOnLayer;
+      if(clusters[lcId].energy()>0.f)
+      {
+        energyFractionOfLCinCP = maxEnergySharedLCandCP/clusters[lcId].energy();
+      }
     }
     std::cout  << std::setw(10) << "LayerId:"<< "\t"
                << std::setw(12) << "layerCluster"<<  "\t"
