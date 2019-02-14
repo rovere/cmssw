@@ -36,6 +36,7 @@ struct HGVHistoProducerAlgoHistograms {
   std::unordered_map<int, ConcurrentMonitorElement > h_energyclustered_perlayer;
   std::unordered_map<int, ConcurrentMonitorElement > h_score_layercl2caloparticle_perlayer;
   std::unordered_map<int, ConcurrentMonitorElement > h_score_caloparticle2layercl_perlayer;
+  std::unordered_map<int, ConcurrentMonitorElement > h_cellAssociation_perlayer;
   std::unordered_map<int, ConcurrentMonitorElement > h_clusternum_perthick;
   std::unordered_map<int, ConcurrentMonitorElement > h_cellsenedens_perthick;
 

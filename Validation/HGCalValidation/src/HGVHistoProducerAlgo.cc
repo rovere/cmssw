@@ -140,6 +140,7 @@ void HGVHistoProducerAlgo::bookClusterHistos(DQMStore::ConcurrentBooker& ibook, 
     histograms.h_energyclustered_perlayer[ilayer] = ibook.book1D("energyclustered_perlayer"+istr,"percent of total energy clustered by layer clusters over caloparticles energy for layer "+istr,nintEneClperlay,minEneClperlay,maxEneClperlay);
     histograms.h_score_layercl2caloparticle_perlayer[ilayer] = ibook.book1D("Score_layercl2caloparticle_perlayer"+istr, "Score of Layer Cluster per CaloParticle", 200, -1.01, 1.01);
     histograms.h_score_caloparticle2layercl_perlayer[ilayer] = ibook.book1D("Score_caloparticle2layercl_perlayer"+istr, "Score of CaloParticle per Layer Cluster", 200, -1.01, 1.01);
+    histograms.h_cellAssociation_perlayer[ilayer] = ibook.book1D("cellAssociation_perlayer"+istr, "Cell Association per Layer", 5, -4., 1.);
   }
 
   //---------------------------------------------------------------------------------------------------------------------------
@@ -291,6 +292,7 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
     std::unordered_map<unsigned, unsigned> occurrencesCPinLC;
     std::unordered_map<unsigned, float> CPEnergyInLC;
     unsigned int numberOfNoiseHitsInLC = 0;
+    unsigned int numberOfHaloHitsInLC = 0;
 
     for (unsigned int hitId = 0; hitId < numberOfHitsInLC; hitId++)
     {
@@ -316,9 +318,13 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
 
       // MR Remove the case in which the fraction is 0, since this could be a
       // real hit that has been marked as halo.
+      if (rhFraction == 0.) {
+        hitsToCaloParticleId[hitId] = -2;
+        numberOfHaloHitsInLC++;
+      }
       if (hit_find_in_CP == detIdToCaloParticleId_Map.end())
       {
-        hitsToCaloParticleId[hitId] = -1;
+        hitsToCaloParticleId[hitId] -= 1;
       }
       else
       {
@@ -337,6 +343,7 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
         }
         hitsToCaloParticleId[hitId] = maxCPId;
       }
+      histograms.h_cellAssociation_perlayer.at(lcLayerId%52+1).fill(hitsToCaloParticleId[hitId] > 0. ? 0. : hitsToCaloParticleId[hitId]);
     }
 
     for(auto& c: hitsToCaloParticleId)
