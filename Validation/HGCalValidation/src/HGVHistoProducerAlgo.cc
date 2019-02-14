@@ -141,6 +141,10 @@ void HGVHistoProducerAlgo::bookClusterHistos(DQMStore::ConcurrentBooker& ibook, 
     histograms.h_score_layercl2caloparticle_perlayer[ilayer] = ibook.book1D("Score_layercl2caloparticle_perlayer"+istr, "Score of Layer Cluster per CaloParticle", 200, -1.01, 1.01);
     histograms.h_score_caloparticle2layercl_perlayer[ilayer] = ibook.book1D("Score_caloparticle2layercl_perlayer"+istr, "Score of CaloParticle per Layer Cluster", 200, -1.01, 1.01);
     histograms.h_cellAssociation_perlayer[ilayer] = ibook.book1D("cellAssociation_perlayer"+istr, "Cell Association per Layer", 5, -4., 1.);
+    histograms.h_cellAssociation_perlayer[ilayer].setBinLabel(1, "TN(purity)");
+    histograms.h_cellAssociation_perlayer[ilayer].setBinLabel(2, "FN(ineff.)");
+    histograms.h_cellAssociation_perlayer[ilayer].setBinLabel(3, "FP(fake)");
+    histograms.h_cellAssociation_perlayer[ilayer].setBinLabel(4, "TP(eff.)");
   }
 
   //---------------------------------------------------------------------------------------------------------------------------
@@ -348,7 +352,7 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
 
     for(auto& c: hitsToCaloParticleId)
     {
-      if(c ==-1)
+      if(c < 0)
       {
         numberOfNoiseHitsInLC++;
       }
@@ -420,15 +424,26 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
     cpsInLayerCluster[lcId].erase(last, cpsInLayerCluster[lcId].end());
     const std::vector<std::pair<DetId, float> >& hits_and_fractions = clusters[lcId].hitsAndFractions();
     unsigned int numberOfHitsInLC = hits_and_fractions.size();
-    float invLayerClusterEnergySquared = 1.f/(clusters[lcId].energy()*clusters[lcId].energy());
     auto firstHitDetId = hits_and_fractions[0].first;
     int lcLayerId = recHitTools_->getLayerWithOffset(firstHitDetId);// + layers * ((recHitTools_->zside(firstHitDetId) + 1) >> 1) - 1;
+    if (clusters[lcId].energy() == 0. && cpsInLayerCluster[lcId].size() != 0) {
+      for(auto& cpPair : cpsInLayerCluster[lcId]) {
+        cpPair.second = 1.;
+        std::cout << "layerCluster Id: \t" << lcId
+          << "\t CP id: \t" << cpPair.first
+          << "\t score \t" << cpPair.second
+          << std::endl;
+        histograms.h_score_layercl2caloparticle_perlayer.at(lcLayerId).fill(cpPair.second);
+      }
+      continue;
+    }
+    float invLayerClusterEnergySquared = 1.f/(clusters[lcId].energy()*clusters[lcId].energy());
     for(unsigned int i = 0; i < numberOfHitsInLC; ++i)
     {
       DetId rh_detid = hits_and_fractions[i].first;
       float rhFraction = hits_and_fractions[i].second;
       bool hitWithNoCP = false;
-      if(rhFraction ==0) continue;
+//      if(rhFraction ==0) continue;
       auto hit_find_in_CP = detIdToCaloParticleId_Map.find(rh_detid);
       if(hit_find_in_CP == detIdToCaloParticleId_Map.end()) hitWithNoCP = true;
       auto itcheck= hitMap_->find(rh_detid);
