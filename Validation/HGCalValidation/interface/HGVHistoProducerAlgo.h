@@ -36,6 +36,10 @@ struct HGVHistoProducerAlgoHistograms {
   std::unordered_map<int, ConcurrentMonitorElement > h_energyclustered_perlayer;
   std::unordered_map<int, ConcurrentMonitorElement > h_score_layercl2caloparticle_perlayer;
   std::unordered_map<int, ConcurrentMonitorElement > h_score_caloparticle2layercl_perlayer;
+  std::unordered_map<int, ConcurrentMonitorElement > h_energy_vs_score_caloparticle2layercl_perlayer;
+  std::unordered_map<int, ConcurrentMonitorElement > h_sharedenergy_caloparticle2layercl_perlayer;
+  std::unordered_map<int, ConcurrentMonitorElement > h_num_caloparticle_eta_perlayer;
+  std::unordered_map<int, ConcurrentMonitorElement > h_denom_caloparticle_eta_perlayer;
   std::unordered_map<int, ConcurrentMonitorElement > h_cellAssociation_perlayer;
   std::unordered_map<int, ConcurrentMonitorElement > h_clusternum_perthick;
   std::unordered_map<int, ConcurrentMonitorElement > h_cellsenedens_perthick;
@@ -135,8 +139,6 @@ class HGVHistoProducerAlgo {
   double minDisToMaxperthickperlayer, maxDisToMaxperthickperlayer; int nintDisToMaxperthickperlayer;
   double minDisToMaxperthickperlayerenewei, maxDisToMaxperthickperlayerenewei; int nintDisToMaxperthickperlayerenewei;
   double minCellsEneDensperthick, maxCellsEneDensperthick; int nintCellsEneDensperthick;
-
-
 };
 
 #endif

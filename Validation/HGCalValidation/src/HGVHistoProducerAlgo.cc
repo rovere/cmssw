@@ -97,10 +97,6 @@ HGVHistoProducerAlgo::HGVHistoProducerAlgo(const edm::ParameterSet& pset) {
   minCellsEneDensperthick  = pset.getParameter<double>("minCellsEneDensperthick");
   maxCellsEneDensperthick  = pset.getParameter<double>("maxCellsEneDensperthick");
   nintCellsEneDensperthick = pset.getParameter<int>("nintCellsEneDensperthick");
-
-
-
-
 }
 
 HGVHistoProducerAlgo::~HGVHistoProducerAlgo() {}
@@ -140,11 +136,15 @@ void HGVHistoProducerAlgo::bookClusterHistos(DQMStore::ConcurrentBooker& ibook, 
     histograms.h_energyclustered_perlayer[ilayer] = ibook.book1D("energyclustered_perlayer"+istr,"percent of total energy clustered by layer clusters over caloparticles energy for layer "+istr,nintEneClperlay,minEneClperlay,maxEneClperlay);
     histograms.h_score_layercl2caloparticle_perlayer[ilayer] = ibook.book1D("Score_layercl2caloparticle_perlayer"+istr, "Score of Layer Cluster per CaloParticle", 200, -1.01, 1.01);
     histograms.h_score_caloparticle2layercl_perlayer[ilayer] = ibook.book1D("Score_caloparticle2layercl_perlayer"+istr, "Score of CaloParticle per Layer Cluster", 200, -1.01, 1.01);
+    histograms.h_energy_vs_score_caloparticle2layercl_perlayer[ilayer] = ibook.book2D("Energy_vs_Score_caloparticle2layer_perlayer"+istr, "Energy vs Score of CaloParticle per Layer Cluster", 100, 0., 1.01, 100, 0., 1.01);
+    histograms.h_sharedenergy_caloparticle2layercl_perlayer[ilayer] = ibook.book1D("SharedEnergy_caloparticle2layercl_perlayer"+istr, "Shared Energy of CaloParticle per Layer Cluster", 100, 0., 1.01);
+    histograms.h_num_caloparticle_eta_perlayer[ilayer] = ibook.book1D("Num_CaloParticle_Eta_perlayer"+istr, "Num CaloParticle Eta per Layer Cluster", 100, -4., 4.);
+    histograms.h_denom_caloparticle_eta_perlayer[ilayer] = ibook.book1D("Denom_CaloParticle_Eta_perlayer"+istr, "Denom CaloParticle Eta per Layer Cluster", 100, -4., 4.);
     histograms.h_cellAssociation_perlayer[ilayer] = ibook.book1D("cellAssociation_perlayer"+istr, "Cell Association per Layer", 5, -4., 1.);
-    histograms.h_cellAssociation_perlayer[ilayer].setBinLabel(1, "TN(purity)");
-    histograms.h_cellAssociation_perlayer[ilayer].setBinLabel(2, "FN(ineff.)");
-    histograms.h_cellAssociation_perlayer[ilayer].setBinLabel(3, "FP(fake)");
-    histograms.h_cellAssociation_perlayer[ilayer].setBinLabel(4, "TP(eff.)");
+    histograms.h_cellAssociation_perlayer[ilayer].setBinLabel(2, "TN(purity)");
+    histograms.h_cellAssociation_perlayer[ilayer].setBinLabel(3, "FN(ineff.)");
+    histograms.h_cellAssociation_perlayer[ilayer].setBinLabel(4, "FP(fake)");
+    histograms.h_cellAssociation_perlayer[ilayer].setBinLabel(5, "TP(eff.)");
   }
 
   //---------------------------------------------------------------------------------------------------------------------------
@@ -536,26 +536,49 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
 
           if(!hitWithNoLC)
           {
-            auto findHitIt = std::find(detIdToLayerClusterId_Map[cp_hitDetId].begin(), detIdToLayerClusterId_Map[cp_hitDetId].end(), HGVHistoProducerAlgo::detIdInfoInCluster{layerClusterId,0.f});
+            auto findHitIt = std::find(
+                detIdToLayerClusterId_Map[cp_hitDetId].begin(),
+                detIdToLayerClusterId_Map[cp_hitDetId].end(),
+                HGVHistoProducerAlgo::detIdInfoInCluster{layerClusterId, 0.f}
+                );
             if(findHitIt != detIdToLayerClusterId_Map[cp_hitDetId].end())
               lcFraction = findHitIt->fraction;
           }
+          if (lcFraction == 0.) {
+            lcFraction = -1.;
+          }
           lcPair.second.second += (lcFraction - cpFraction)*(lcFraction - cpFraction)*hitEnergySquared*invCPEnergySquared;
+          std::cout << "layerClusterId:\t" << layerClusterId << "\t"
+                    << "lcfraction,cpfraction:\t" << lcFraction << ", " << cpFraction << "\t"
+                    << "hitEnergySquared:\t" << hitEnergySquared << "\t"
+                    << "currect score:\t" << lcPair.second.second << "\t"
+                    << "invCPEnergySquared:\t" << invCPEnergySquared << std::endl;
         }
       }
 
 
 
-      if(cPOnLayer[cpId][layerId].layerClusterIdToEnergyAndScore.empty()) std::cout << "CP Id: \t" << cpId << "\tLC id:\t-1 " << "\t error \t-1" <<std::endl;
+      if(cPOnLayer[cpId][layerId].layerClusterIdToEnergyAndScore.empty())
+        std::cout << "CP Id: \t" << cpId << "\tLC id:\t-1 " << "\t error \t-1" <<std::endl;
 
       for(auto& lcPair : cPOnLayer[cpId][layerId].layerClusterIdToEnergyAndScore)
       {
         std::cout << "CP Id: \t" << cpId << "\t LC id: \t"
                   << lcPair.first << "\t score \t"
-                  << lcPair.second.second << std::endl;
-        histograms.h_score_caloparticle2layercl_perlayer.at(layerId%52+1).fill(lcPair.second.second);
-        std::cout << "Filling Layer: " << (layerId%52+1) << " with score: " << lcPair.second.second << std::endl;
+                  << lcPair.second.second << "\t"
+                  << "shared energy:\t" << lcPair.second.first << "\t"
+                  << "shared energy fraction:\t" << (lcPair.second.first/CPenergy) << std::endl;
+        histograms.h_score_caloparticle2layercl_perlayer.at(layerId%52+1).fill(lcPair.second.second > 1. ? 1. : lcPair.second.second);
+        histograms.h_sharedenergy_caloparticle2layercl_perlayer.at(layerId%52+1).fill(lcPair.second.first/CPenergy);
+        histograms.h_energy_vs_score_caloparticle2layercl_perlayer.at(layerId%52+1).fill(lcPair.second.second  > 1. ? 1. : lcPair.second.second, lcPair.second.first/CPenergy);
       }
+      if (std::count_if(
+            std::begin(cPOnLayer[cpId][layerId].layerClusterIdToEnergyAndScore),
+            std::end(cPOnLayer[cpId][layerId].layerClusterIdToEnergyAndScore),
+            [](auto const &obj){return obj.second.second < 0.2;})) {
+        histograms.h_num_caloparticle_eta_perlayer.at(layerId%52+1).fill(cP[cpId].g4Tracks()[0].momentum().eta());
+      }
+      histograms.h_denom_caloparticle_eta_perlayer.at(layerId%52+1).fill(cP[cpId].g4Tracks()[0].momentum().eta());
     }
   }
 }

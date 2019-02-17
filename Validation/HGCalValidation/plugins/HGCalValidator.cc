@@ -12,8 +12,8 @@ HGCalValidator::HGCalValidator(const edm::ParameterSet& pset):
   dolayerclustersPlots_(pset.getUntrackedParameter<bool>("dolayerclustersPlots")),
   cummatbudinxo_(pset.getParameter<edm::FileInPath>("cummatbudinxo"))
 {
-  
-  //In this way we can easily generalize to associations between other objects also. 
+
+  //In this way we can easily generalize to associations between other objects also.
   const edm::InputTag& label_cp_effic_tag = pset.getParameter< edm::InputTag >("label_cp_effic");
   const edm::InputTag& label_cp_fake_tag = pset.getParameter< edm::InputTag >("label_cp_fake");
 
@@ -21,7 +21,7 @@ HGCalValidator::HGCalValidator(const edm::ParameterSet& pset):
   label_cp_fake = consumes<std::vector<CaloParticle> >(label_cp_fake_tag);
 
   simVertices_ = consumes<std::vector<SimVertex>>(pset.getParameter<edm::InputTag>("simVertices"));
-  
+
   recHitsEE_ = consumes<HGCRecHitCollection>(edm::InputTag("HGCalRecHit", "HGCEERecHits"));
   recHitsFH_ = consumes<HGCRecHitCollection>(edm::InputTag("HGCalRecHit", "HGCHEFRecHits"));
   recHitsBH_ = consumes<HGCRecHitCollection>(edm::InputTag("HGCalRecHit", "HGCHEBRecHits"));
@@ -42,21 +42,21 @@ HGCalValidator::HGCalValidator(const edm::ParameterSet& pset):
 				    pset.getParameter<bool>("chargedOnlyCP"),
 				    pset.getParameter<bool>("stableOnlyCP"),
 				    pset.getParameter<std::vector<int> >("pdgIdCP"));
-  
+
   tools_.reset(new hgcal::RecHitTools());
- 
+
   particles_to_monitor_ = pset.getParameter<std::vector<int> >("pdgIdCP");
   totallayers_to_monitor_ = pset.getParameter<int>("totallayers_to_monitor");
   thicknesses_to_monitor_ = pset.getParameter<std::vector<int> >("thicknesses_to_monitor");
-  
+
   //For the material budget file here
   std::ifstream fmb(cummatbudinxo_.fullPath().c_str());
   double thelay = 0.; double mbg = 0.;
   for (unsigned ilayer = 1; ilayer <= totallayers_to_monitor_; ++ilayer) {
     fmb >> thelay >> mbg;
-    cummatbudg.insert( std::pair<double, double>( thelay , mbg ) ); 
+    cummatbudg.insert( std::pair<double, double>( thelay , mbg ) );
   }
-  
+
   fmb.close();
 
 
@@ -76,12 +76,12 @@ void HGCalValidator::bookHistograms(DQMStore::ConcurrentBooker& ibook, edm::Run 
 
   // rechittools_->getEventSetup(setup);
   // histoProducerAlgo_->setRecHitTools(rechittools_);
-  
+
   if(doCaloParticlePlots_) {
     ibook.cd();
 
     for (auto const particle : particles_to_monitor_) {
-      ibook.setCurrentFolder(dirName_ + "SelectedCaloParticles/" + std::to_string(particle));     
+      ibook.setCurrentFolder(dirName_ + "SelectedCaloParticles/" + std::to_string(particle));
       histoProducerAlgo_->bookCaloParticleHistos(ibook, histograms.histoProducerAlgo, particle);
     }
     ibook.cd();
@@ -94,20 +94,20 @@ void HGCalValidator::bookHistograms(DQMStore::ConcurrentBooker& ibook, edm::Run 
     string dirName=dirName_;
     if (!algo.process().empty())
       dirName+=algo.process()+"_";
-    std::cout << dirName << std::endl; 
+    std::cout << dirName << std::endl;
     if(!algo.label().empty())
       dirName+=algo.label()+"_";
-    std::cout << dirName << std::endl; 
+    std::cout << dirName << std::endl;
     if(!algo.instance().empty())
       dirName+=algo.instance()+"_";
-    std::cout << dirName << std::endl; 
+    std::cout << dirName << std::endl;
     // if (dirName.find("Tracks")<dirName.length()){
     //   dirName.replace(dirName.find("Tracks"),6,"");
     // }
 
     if (dirName.size () > 0){dirName.resize(dirName.size() - 1);}
-    
-    std::cout << dirName << std::endl; 
+
+    std::cout << dirName << std::endl;
 
     ibook.setCurrentFolder(dirName);
 
@@ -137,7 +137,7 @@ void HGCalValidator::cpParametersAndSelection(const Histograms& histograms,
     }
     ++j;
   }//end of loop over caloparticles
-  
+
 }
 
 void HGCalValidator::dqmAnalyze(const edm::Event& event, const edm::EventSetup& setup, const Histograms& histograms) const {
@@ -154,7 +154,7 @@ void HGCalValidator::dqmAnalyze(const edm::Event& event, const edm::EventSetup& 
   edm::Handle<std::vector<CaloParticle> > caloParticleHandle;
   event.getByToken(label_cp_effic, caloParticleHandle);
   std::vector<CaloParticle> const & caloParticles = *caloParticleHandle;
-  
+
   tools_->getEventSetup(setup);
   histoProducerAlgo_->setRecHitTools(tools_);
 
