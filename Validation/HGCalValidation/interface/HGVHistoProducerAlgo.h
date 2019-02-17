@@ -70,7 +70,9 @@ class HGVHistoProducerAlgo {
   void bookClusterHistos(DQMStore::ConcurrentBooker& ibook, Histograms& histograms,unsigned layers, std::vector<int> thicknesses);
   void layerClusters_to_CaloParticles(const Histograms& histograms,
       const reco::CaloClusterCollection &clusters,
-      std::vector<CaloParticle> const & cP, unsigned layers) const ;
+      std::vector<CaloParticle> const & cP,
+      std::map<DetId, const HGCRecHit*> const &,
+      unsigned layers) const ;
   void fill_caloparticle_histos(const Histograms& histograms,
 				int pdgid,
 				const CaloParticle & caloparticle,
@@ -84,6 +86,7 @@ class HGVHistoProducerAlgo {
 				   int count,
 				   const reco::CaloClusterCollection &clusters,
 				   std::vector<CaloParticle> const & cP,
+                                   std::map<DetId, const HGCRecHit*> const &,
 				   std::map<double, double> cummatbudg,
 				   unsigned layers,
 				   std::vector<int> thicknesses) const ;
@@ -93,11 +96,12 @@ class HGVHistoProducerAlgo {
 
   void setRecHitTools(std::shared_ptr<hgcal::RecHitTools> recHitTools );
 
-  void fillHitMap(const HGCRecHitCollection & HGCEERecHits,
-		  const HGCRecHitCollection & HGCFHRecHits,
-		  const HGCRecHitCollection & HGCBHRecHits);
+//  void fillHitMap(const HGCRecHitCollection & HGCEERecHits,
+//		  const HGCRecHitCollection & HGCFHRecHits,
+//		  const HGCRecHitCollection & HGCBHRecHits);
 
-  DetId findmaxhit(const reco::CaloCluster & cluster) const;
+  DetId findmaxhit(const reco::CaloCluster & cluster,
+      std::map<DetId, const HGCRecHit*> const &) const;
 
   struct detIdInfoInCluster
   {
@@ -119,7 +123,7 @@ class HGVHistoProducerAlgo {
 
   std::shared_ptr<hgcal::RecHitTools> recHitTools_;
 
-  std::map<DetId, const HGCRecHit *> * hitMap_;
+//  std::map<DetId, const HGCRecHit *> * hitMap_;
 
   //private data members
   double minEta, maxEta;  int nintEta; bool useFabsEta;

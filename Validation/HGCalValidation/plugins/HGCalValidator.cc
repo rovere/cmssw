@@ -164,20 +164,22 @@ void HGCalValidator::dqmAnalyze(const edm::Event& event, const edm::EventSetup& 
   event.getByToken(recHitsFH_, recHitHandleFH);
   edm::Handle<HGCRecHitCollection> recHitHandleBH;
   event.getByToken(recHitsBH_, recHitHandleBH);
-  
-  histoProducerAlgo_->fillHitMap(*recHitHandleEE,*recHitHandleFH,*recHitHandleBH);
-  
-  
+
+  std::map<DetId, const HGCRecHit* > hitMap;
+  fillHitMap(hitMap, *recHitHandleEE,*recHitHandleFH,*recHitHandleBH);
+//  histoProducerAlgo_->fillHitMap(*recHitHandleEE,*recHitHandleFH,*recHitHandleBH);
+
+
   // ##############################################
-  // fill caloparticles histograms 
+  // fill caloparticles histograms
   // ##############################################
   LogTrace("HGCalValidator") << "\n# of CaloParticles: " << caloParticles.size() << "\n";
   std::vector<size_t> selected_cPeff;
   cpParametersAndSelection(histograms, caloParticles, simVertices, selected_cPeff);
-  
+
   int w=0; //counter counting the number of sets of histograms
   for (unsigned int www=0;www<label.size();www++, w++){ // need to increment w here, since there will be many continues in the loop body
-    
+
     //get collections from the event
     edm::Handle<reco::CaloClusterCollection> clusterHandle;
     event.getByToken(labelToken[www],clusterHandle);
@@ -188,13 +190,17 @@ void HGCalValidator::dqmAnalyze(const edm::Event& event, const edm::EventSetup& 
     // ##############################################
     if(!dolayerclustersPlots_){continue;}
 
-    histoProducerAlgo_->fill_generic_cluster_histos(histograms.histoProducerAlgo,w,clusters,caloParticles,cummatbudg,totallayers_to_monitor_, thicknesses_to_monitor_);
+    histoProducerAlgo_->fill_generic_cluster_histos(histograms.histoProducerAlgo,
+        w, clusters, caloParticles,
+        hitMap,
+        cummatbudg, totallayers_to_monitor_,
+        thicknesses_to_monitor_);
 
     for (unsigned int layerclusterIndex = 0; layerclusterIndex < clusters.size(); layerclusterIndex++) {
 
-      //std::cout << "TESTING HERE " << clusters[layerclusterIndex].eta() << std::endl;     
+      //std::cout << "TESTING HERE " << clusters[layerclusterIndex].eta() << std::endl;
       histoProducerAlgo_->fill_cluster_histos(histograms.histoProducerAlgo,w,clusters[layerclusterIndex]);
-      
+
     }
 
     LogTrace("HGCalValidator") << "\n# of layer clusters with "
@@ -204,5 +210,23 @@ void HGCalValidator::dqmAnalyze(const edm::Event& event, const edm::EventSetup& 
 			       << ": " << clusters.size() << "\n";
 
   } // End of  for (unsigned int www=0;www<label.size();www++){
+}
+
+void HGCalValidator::fillHitMap(std::map<DetId, const HGCRecHit *> & hitMap,
+    const HGCRecHitCollection & rechitsEE,
+    const HGCRecHitCollection & rechitsFH,
+    const HGCRecHitCollection & rechitsBH) const {
+  hitMap.clear();
+  for (const auto& hit : rechitsEE) {
+    hitMap.emplace(hit.detid(), &hit);
+  }
+
+  for (const auto& hit : rechitsFH) {
+    hitMap.emplace(hit.detid(), &hit);
+  }
+
+  for (const auto& hit : rechitsBH) {
+    hitMap.emplace(hit.detid(), &hit);
+  }
 }
 

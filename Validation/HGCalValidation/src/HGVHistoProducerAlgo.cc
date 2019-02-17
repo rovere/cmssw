@@ -10,7 +10,7 @@
 using namespace std;
 
 HGVHistoProducerAlgo::HGVHistoProducerAlgo(const edm::ParameterSet& pset) {
-  hitMap_ = new std::map<DetId, const HGCRecHit *>();
+//  hitMap_ = new std::map<DetId, const HGCRecHit *>();
 
   //parameters for calo particles eta
   minEta  = pset.getParameter<double>("minEta");
@@ -209,6 +209,7 @@ void HGVHistoProducerAlgo::fill_cluster_histos(const Histograms& histograms,
 void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& histograms,
     const reco::CaloClusterCollection &clusters,
     std::vector<CaloParticle> const & cP,
+    std::map<DetId, const HGCRecHit *> const & hitMap,
     unsigned layers) const
 {
 
@@ -247,8 +248,8 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
         DetId hitid = (it_haf.first);
         int cpLayerId = recHitTools_->getLayerWithOffset(hitid) + layers * ((recHitTools_->zside(hitid) + 1) >> 1) - 1;
         // std::cout <<"on layer : "<<  cpLayerId << " calo particle " << cpId << std::endl;
-        std::map<DetId,const HGCRecHit *>::const_iterator itcheck= hitMap_->find(hitid);
-        if(itcheck != hitMap_->end())
+        std::map<DetId,const HGCRecHit *>::const_iterator itcheck= hitMap.find(hitid);
+        if(itcheck != hitMap.end())
         {
           const HGCRecHit *hit = itcheck->second;
           auto hit_find_it = detIdToCaloParticleId_Map.find(hitid);
@@ -303,7 +304,7 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
       DetId rh_detid = hits_and_fractions[hitId].first;
       auto rhFraction = hits_and_fractions[hitId].second;
 
-      std::map<DetId,const HGCRecHit *>::const_iterator itcheck= hitMap_->find(rh_detid);
+      std::map<DetId,const HGCRecHit *>::const_iterator itcheck= hitMap.find(rh_detid);
       const HGCRecHit *hit = itcheck->second;
 
 
@@ -446,7 +447,7 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
 //      if(rhFraction ==0) continue;
       auto hit_find_in_CP = detIdToCaloParticleId_Map.find(rh_detid);
       if(hit_find_in_CP == detIdToCaloParticleId_Map.end()) hitWithNoCP = true;
-      auto itcheck= hitMap_->find(rh_detid);
+      auto itcheck= hitMap.find(rh_detid);
       const HGCRecHit *hit = itcheck->second;
       float hitEnergySquared = hit->energy()*hit->energy();
 
@@ -525,7 +526,7 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
         if(cpFraction ==0.f) continue; //hopefully this should never happen
         auto hit_find_in_LC = detIdToLayerClusterId_Map.find(cp_hitDetId);
         if(hit_find_in_LC == detIdToLayerClusterId_Map.end()) hitWithNoLC = true;
-        auto itcheck= hitMap_->find(cp_hitDetId);
+        auto itcheck= hitMap.find(cp_hitDetId);
         const HGCRecHit *hit = itcheck->second;
         float hitEnergySquared = hit->energy()*hit->energy();
         float invCPEnergySquared = 1.f/(CPenergy*CPenergy);
@@ -587,6 +588,7 @@ void HGVHistoProducerAlgo::fill_generic_cluster_histos(const Histograms& histogr
 						       int count,
 						       const reco::CaloClusterCollection &clusters,
 						       std::vector<CaloParticle> const & cP,
+                                                       std::map<DetId, const HGCRecHit*> const & hitMap,
 						       std::map<double, double> cummatbudg,
 						       unsigned layers,
 						       std::vector<int> thicknesses) const {
@@ -604,7 +606,7 @@ void HGVHistoProducerAlgo::fill_generic_cluster_histos(const Histograms& histogr
   }
   //To keep track of the total num of clusters with mixed thickness hits per event
   tnlcpth.insert( std::pair<std::string, int>( "mixed", 0) );
-  layerClusters_to_CaloParticles(histograms, clusters,cP,layers);
+  layerClusters_to_CaloParticles(histograms, clusters, cP, hitMap, layers);
 
   //To find out the total amount of energy clustered per layer
   //Initialize with zeros because I see clear gives weird numbers.
@@ -627,7 +629,7 @@ void HGVHistoProducerAlgo::fill_generic_cluster_histos(const Histograms& histogr
       // std::cout << " seedid info " <<  seedid.rawId() << " " << seedid.det() << " " << HGCalDetId(seedid) << std::endl;
       const double seedx = recHitTools_->getPosition(seedid).x();
       const double seedy = recHitTools_->getPosition(seedid).y();
-      DetId maxid = findmaxhit( clusters[layerclusterIndex] );
+      DetId maxid = findmaxhit( clusters[layerclusterIndex], hitMap );
     // const DetId maxid = clusters[layerclusterIndex].max();
     double maxx = recHitTools_->getPosition(maxid).x();
     double maxy = recHitTools_->getPosition(maxid).y();
@@ -666,8 +668,8 @@ void HGVHistoProducerAlgo::fill_generic_cluster_histos(const Histograms& histogr
       if (thickness == 300.) {nthhits300++;}
       if (thickness == -1  ) {nthhitsscint++;}
 
-      std::map<DetId,const HGCRecHit *>::const_iterator itcheck= hitMap_->find(rh_detid);
-      if (itcheck == hitMap_->end()) {
+      std::map<DetId,const HGCRecHit *>::const_iterator itcheck= hitMap.find(rh_detid);
+      if (itcheck == hitMap.end()) {
 	std::cout << " You shouldn't be here - Unable to find a hit " << rh_detid.rawId() << " " << rh_detid.det() << " " << HGCalDetId(rh_detid) << std::endl;
 	continue;
       }
@@ -774,25 +776,26 @@ void HGVHistoProducerAlgo::setRecHitTools(std::shared_ptr<hgcal::RecHitTools> re
   recHitTools_ = recHitTools;
 }
 
-void HGVHistoProducerAlgo::fillHitMap(const HGCRecHitCollection & rechitsEE,
-				      const HGCRecHitCollection & rechitsFH,
-				      const HGCRecHitCollection & rechitsBH) {
-  hitMap_->clear();
-  for (const auto& hit : rechitsEE) {
-    hitMap_->emplace_hint(hitMap_->end(), hit.detid(), &hit);
-  }
+// void HGVHistoProducerAlgo::fillHitMap(const HGCRecHitCollection & rechitsEE,
+// 				      const HGCRecHitCollection & rechitsFH,
+// 				      const HGCRecHitCollection & rechitsBH) {
+//   hitMap_->clear();
+//   for (const auto& hit : rechitsEE) {
+//     hitMap_->emplace(hit.detid(), &hit);
+//   }
+//
+//   for (const auto& hit : rechitsFH) {
+//     hitMap_->emplace(hit.detid(), &hit);
+//   }
+//
+//   for (const auto& hit : rechitsBH) {
+//     hitMap_->emplace(hit.detid(), &hit);
+//   }
+//
+// }
 
-  for (const auto& hit : rechitsFH) {
-    hitMap_->emplace_hint(hitMap_->end(), hit.detid(), &hit);
-  }
-
-  for (const auto& hit : rechitsBH) {
-    hitMap_->emplace_hint(hitMap_->end(), hit.detid(), &hit);
-  }
-
-}
-
-DetId HGVHistoProducerAlgo::findmaxhit(const reco::CaloCluster & cluster) const {
+DetId HGVHistoProducerAlgo::findmaxhit(const reco::CaloCluster & cluster,
+    std::map<DetId, const HGCRecHit*> const & hitMap) const {
 
   DetId themaxid;
   const std::vector<std::pair<DetId, float> > hits_and_fractions = cluster.hitsAndFractions();
@@ -801,7 +804,7 @@ DetId HGVHistoProducerAlgo::findmaxhit(const reco::CaloCluster & cluster) const 
   for (std::vector<std::pair<DetId, float>>::const_iterator it_haf = hits_and_fractions.begin(); it_haf != hits_and_fractions.end(); ++it_haf) {
     DetId rh_detid = it_haf->first;
 
-    std::map<DetId,const HGCRecHit *>::const_iterator itcheck= hitMap_->find(rh_detid);
+    std::map<DetId,const HGCRecHit *>::const_iterator itcheck= hitMap.find(rh_detid);
     const HGCRecHit *hit = itcheck->second;
 
     if ( maxene < hit->energy() ){

@@ -71,14 +71,17 @@ class HGCalValidator : public DQMGlobalEDAnalyzer<HGCalValidatorHistograms> {
 
  private:
 
-  CaloParticleSelector cpSelector; 
+  void fillHitMap(std::map<DetId, const HGCRecHit * > &,
+      const HGCRecHitCollection &,
+      const HGCRecHitCollection &,
+      const HGCRecHitCollection &) const;
+  CaloParticleSelector cpSelector;
   std::shared_ptr<hgcal::RecHitTools> tools_;
   std::map<double, double> cummatbudg;
   std::vector<int> particles_to_monitor_;
   unsigned totallayers_to_monitor_;
   std::vector<int> thicknesses_to_monitor_;
   std::string dirName_;
-
 };
 
 
