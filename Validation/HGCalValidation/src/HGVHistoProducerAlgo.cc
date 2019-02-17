@@ -138,8 +138,14 @@ void HGVHistoProducerAlgo::bookClusterHistos(DQMStore::ConcurrentBooker& ibook, 
     histograms.h_score_caloparticle2layercl_perlayer[ilayer] = ibook.book1D("Score_caloparticle2layercl_perlayer"+istr, "Score of CaloParticle per Layer Cluster", 200, -1.01, 1.01);
     histograms.h_energy_vs_score_caloparticle2layercl_perlayer[ilayer] = ibook.book2D("Energy_vs_Score_caloparticle2layer_perlayer"+istr, "Energy vs Score of CaloParticle per Layer Cluster", 100, 0., 1.01, 100, 0., 1.01);
     histograms.h_sharedenergy_caloparticle2layercl_perlayer[ilayer] = ibook.book1D("SharedEnergy_caloparticle2layercl_perlayer"+istr, "Shared Energy of CaloParticle per Layer Cluster", 100, 0., 1.01);
+    histograms.h_sharedenergy_caloparticle2layercl_vs_eta_perlayer[ilayer] = ibook.bookProfile("SharedEnergy_caloparticle2layercl_vs_eta_perlayer"+istr, "Shared Energy of CaloParticle vs #eta per Layer Cluster", 100, -4., 4., 0., 1.);
+    histograms.h_sharedenergy_caloparticle2layercl_vs_phi_perlayer[ilayer] = ibook.bookProfile("SharedEnergy_caloparticle2layercl_vs_phi_perlayer"+istr, "Shared Energy of CaloParticle vs #phi per Layer Cluster", 100, -4., 4., 0., 1.);
     histograms.h_num_caloparticle_eta_perlayer[ilayer] = ibook.book1D("Num_CaloParticle_Eta_perlayer"+istr, "Num CaloParticle Eta per Layer Cluster", 100, -4., 4.);
+    histograms.h_numDup_caloparticle_eta_perlayer[ilayer] = ibook.book1D("NumDup_CaloParticle_Eta_perlayer"+istr, "Num Duplicate CaloParticle Eta per Layer Cluster", 100, -4., 4.);
     histograms.h_denom_caloparticle_eta_perlayer[ilayer] = ibook.book1D("Denom_CaloParticle_Eta_perlayer"+istr, "Denom CaloParticle Eta per Layer Cluster", 100, -4., 4.);
+    histograms.h_num_caloparticle_phi_perlayer[ilayer] = ibook.book1D("Num_CaloParticle_Phi_perlayer"+istr, "Num CaloParticle Phi per Layer Cluster", 100, -4., 4.);
+    histograms.h_numDup_caloparticle_phi_perlayer[ilayer] = ibook.book1D("NumDup_CaloParticle_Phi_perlayer"+istr, "Num Duplicate CaloParticle Phi per Layer Cluster", 100, -4., 4.);
+    histograms.h_denom_caloparticle_phi_perlayer[ilayer] = ibook.book1D("Denom_CaloParticle_Phi_perlayer"+istr, "Denom CaloParticle Phi per Layer Cluster", 100, -4., 4.);
     histograms.h_cellAssociation_perlayer[ilayer] = ibook.book1D("cellAssociation_perlayer"+istr, "Cell Association per Layer", 5, -4., 1.);
     histograms.h_cellAssociation_perlayer[ilayer].setBinLabel(2, "TN(purity)");
     histograms.h_cellAssociation_perlayer[ilayer].setBinLabel(3, "FN(ineff.)");
@@ -573,13 +579,26 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
         histograms.h_sharedenergy_caloparticle2layercl_perlayer.at(layerId%52+1).fill(lcPair.second.first/CPenergy);
         histograms.h_energy_vs_score_caloparticle2layercl_perlayer.at(layerId%52+1).fill(lcPair.second.second  > 1. ? 1. : lcPair.second.second, lcPair.second.first/CPenergy);
       }
-      if (std::count_if(
+      auto assoc = std::count_if(
             std::begin(cPOnLayer[cpId][layerId].layerClusterIdToEnergyAndScore),
             std::end(cPOnLayer[cpId][layerId].layerClusterIdToEnergyAndScore),
-            [](auto const &obj){return obj.second.second < 0.2;})) {
+            [](const auto &obj){return obj.second.second < 0.2;});
+      if (assoc) {
         histograms.h_num_caloparticle_eta_perlayer.at(layerId%52+1).fill(cP[cpId].g4Tracks()[0].momentum().eta());
+        histograms.h_num_caloparticle_phi_perlayer.at(layerId%52+1).fill(cP[cpId].g4Tracks()[0].momentum().phi());
+        if (assoc > 1) {
+          histograms.h_numDup_caloparticle_eta_perlayer.at(layerId%52+1).fill(cP[cpId].g4Tracks()[0].momentum().eta());
+          histograms.h_numDup_caloparticle_phi_perlayer.at(layerId%52+1).fill(cP[cpId].g4Tracks()[0].momentum().phi());
+        }
+        auto best = std::min_element(
+            std::begin(cPOnLayer[cpId][layerId].layerClusterIdToEnergyAndScore),
+            std::end(cPOnLayer[cpId][layerId].layerClusterIdToEnergyAndScore),
+              [](const auto &obj1, const auto &obj2){return obj1.second.second < obj2.second.second;});
+        histograms.h_sharedenergy_caloparticle2layercl_vs_eta_perlayer.at(layerId%52+1).fill(cP[cpId].g4Tracks()[0].momentum().eta(), best->second.first/CPenergy);
+        histograms.h_sharedenergy_caloparticle2layercl_vs_phi_perlayer.at(layerId%52+1).fill(cP[cpId].g4Tracks()[0].momentum().phi(), best->second.first/CPenergy);
       }
       histograms.h_denom_caloparticle_eta_perlayer.at(layerId%52+1).fill(cP[cpId].g4Tracks()[0].momentum().eta());
+      histograms.h_denom_caloparticle_phi_perlayer.at(layerId%52+1).fill(cP[cpId].g4Tracks()[0].momentum().phi());
     }
   }
 }

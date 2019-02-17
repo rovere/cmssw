@@ -1,7 +1,10 @@
 import FWCore.ParameterSet.Config as cms
 from DQMServices.Core.DQMEDHarvester import DQMEDHarvester
 
-eff_layers = ["effic_layer%d 'LayerCluster Efficiency vs #eta Layer%d' Num_CaloParticle_Eta_perlayer%d Denom_CaloParticle_Eta_perlayer%d" % (i, i, i, i)  for i in range(1,53) ]
+eff_layers = ["effic_eta_layer%d 'LayerCluster Efficiency vs #eta Layer%d' Num_CaloParticle_Eta_perlayer%d Denom_CaloParticle_Eta_perlayer%d" % (i, i, i, i)  for i in range(1,53) ]
+eff_layers.extend(["effic_phi_layer%d 'LayerCluster Efficiency vs #phi Layer%d' Num_CaloParticle_Phi_perlayer%d Denom_CaloParticle_Phi_perlayer%d" % (i, i, i, i)  for i in range(1,53) ])
+eff_layers.extend(["duplicate_eta_layer%d 'LayerCluster Duplicate(Split) Rate vs #eta Layer%d' NumDup_CaloParticle_Eta_perlayer%d Denom_CaloParticle_Eta_perlayer%d" % (i, i, i, i)  for i in range(1,53) ])
+eff_layers.extend(["duplicate_phi_layer%d 'LayerCluster Duplicate(Split) vs #phi Layer%d' NumDup_CaloParticle_Phi_perlayer%d Denom_CaloParticle_Phi_perlayer%d" % (i, i, i, i)  for i in range(1,53) ])
 
 postProcessorHGCAL = DQMEDHarvester('DQMGenericClient',
     subDirs = cms.untracked.vstring('HGCAL/HGCalValidator/hgcalLayerClusters/'),
