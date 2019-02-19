@@ -13,12 +13,15 @@ import Validation.RecoTrack.plotting.plotting as plotting
 import Validation.RecoTrack.plotting.validation as validation
 import Validation.RecoTrack.plotting.html as html
 
-#Could i get this from somewhere? 
+#Could i get this from somewhere?
 lastLayerEE = 28  # last layer of EE
 lastLayerFH = 40  # last layer of FH
 maxlayer = 52 # last layer of BH
 
 _common = {"stat": True, "drawStyle": "hist"}
+_legend_common = {"legendDx": -0.3,
+                  "legendDy": -0.05,
+                  "legendDw": 0.1}
 
 _SelectedCaloParticles = PlotGroup("SelectedCaloParticles", [
         Plot("num_caloparticle_eta", xtitle="", **_common),
@@ -51,38 +54,38 @@ _totclusternum_thick = PlotGroup("totclusternum_thick", [
     Plot("totclusternum_thick_-1", xtitle="", **_common),
     ])
 
-_totclusternum_layer_EE = PlotGroup("totclusternum_layer_EE", [ 
-        Plot("totclusternum_layer_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+_totclusternum_layer_EE = PlotGroup("totclusternum_layer_EE", [
+        Plot("totclusternum_layer_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_totclusternum_layer_FH = PlotGroup("totclusternum_layer_FH", [ 
-        Plot("totclusternum_layer_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_totclusternum_layer_FH = PlotGroup("totclusternum_layer_FH", [
+        Plot("totclusternum_layer_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_totclusternum_layer_BH = PlotGroup("totclusternum_layer_BH", [ 
-        Plot("totclusternum_layer_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_totclusternum_layer_BH = PlotGroup("totclusternum_layer_BH", [
+        Plot("totclusternum_layer_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
-_energyclustered_perlayer_EE = PlotGroup("energyclustered_perlayer_EE", [ 
-        Plot("energyclustered_perlayer%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+_energyclustered_perlayer_EE = PlotGroup("energyclustered_perlayer_EE", [
+        Plot("energyclustered_perlayer%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_energyclustered_perlayer_FH = PlotGroup("energyclustered_perlayer_FH", [ 
-        Plot("energyclustered_perlayer%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_energyclustered_perlayer_FH = PlotGroup("energyclustered_perlayer_FH", [
+        Plot("energyclustered_perlayer%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_energyclustered_perlayer_BH = PlotGroup("energyclustered_perlayer_BH", [ 
-        Plot("energyclustered_perlayer%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_energyclustered_perlayer_BH = PlotGroup("energyclustered_perlayer_BH", [
+        Plot("energyclustered_perlayer%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
@@ -94,418 +97,489 @@ _cellsenedens_thick =  PlotGroup("cellsenedens_thick", [
     ])
 
 #----------------------------------------------------------------------------------------------------------------
-#120 um 
-_cellsnum_perthick_perlayer_120_EE = PlotGroup("cellsnum_perthick_perlayer_120_EE", [ 
-        Plot("cellsnum_perthick_perlayer_120_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+#120 um
+_cellsnum_perthick_perlayer_120_EE = PlotGroup("cellsnum_perthick_perlayer_120_EE", [
+        Plot("cellsnum_perthick_perlayer_120_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_cellsnum_perthick_perlayer_120_FH = PlotGroup("cellsnum_perthick_perlayer_120_FH", [ 
-        Plot("cellsnum_perthick_perlayer_120_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_cellsnum_perthick_perlayer_120_FH = PlotGroup("cellsnum_perthick_perlayer_120_FH", [
+        Plot("cellsnum_perthick_perlayer_120_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_cellsnum_perthick_perlayer_120_BH = PlotGroup("cellsnum_perthick_perlayer_120_BH", [ 
-        Plot("cellsnum_perthick_perlayer_120_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_cellsnum_perthick_perlayer_120_BH = PlotGroup("cellsnum_perthick_perlayer_120_BH", [
+        Plot("cellsnum_perthick_perlayer_120_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
-#200 um 
-_cellsnum_perthick_perlayer_200_EE = PlotGroup("cellsnum_perthick_perlayer_200_EE", [ 
-        Plot("cellsnum_perthick_perlayer_200_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+#200 um
+_cellsnum_perthick_perlayer_200_EE = PlotGroup("cellsnum_perthick_perlayer_200_EE", [
+        Plot("cellsnum_perthick_perlayer_200_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_cellsnum_perthick_perlayer_200_FH = PlotGroup("cellsnum_perthick_perlayer_200_FH", [ 
-        Plot("cellsnum_perthick_perlayer_200_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_cellsnum_perthick_perlayer_200_FH = PlotGroup("cellsnum_perthick_perlayer_200_FH", [
+        Plot("cellsnum_perthick_perlayer_200_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_cellsnum_perthick_perlayer_200_BH = PlotGroup("cellsnum_perthick_perlayer_200_BH", [ 
-        Plot("cellsnum_perthick_perlayer_200_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_cellsnum_perthick_perlayer_200_BH = PlotGroup("cellsnum_perthick_perlayer_200_BH", [
+        Plot("cellsnum_perthick_perlayer_200_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
-#300 um 
-_cellsnum_perthick_perlayer_300_EE = PlotGroup("cellsnum_perthick_perlayer_300_EE", [ 
-        Plot("cellsnum_perthick_perlayer_300_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+#300 um
+_cellsnum_perthick_perlayer_300_EE = PlotGroup("cellsnum_perthick_perlayer_300_EE", [
+        Plot("cellsnum_perthick_perlayer_300_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_cellsnum_perthick_perlayer_300_FH = PlotGroup("cellsnum_perthick_perlayer_300_FH", [ 
-        Plot("cellsnum_perthick_perlayer_300_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_cellsnum_perthick_perlayer_300_FH = PlotGroup("cellsnum_perthick_perlayer_300_FH", [
+        Plot("cellsnum_perthick_perlayer_300_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_cellsnum_perthick_perlayer_300_BH = PlotGroup("cellsnum_perthick_perlayer_300_BH", [ 
-        Plot("cellsnum_perthick_perlayer_300_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_cellsnum_perthick_perlayer_300_BH = PlotGroup("cellsnum_perthick_perlayer_300_BH", [
+        Plot("cellsnum_perthick_perlayer_300_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
-#scint um 
-_cellsnum_perthick_perlayer_scint_EE = PlotGroup("cellsnum_perthick_perlayer_-1_EE", [ 
-        Plot("cellsnum_perthick_perlayer_-1_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+#scint um
+_cellsnum_perthick_perlayer_scint_EE = PlotGroup("cellsnum_perthick_perlayer_-1_EE", [
+        Plot("cellsnum_perthick_perlayer_-1_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_cellsnum_perthick_perlayer_scint_FH = PlotGroup("cellsnum_perthick_perlayer_-1_FH", [ 
-        Plot("cellsnum_perthick_perlayer_-1_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_cellsnum_perthick_perlayer_scint_FH = PlotGroup("cellsnum_perthick_perlayer_-1_FH", [
+        Plot("cellsnum_perthick_perlayer_-1_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_cellsnum_perthick_perlayer_scint_BH = PlotGroup("cellsnum_perthick_perlayer_-1_BH", [ 
-        Plot("cellsnum_perthick_perlayer_-1_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_cellsnum_perthick_perlayer_scint_BH = PlotGroup("cellsnum_perthick_perlayer_-1_BH", [
+        Plot("cellsnum_perthick_perlayer_-1_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
 #----------------------------------------------------------------------------------------------------------------
-#120 um 
-_distancetomaxcell_perthickperlayer_120_EE = PlotGroup("distancetomaxcell_perthickperlayer_120_EE", [ 
-        Plot("distancetomaxcell_perthickperlayer_120_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+#120 um
+_common_distance = {}
+_common_distance.update(_common)
+_common_distance.update(_legend_common)
+_common_distance["xmax"] = 150
+_common_distance["stat"] = False
+_common_distance["ymin"] = 1e-3
+_common_distance["ymax"] = 10000
+_common_distance["ylog"] = True
+
+
+_distancetomaxcell_perthickperlayer_120_EE = PlotGroup("distancetomaxcell_perthickperlayer_120_EE", [
+        Plot("distancetomaxcell_perthickperlayer_120_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_distancetomaxcell_perthickperlayer_120_FH = PlotGroup("distancetomaxcell_perthickperlayer_120_FH", [ 
-        Plot("distancetomaxcell_perthickperlayer_120_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_distancetomaxcell_perthickperlayer_120_FH = PlotGroup("distancetomaxcell_perthickperlayer_120_FH", [
+        Plot("distancetomaxcell_perthickperlayer_120_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_distancetomaxcell_perthickperlayer_120_BH = PlotGroup("distancetomaxcell_perthickperlayer_120_BH", [ 
-        Plot("distancetomaxcell_perthickperlayer_120_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_distancetomaxcell_perthickperlayer_120_BH = PlotGroup("distancetomaxcell_perthickperlayer_120_BH", [
+        Plot("distancetomaxcell_perthickperlayer_120_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
-#200 um 
-_distancetomaxcell_perthickperlayer_200_EE = PlotGroup("distancetomaxcell_perthickperlayer_200_EE", [ 
-        Plot("distancetomaxcell_perthickperlayer_200_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+#200 um
+_distancetomaxcell_perthickperlayer_200_EE = PlotGroup("distancetomaxcell_perthickperlayer_200_EE", [
+        Plot("distancetomaxcell_perthickperlayer_200_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_distancetomaxcell_perthickperlayer_200_FH = PlotGroup("distancetomaxcell_perthickperlayer_200_FH", [ 
-        Plot("distancetomaxcell_perthickperlayer_200_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_distancetomaxcell_perthickperlayer_200_FH = PlotGroup("distancetomaxcell_perthickperlayer_200_FH", [
+        Plot("distancetomaxcell_perthickperlayer_200_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_distancetomaxcell_perthickperlayer_200_BH = PlotGroup("distancetomaxcell_perthickperlayer_200_BH", [ 
-        Plot("distancetomaxcell_perthickperlayer_200_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_distancetomaxcell_perthickperlayer_200_BH = PlotGroup("distancetomaxcell_perthickperlayer_200_BH", [
+        Plot("distancetomaxcell_perthickperlayer_200_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
-#300 um 
-_distancetomaxcell_perthickperlayer_300_EE = PlotGroup("distancetomaxcell_perthickperlayer_300_EE", [ 
-        Plot("distancetomaxcell_perthickperlayer_300_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+#300 um
+_distancetomaxcell_perthickperlayer_300_EE = PlotGroup("distancetomaxcell_perthickperlayer_300_EE", [
+        Plot("distancetomaxcell_perthickperlayer_300_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_distancetomaxcell_perthickperlayer_300_FH = PlotGroup("distancetomaxcell_perthickperlayer_300_FH", [ 
-        Plot("distancetomaxcell_perthickperlayer_300_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_distancetomaxcell_perthickperlayer_300_FH = PlotGroup("distancetomaxcell_perthickperlayer_300_FH", [
+        Plot("distancetomaxcell_perthickperlayer_300_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_distancetomaxcell_perthickperlayer_300_BH = PlotGroup("distancetomaxcell_perthickperlayer_300_BH", [ 
-        Plot("distancetomaxcell_perthickperlayer_300_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_distancetomaxcell_perthickperlayer_300_BH = PlotGroup("distancetomaxcell_perthickperlayer_300_BH", [
+        Plot("distancetomaxcell_perthickperlayer_300_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
-#scint um 
-_distancetomaxcell_perthickperlayer_scint_EE = PlotGroup("distancetomaxcell_perthickperlayer_-1_EE", [ 
-        Plot("distancetomaxcell_perthickperlayer_-1_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+#scint um
+_distancetomaxcell_perthickperlayer_scint_EE = PlotGroup("distancetomaxcell_perthickperlayer_-1_EE", [
+        Plot("distancetomaxcell_perthickperlayer_-1_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_distancetomaxcell_perthickperlayer_scint_FH = PlotGroup("distancetomaxcell_perthickperlayer_-1_FH", [ 
-        Plot("distancetomaxcell_perthickperlayer_-1_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_distancetomaxcell_perthickperlayer_scint_FH = PlotGroup("distancetomaxcell_perthickperlayer_-1_FH", [
+        Plot("distancetomaxcell_perthickperlayer_-1_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_distancetomaxcell_perthickperlayer_scint_BH = PlotGroup("distancetomaxcell_perthickperlayer_-1_BH", [ 
-        Plot("distancetomaxcell_perthickperlayer_-1_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_distancetomaxcell_perthickperlayer_scint_BH = PlotGroup("distancetomaxcell_perthickperlayer_-1_BH", [
+        Plot("distancetomaxcell_perthickperlayer_-1_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
 
 #----------------------------------------------------------------------------------------------------------------
-#120 um 
-_distancetoseedcell_perthickperlayer_120_EE = PlotGroup("distancetoseedcell_perthickperlayer_120_EE", [ 
-        Plot("distancetoseedcell_perthickperlayer_120_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+#120 um
+_distancetoseedcell_perthickperlayer_120_EE = PlotGroup("distancetoseedcell_perthickperlayer_120_EE", [
+        Plot("distancetoseedcell_perthickperlayer_120_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_distancetoseedcell_perthickperlayer_120_FH = PlotGroup("distancetoseedcell_perthickperlayer_120_FH", [ 
-        Plot("distancetoseedcell_perthickperlayer_120_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_distancetoseedcell_perthickperlayer_120_FH = PlotGroup("distancetoseedcell_perthickperlayer_120_FH", [
+        Plot("distancetoseedcell_perthickperlayer_120_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_distancetoseedcell_perthickperlayer_120_BH = PlotGroup("distancetoseedcell_perthickperlayer_120_BH", [ 
-        Plot("distancetoseedcell_perthickperlayer_120_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_distancetoseedcell_perthickperlayer_120_BH = PlotGroup("distancetoseedcell_perthickperlayer_120_BH", [
+        Plot("distancetoseedcell_perthickperlayer_120_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
-#200 um 
-_distancetoseedcell_perthickperlayer_200_EE = PlotGroup("distancetoseedcell_perthickperlayer_200_EE", [ 
-        Plot("distancetoseedcell_perthickperlayer_200_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+#200 um
+_distancetoseedcell_perthickperlayer_200_EE = PlotGroup("distancetoseedcell_perthickperlayer_200_EE", [
+        Plot("distancetoseedcell_perthickperlayer_200_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_distancetoseedcell_perthickperlayer_200_FH = PlotGroup("distancetoseedcell_perthickperlayer_200_FH", [ 
-        Plot("distancetoseedcell_perthickperlayer_200_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_distancetoseedcell_perthickperlayer_200_FH = PlotGroup("distancetoseedcell_perthickperlayer_200_FH", [
+        Plot("distancetoseedcell_perthickperlayer_200_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_distancetoseedcell_perthickperlayer_200_BH = PlotGroup("distancetoseedcell_perthickperlayer_200_BH", [ 
-        Plot("distancetoseedcell_perthickperlayer_200_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_distancetoseedcell_perthickperlayer_200_BH = PlotGroup("distancetoseedcell_perthickperlayer_200_BH", [
+        Plot("distancetoseedcell_perthickperlayer_200_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
-#300 um 
-_distancetoseedcell_perthickperlayer_300_EE = PlotGroup("distancetoseedcell_perthickperlayer_300_EE", [ 
-        Plot("distancetoseedcell_perthickperlayer_300_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+#300 um
+_distancetoseedcell_perthickperlayer_300_EE = PlotGroup("distancetoseedcell_perthickperlayer_300_EE", [
+        Plot("distancetoseedcell_perthickperlayer_300_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_distancetoseedcell_perthickperlayer_300_FH = PlotGroup("distancetoseedcell_perthickperlayer_300_FH", [ 
-        Plot("distancetoseedcell_perthickperlayer_300_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_distancetoseedcell_perthickperlayer_300_FH = PlotGroup("distancetoseedcell_perthickperlayer_300_FH", [
+        Plot("distancetoseedcell_perthickperlayer_300_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_distancetoseedcell_perthickperlayer_300_BH = PlotGroup("distancetoseedcell_perthickperlayer_300_BH", [ 
-        Plot("distancetoseedcell_perthickperlayer_300_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_distancetoseedcell_perthickperlayer_300_BH = PlotGroup("distancetoseedcell_perthickperlayer_300_BH", [
+        Plot("distancetoseedcell_perthickperlayer_300_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
-#scint um 
-_distancetoseedcell_perthickperlayer_scint_EE = PlotGroup("distancetoseedcell_perthickperlayer_-1_EE", [ 
-        Plot("distancetoseedcell_perthickperlayer_-1_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+#scint um
+_distancetoseedcell_perthickperlayer_scint_EE = PlotGroup("distancetoseedcell_perthickperlayer_-1_EE", [
+        Plot("distancetoseedcell_perthickperlayer_-1_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_distancetoseedcell_perthickperlayer_scint_FH = PlotGroup("distancetoseedcell_perthickperlayer_-1_FH", [ 
-        Plot("distancetoseedcell_perthickperlayer_-1_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_distancetoseedcell_perthickperlayer_scint_FH = PlotGroup("distancetoseedcell_perthickperlayer_-1_FH", [
+        Plot("distancetoseedcell_perthickperlayer_-1_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_distancetoseedcell_perthickperlayer_scint_BH = PlotGroup("distancetoseedcell_perthickperlayer_-1_BH", [ 
-        Plot("distancetoseedcell_perthickperlayer_-1_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_distancetoseedcell_perthickperlayer_scint_BH = PlotGroup("distancetoseedcell_perthickperlayer_-1_BH", [
+        Plot("distancetoseedcell_perthickperlayer_-1_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
 #=====================================================================================================================
 #----------------------------------------------------------------------------------------------------------------
-#120 um 
-_distancetomaxcell_perthickperlayer_eneweighted_120_EE = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_120_EE", [ 
-        Plot("distancetomaxcell_perthickperlayer_eneweighted_120_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+#120 um
+_distancetomaxcell_perthickperlayer_eneweighted_120_EE = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_120_EE", [
+        Plot("distancetomaxcell_perthickperlayer_eneweighted_120_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_distancetomaxcell_perthickperlayer_eneweighted_120_FH = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_120_FH", [ 
-        Plot("distancetomaxcell_perthickperlayer_eneweighted_120_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_distancetomaxcell_perthickperlayer_eneweighted_120_FH = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_120_FH", [
+        Plot("distancetomaxcell_perthickperlayer_eneweighted_120_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_distancetomaxcell_perthickperlayer_eneweighted_120_BH = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_120_BH", [ 
-        Plot("distancetomaxcell_perthickperlayer_eneweighted_120_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_distancetomaxcell_perthickperlayer_eneweighted_120_BH = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_120_BH", [
+        Plot("distancetomaxcell_perthickperlayer_eneweighted_120_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
-#200 um 
-_distancetomaxcell_perthickperlayer_eneweighted_200_EE = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_200_EE", [ 
-        Plot("distancetomaxcell_perthickperlayer_eneweighted_200_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+#200 um
+_distancetomaxcell_perthickperlayer_eneweighted_200_EE = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_200_EE", [
+        Plot("distancetomaxcell_perthickperlayer_eneweighted_200_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_distancetomaxcell_perthickperlayer_eneweighted_200_FH = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_200_FH", [ 
-        Plot("distancetomaxcell_perthickperlayer_eneweighted_200_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_distancetomaxcell_perthickperlayer_eneweighted_200_FH = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_200_FH", [
+        Plot("distancetomaxcell_perthickperlayer_eneweighted_200_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_distancetomaxcell_perthickperlayer_eneweighted_200_BH = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_200_BH", [ 
-        Plot("distancetomaxcell_perthickperlayer_eneweighted_200_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_distancetomaxcell_perthickperlayer_eneweighted_200_BH = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_200_BH", [
+        Plot("distancetomaxcell_perthickperlayer_eneweighted_200_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
-#300 um 
-_distancetomaxcell_perthickperlayer_eneweighted_300_EE = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_300_EE", [ 
-        Plot("distancetomaxcell_perthickperlayer_eneweighted_300_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+#300 um
+_distancetomaxcell_perthickperlayer_eneweighted_300_EE = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_300_EE", [
+        Plot("distancetomaxcell_perthickperlayer_eneweighted_300_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_distancetomaxcell_perthickperlayer_eneweighted_300_FH = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_300_FH", [ 
-        Plot("distancetomaxcell_perthickperlayer_eneweighted_300_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_distancetomaxcell_perthickperlayer_eneweighted_300_FH = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_300_FH", [
+        Plot("distancetomaxcell_perthickperlayer_eneweighted_300_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_distancetomaxcell_perthickperlayer_eneweighted_300_BH = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_300_BH", [ 
-        Plot("distancetomaxcell_perthickperlayer_eneweighted_300_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_distancetomaxcell_perthickperlayer_eneweighted_300_BH = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_300_BH", [
+        Plot("distancetomaxcell_perthickperlayer_eneweighted_300_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
-#scint um 
-_distancetomaxcell_perthickperlayer_eneweighted_scint_EE = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_-1_EE", [ 
-        Plot("distancetomaxcell_perthickperlayer_eneweighted_-1_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+#scint um
+_distancetomaxcell_perthickperlayer_eneweighted_scint_EE = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_-1_EE", [
+        Plot("distancetomaxcell_perthickperlayer_eneweighted_-1_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_distancetomaxcell_perthickperlayer_eneweighted_scint_FH = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_-1_FH", [ 
-        Plot("distancetomaxcell_perthickperlayer_eneweighted_-1_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_distancetomaxcell_perthickperlayer_eneweighted_scint_FH = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_-1_FH", [
+        Plot("distancetomaxcell_perthickperlayer_eneweighted_-1_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_distancetomaxcell_perthickperlayer_eneweighted_scint_BH = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_-1_BH", [ 
-        Plot("distancetomaxcell_perthickperlayer_eneweighted_-1_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_distancetomaxcell_perthickperlayer_eneweighted_scint_BH = PlotGroup("distancetomaxcell_perthickperlayer_eneweighted_-1_BH", [
+        Plot("distancetomaxcell_perthickperlayer_eneweighted_-1_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
 
 #----------------------------------------------------------------------------------------------------------------
-#120 um 
-_distancetoseedcell_perthickperlayer_eneweighted_120_EE = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_120_EE", [ 
-        Plot("distancetoseedcell_perthickperlayer_eneweighted_120_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+#120 um
+_distancetoseedcell_perthickperlayer_eneweighted_120_EE = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_120_EE", [
+        Plot("distancetoseedcell_perthickperlayer_eneweighted_120_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_distancetoseedcell_perthickperlayer_eneweighted_120_FH = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_120_FH", [ 
-        Plot("distancetoseedcell_perthickperlayer_eneweighted_120_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_distancetoseedcell_perthickperlayer_eneweighted_120_FH = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_120_FH", [
+        Plot("distancetoseedcell_perthickperlayer_eneweighted_120_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_distancetoseedcell_perthickperlayer_eneweighted_120_BH = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_120_BH", [ 
-        Plot("distancetoseedcell_perthickperlayer_eneweighted_120_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_distancetoseedcell_perthickperlayer_eneweighted_120_BH = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_120_BH", [
+        Plot("distancetoseedcell_perthickperlayer_eneweighted_120_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
-#200 um 
-_distancetoseedcell_perthickperlayer_eneweighted_200_EE = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_200_EE", [ 
-        Plot("distancetoseedcell_perthickperlayer_eneweighted_200_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+#200 um
+_distancetoseedcell_perthickperlayer_eneweighted_200_EE = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_200_EE", [
+        Plot("distancetoseedcell_perthickperlayer_eneweighted_200_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_distancetoseedcell_perthickperlayer_eneweighted_200_FH = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_200_FH", [ 
-        Plot("distancetoseedcell_perthickperlayer_eneweighted_200_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_distancetoseedcell_perthickperlayer_eneweighted_200_FH = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_200_FH", [
+        Plot("distancetoseedcell_perthickperlayer_eneweighted_200_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_distancetoseedcell_perthickperlayer_eneweighted_200_BH = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_200_BH", [ 
-        Plot("distancetoseedcell_perthickperlayer_eneweighted_200_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_distancetoseedcell_perthickperlayer_eneweighted_200_BH = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_200_BH", [
+        Plot("distancetoseedcell_perthickperlayer_eneweighted_200_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
-#300 um 
-_distancetoseedcell_perthickperlayer_eneweighted_300_EE = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_300_EE", [ 
-        Plot("distancetoseedcell_perthickperlayer_eneweighted_300_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+#300 um
+_distancetoseedcell_perthickperlayer_eneweighted_300_EE = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_300_EE", [
+        Plot("distancetoseedcell_perthickperlayer_eneweighted_300_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_distancetoseedcell_perthickperlayer_eneweighted_300_FH = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_300_FH", [ 
-        Plot("distancetoseedcell_perthickperlayer_eneweighted_300_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_distancetoseedcell_perthickperlayer_eneweighted_300_FH = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_300_FH", [
+        Plot("distancetoseedcell_perthickperlayer_eneweighted_300_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_distancetoseedcell_perthickperlayer_eneweighted_300_BH = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_300_BH", [ 
-        Plot("distancetoseedcell_perthickperlayer_eneweighted_300_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_distancetoseedcell_perthickperlayer_eneweighted_300_BH = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_300_BH", [
+        Plot("distancetoseedcell_perthickperlayer_eneweighted_300_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
-#scint um 
-_distancetoseedcell_perthickperlayer_eneweighted_scint_EE = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_-1_EE", [ 
-        Plot("distancetoseedcell_perthickperlayer_eneweighted_-1_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE) 
+#scint um
+_distancetoseedcell_perthickperlayer_eneweighted_scint_EE = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_-1_EE", [
+        Plot("distancetoseedcell_perthickperlayer_eneweighted_-1_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
-_distancetoseedcell_perthickperlayer_eneweighted_scint_FH = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_-1_FH", [ 
-        Plot("distancetoseedcell_perthickperlayer_eneweighted_-1_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH) 
+_distancetoseedcell_perthickperlayer_eneweighted_scint_FH = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_-1_FH", [
+        Plot("distancetoseedcell_perthickperlayer_eneweighted_-1_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
-_distancetoseedcell_perthickperlayer_eneweighted_scint_BH = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_-1_BH", [ 
-        Plot("distancetoseedcell_perthickperlayer_eneweighted_-1_%s"%(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer) 
+_distancetoseedcell_perthickperlayer_eneweighted_scint_BH = PlotGroup("distancetoseedcell_perthickperlayer_eneweighted_-1_BH", [
+        Plot("distancetoseedcell_perthickperlayer_eneweighted_-1_%s"%(i+1), xtitle="", **_common_distance) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
 
+_common_score = {"title": "Score CaloParticle to LayerClusters",
+                 "stat": False,
+                 "xmin": 0.,
+                 "drawStyle": "hist",
+                 "lineWidth": 1
+                }
+_common_score.update(_legend_common)
+_score_caloparticle_to_layerclusters = PlotGroup("score_caloparticle_to_layercluster", [
+        Plot("Score_caloparticle2layercl_perlayer%d"%(i+1), xtitle="Layer %d"%(i+1), **_common_score) for i in range(0,maxlayer)
+        ],
+                                    ncols=8
+                                    )
 
-#_energyclustered = 
+_common_score = {"title": "Score LayerCluster to CaloParticles",
+                 "stat": False,
+                 "xmin": 0.,
+                 "drawStyle": "hist",
+                 "lineWidth": 1
+                }
+_common_score.update(_legend_common)
+_score_layercluster_to_caloparticles = PlotGroup("score_layercluster_to_caloparticle", [
+        Plot("Score_layercl2caloparticle_perlayer%d"%(i+1), xtitle="Layer %d"%(i+1), **_common_score) for i in range(0,maxlayer)
+        ],
+                                    ncols=8
+                                    )
+
+_common_shared= {"title": "Shared Energy CaloParticle To Layer Cluster",
+                 "stat": False,
+                 "legend": False,
+                }
+_common_shared.update(_legend_common)
+_shared_plots = [Plot("SharedEnergy_caloparticle2layercl_perlayer%d"%(i+1), xtitle="", **_common_shared) for i in range(0,maxlayer)]
+_shared_plots.extend([Plot("SharedEnergy_caloparticle2layercl_vs_eta_perlayer%d"%(i+1), xtitle="Layer %d"%(i+1), **_common_shared) for i in range(0,maxlayer)])
+_shared_plots.extend([Plot("SharedEnergy_caloparticle2layercl_vs_phi_perlayer%d"%(i+1), xtitle="Layer %d"%(i+1), **_common_shared) for i in range(0,maxlayer)])
+_sharedEnergy_caloparticle_to_layercluster = PlotGroup("sharedEnergy_caloparticle_to_layercluster", _shared_plots, ncols=8)
+
+_common_assoc = {#"title": "Cell Association Table",
+                 "stat": False,
+                 "legend": False,
+                 "xbinlabels": ["", "TN(pur)", "FN(ineff.)", "FP(fake)", "TP(eff)"],
+                 "drawStyle": "hist"
+                }
+_common_assoc.update(_legend_common)
+_cell_association_table = PlotGroup("cellAssociation_table", [
+        Plot("cellAssociation_perlayer%d"%(i+1), xtitle="Layer %d"%(i+1), **_common_assoc) for i in range(0,maxlayer)
+        ],
+                                    ncols=8
+                                    )
+
+_common_eff = {"stat": False, "legend": False}
+_effplots = [Plot("effic_eta_layer%d"%(i+1), xtitle="", **_common_eff) for i in range(0,maxlayer)]
+_effplots.extend([Plot("effic_phi_layer%d"%(i+1), xtitle="", **_common_eff) for i in range(0,maxlayer)])
+_effplots.extend([Plot("globalEfficiencies", xtitle="Global Efficiencies", **_common_eff)])
+_efficiencies = PlotGroup("Efficiencies", _effplots, ncols=8)
+
+
+_common_dup = {"stat": False, "legend": False}
+_dupplots = [Plot("duplicate_eta_layer%d"%(i+1), xtitle="", **_common_dup) for i in range(0,maxlayer)]
+_dupplots.extend([Plot("duplicate_phi_layer%d"%(i+1), xtitle="", **_common_dup) for i in range(0,maxlayer)])
+_duplicates = PlotGroup("Duplicates", _dupplots, ncols=8)
+
+
+#_energyclustered =
 
 
 hgcalLayerClustersPlotter = Plotter()
 #We follow Chris categories in folders
-# [A] calculated "energy density" for cells in a) 120um, b) 200um, c) 300um, d) scint 
+# [A] calculated "energy density" for cells in a) 120um, b) 200um, c) 300um, d) scint
 # (one entry per rechit, in the appropriate histo)
 hgcalLayerClustersPlotter.append("CellsEnergyDensityPerThickness", [
         "DQMData/Run 1/HGCAL/Run summary/HGCalValidator/hgcalLayerClusters",
         ], PlotFolder(
-        _cellsenedens_thick, 
+        _cellsenedens_thick,
         loopSubFolders=False,
-        purpose=PlotPurpose.Timing, page="CellsEnergyDensityPerThickness"   
+        purpose=PlotPurpose.Timing, page="CellsEnergyDensityPerThickness"
         ))
 
-# [B] number of layer clusters per event in a) 120um, b) 200um, c) 300um, d) scint 
+# [B] number of layer clusters per event in a) 120um, b) 200um, c) 300um, d) scint
 # (one entry per event in each of the four histos)
 hgcalLayerClustersPlotter.append("TotalNumberofLayerClustersPerThickness", [
         "DQMData/Run 1/HGCAL/Run summary/HGCalValidator/hgcalLayerClusters",
         ], PlotFolder(
-        _totclusternum_thick, 
+        _totclusternum_thick,
         loopSubFolders=False,
-        purpose=PlotPurpose.Timing, page="TotalNumberofLayerClustersPerThickness"   
+        purpose=PlotPurpose.Timing, page="TotalNumberofLayerClustersPerThickness"
         ))
 
 # [C] number of layer clusters per layer (one entry per event in each histo)
@@ -516,11 +590,11 @@ hgcalLayerClustersPlotter.append("NumberofLayerClustersPerLayer", [
         _totclusternum_layer_FH,
         _totclusternum_layer_BH,
         loopSubFolders=False,
-        purpose=PlotPurpose.Timing, page="NumberofLayerClustersPerLayer"   
+        purpose=PlotPurpose.Timing, page="NumberofLayerClustersPerLayer"
         ))
 
-# [D] For each layer cluster: 
-# number of cells in layer cluster, by layer - separate histos in each layer for 120um Si, 200/300um Si, Scint 
+# [D] For each layer cluster:
+# number of cells in layer cluster, by layer - separate histos in each layer for 120um Si, 200/300um Si, Scint
 # NB: not all combinations exist; e.g. no 120um Si in layers with scint.
 # (One entry in the appropriate histo per layer cluster).
 hgcalLayerClustersPlotter.append("CellsNumberPerLayerPerThickness", [
@@ -539,12 +613,12 @@ hgcalLayerClustersPlotter.append("CellsNumberPerLayerPerThickness", [
         _cellsnum_perthick_perlayer_scint_FH,
         _cellsnum_perthick_perlayer_scint_BH,
         loopSubFolders=False,
-        purpose=PlotPurpose.Timing, page="CellsNumberPerLayerPerThickness"   
+        purpose=PlotPurpose.Timing, page="CellsNumberPerLayerPerThickness"
         ))
 
-# [E] For each layer cluster: 
+# [E] For each layer cluster:
 # distance of cells from a) seed cell, b) max cell; and c), d): same with entries weighted by cell energy
-# separate histos in each layer for 120um Si, 200/300um Si, Scint 
+# separate histos in each layer for 120um Si, 200/300um Si, Scint
 # NB: not all combinations exist; e.g. no 120um Si in layers with scint.
 # (One entry in each of the four appropriate histos per cell in a layer cluster)
 hgcalLayerClustersPlotter.append("CellsDistanceToSeedAndMaxCellPerLayerPerThickness", [
@@ -599,7 +673,7 @@ hgcalLayerClustersPlotter.append("CellsDistanceToSeedAndMaxCellPerLayerPerThickn
         _distancetoseedcell_perthickperlayer_eneweighted_scint_FH,
         _distancetoseedcell_perthickperlayer_eneweighted_scint_BH,
         loopSubFolders=False,
-        purpose=PlotPurpose.Timing, page="CellsDistanceToSeedAndMaxCellPerLayerPerThickness"   
+        purpose=PlotPurpose.Timing, page="CellsDistanceToSeedAndMaxCellPerLayerPerThickness"
         ))
 
 # [F] Looking at the fraction of true energy that has been clustered; by layer and overall
@@ -611,10 +685,10 @@ hgcalLayerClustersPlotter.append("EnergyClusteredByLayerAndOverall", [
         _energyclustered_perlayer_FH,
         _energyclustered_perlayer_BH,
         loopSubFolders=False,
-        purpose=PlotPurpose.Timing, page="EnergyClusteredByLayerAndOverall"   
+        purpose=PlotPurpose.Timing, page="EnergyClusteredByLayerAndOverall"
         ))
 
-# [G] Miscellaneous plots: 
+# [G] Miscellaneous plots:
 # longdepthbarycentre: The longitudinal depth barycentre. One entry per event.
 # mixedhitscluster: Number of clusters per event with hits in different thicknesses.
 # num_reco_cluster_eta: Number of reco clusters vs eta
@@ -627,7 +701,7 @@ hgcalLayerClustersPlotter.append("Miscellaneous", [
             _energyclustered,
             _longdepthbarycentre,
             loopSubFolders=False,
-            purpose=PlotPurpose.Timing, page="Miscellaneous"   
+            purpose=PlotPurpose.Timing, page="Miscellaneous"
             ))
 
 # [H] SelectedCaloParticles plots
@@ -636,6 +710,53 @@ hgcalLayerClustersPlotter.append("SelectedCaloParticles_Photons", [
             ], PlotFolder(
             _SelectedCaloParticles,
             loopSubFolders=False,
-            purpose=PlotPurpose.Timing, page="SelectedCaloParticles_Photons"   
+            purpose=PlotPurpose.Timing, page="SelectedCaloParticles_Photons"
             ))
+
+# [I] Score of CaloParticles wrt Layer Clusters
+hgcalLayerClustersPlotter.append("ScoreCaloParticlesToLayerClusters", [
+            "DQMData/Run 1/HGCAL/Run summary/HGCalValidator/hgcalLayerClusters",
+            ], PlotFolder(
+            _score_caloparticle_to_layerclusters,
+            loopSubFolders=False,
+            purpose=PlotPurpose.Timing, page="ScoreCaloParticlesToLayerClusters"))
+
+# [J] Score of LayerClusters wrt CaloParticles
+hgcalLayerClustersPlotter.append("ScoreLayerClustersToCaloParticles", [
+            "DQMData/Run 1/HGCAL/Run summary/HGCalValidator/hgcalLayerClusters",
+            ], PlotFolder(
+            _score_layercluster_to_caloparticles,
+            loopSubFolders=False,
+            purpose=PlotPurpose.Timing, page="ScoreLayerClustersToCaloParticles"))
+
+# [K] Shared Energy between CaloParticle and LayerClusters
+hgcalLayerClustersPlotter.append("SharedEnergy", [
+            "DQMData/Run 1/HGCAL/Run summary/HGCalValidator/hgcalLayerClusters",
+            ], PlotFolder(
+            _sharedEnergy_caloparticle_to_layercluster,
+            loopSubFolders=False,
+            purpose=PlotPurpose.Timing, page="SharedEnergyCaloParticleToLayerCluster"))
+
+# [L] Cell Association per Layer
+hgcalLayerClustersPlotter.append("CellAssociation", [
+            "DQMData/Run 1/HGCAL/Run summary/HGCalValidator/hgcalLayerClusters",
+            ], PlotFolder(
+            _cell_association_table,
+            loopSubFolders=False,
+            purpose=PlotPurpose.Timing, page="CellAssociation"))
+
+# [M] Efficiency Plots
+hgcalLayerClustersPlotter.append("Efficiencies", [
+            "DQMData/Run 1/HGCAL/Run summary/HGCalValidator/hgcalLayerClusters",
+            ], PlotFolder(
+            _efficiencies,
+            loopSubFolders=False,
+            purpose=PlotPurpose.Timing, page="Efficiencies"))
+# [L] Duplicate Plots
+hgcalLayerClustersPlotter.append("Duplicates", [
+            "DQMData/Run 1/HGCAL/Run summary/HGCalValidator/hgcalLayerClusters",
+            ], PlotFolder(
+            _duplicates,
+            loopSubFolders=False,
+            purpose=PlotPurpose.Timing, page="Duplicates"))
 

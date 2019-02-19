@@ -3,13 +3,14 @@
 from __future__ import print_function
 import os
 import argparse
+import re
 
 from Validation.RecoTrack.plotting.validation import SimpleValidation, SimpleSample
 import Validation.HGCalValidation.hgcalPlots as hgcalPlots
 import Validation.RecoTrack.plotting.plotting as plotting
 
 def main(opts):
-    sample = SimpleSample(opts.subdirprefix, opts.html_sample, [(f, f.replace(".root", "")) for f in opts.files])
+    sample = SimpleSample(opts.subdirprefix, opts.html_sample, [(f, re.sub(r'/.*.root', '', f)) for f in opts.files])
 
     drawArgs={}
     if opts.no_ratio:
