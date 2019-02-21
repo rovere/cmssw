@@ -531,6 +531,17 @@ _shared_plots.extend([Plot("SharedEnergy_caloparticle2layercl_vs_eta_perlayer%d"
 _shared_plots.extend([Plot("SharedEnergy_caloparticle2layercl_vs_phi_perlayer%d"%(i+1), xtitle="Layer %d"%(i+1), **_common_shared) for i in range(0,maxlayer)])
 _sharedEnergy_caloparticle_to_layercluster = PlotGroup("sharedEnergy_caloparticle_to_layercluster", _shared_plots, ncols=8)
 
+_common_shared= {"title": "Shared Energy Layer Cluster To CaloParticle",
+                 "stat": False,
+                 "legend": False,
+                }
+_common_shared.update(_legend_common)
+_shared_plots2 = [Plot("SharedEnergy_layercluster2caloparticle_perlayer%d"%(i+1), xtitle="", **_common_shared) for i in range(0,maxlayer)]
+_shared_plots2.extend([Plot("SharedEnergy_layercl2caloparticle_vs_eta_perlayer%d"%(i+1), xtitle="Layer %d"%(i+1), **_common_shared) for i in range(0,maxlayer)])
+_shared_plots2.extend([Plot("SharedEnergy_layercl2caloparticle_vs_phi_perlayer%d"%(i+1), xtitle="Layer %d"%(i+1), **_common_shared) for i in range(0,maxlayer)])
+_sharedEnergy_layercluster_to_caloparticle = PlotGroup("sharedEnergy_layercluster_to_caloparticle", _shared_plots2, ncols=8)
+
+
 _common_assoc = {#"title": "Cell Association Table",
                  "stat": False,
                  "legend": False,
@@ -544,20 +555,46 @@ _cell_association_table = PlotGroup("cellAssociation_table", [
                                     ncols=8
                                     )
 
+_bin_count = 0
 _common_eff = {"stat": False, "legend": False}
 _effplots = [Plot("effic_eta_layer%d"%(i+1), xtitle="", **_common_eff) for i in range(0,maxlayer)]
 _effplots.extend([Plot("effic_phi_layer%d"%(i+1), xtitle="", **_common_eff) for i in range(0,maxlayer)])
+_common_eff["xmin"] = 0.
+_bin_count += 52*2.
+_common_eff["xmax"] =_bin_count
 _effplots.extend([Plot("globalEfficiencies", xtitle="Global Efficiencies", **_common_eff)])
 _efficiencies = PlotGroup("Efficiencies", _effplots, ncols=8)
 
 
-_common_dup = {"stat": False, "legend": False}
+_common_dup = {"stat": False, "legend": False, "title": "Global Duplicates"}
 _dupplots = [Plot("duplicate_eta_layer%d"%(i+1), xtitle="", **_common_dup) for i in range(0,maxlayer)]
 _dupplots.extend([Plot("duplicate_phi_layer%d"%(i+1), xtitle="", **_common_dup) for i in range(0,maxlayer)])
+_common_dup["xmin"] = _bin_count+1
+_bin_count += 52*2.
+_common_dup["xmax"] = _bin_count
+_dupplots.extend([Plot("globalEfficiencies", xtitle="Global Duplicates", **_common_dup)])
 _duplicates = PlotGroup("Duplicates", _dupplots, ncols=8)
 
+_common_fake = {"stat": False, "legend": False, "title": "Global Fake Rates"}
+_fakeplots = [Plot("fake_eta_layer%d"%(i+1), xtitle="", **_common_fake) for i in range(0,maxlayer)]
+_fakeplots.extend([Plot("fake_phi_layer%d"%(i+1), xtitle="", **_common_fake) for i in range(0,maxlayer)])
+_common_fake["xmin"] = _bin_count+1
+_bin_count += 52*2.
+_common_fake["xmax"] = _bin_count
+_fakeplots.extend([Plot("globalEfficiencies", xtitle="Global Fake Rate", **_common_fake)])
+_fakes = PlotGroup("FakeRate", _fakeplots, ncols=8)
+
+_common_merge = {"stat": False, "legend": False, "title": "Global Merge Rates"}
+_mergeplots = [Plot("merge_eta_layer%d"%(i+1), xtitle="", **_common_merge) for i in range(0,maxlayer)]
+_mergeplots.extend([Plot("merge_phi_layer%d"%(i+1), xtitle="", **_common_merge) for i in range(0,maxlayer)])
+_common_merge["xmin"] = _bin_count+1
+_bin_count += 52*2.
+_common_merge["xmax"] = _bin_count
+_mergeplots.extend([Plot("globalEfficiencies", xtitle="Global merge Rate", **_common_merge)])
+_merges = PlotGroup("MergeRate", _mergeplots, ncols=8)
 
 #_energyclustered =
+
 
 
 hgcalLayerClustersPlotter = Plotter()
@@ -737,6 +774,14 @@ hgcalLayerClustersPlotter.append("SharedEnergy", [
             loopSubFolders=False,
             purpose=PlotPurpose.Timing, page="SharedEnergyCaloParticleToLayerCluster"))
 
+# [K2] Shared Energy between LayerClusters and CaloParticle
+hgcalLayerClustersPlotter.append("SharedEnergy", [
+            "DQMData/Run 1/HGCAL/Run summary/HGCalValidator/hgcalLayerClusters",
+            ], PlotFolder(
+            _sharedEnergy_layercluster_to_caloparticle,
+            loopSubFolders=False,
+            purpose=PlotPurpose.Timing, page="SharedEnergyLayerClusterToCaloParticle"))
+
 # [L] Cell Association per Layer
 hgcalLayerClustersPlotter.append("CellAssociation", [
             "DQMData/Run 1/HGCAL/Run summary/HGCalValidator/hgcalLayerClusters",
@@ -759,4 +804,18 @@ hgcalLayerClustersPlotter.append("Duplicates", [
             _duplicates,
             loopSubFolders=False,
             purpose=PlotPurpose.Timing, page="Duplicates"))
+# [M] Fake Rate Plots
+hgcalLayerClustersPlotter.append("FakeRate", [
+            "DQMData/Run 1/HGCAL/Run summary/HGCalValidator/hgcalLayerClusters",
+            ], PlotFolder(
+            _fakes,
+            loopSubFolders=False,
+            purpose=PlotPurpose.Timing, page="Fakes"))
+# [N] Merge Rate Plots
+hgcalLayerClustersPlotter.append("MergeRate", [
+            "DQMData/Run 1/HGCAL/Run summary/HGCalValidator/hgcalLayerClusters",
+            ], PlotFolder(
+            _merges,
+            loopSubFolders=False,
+            purpose=PlotPurpose.Timing, page="Merges"))
 

@@ -137,15 +137,25 @@ void HGVHistoProducerAlgo::bookClusterHistos(DQMStore::ConcurrentBooker& ibook, 
     histograms.h_score_layercl2caloparticle_perlayer[ilayer] = ibook.book1D("Score_layercl2caloparticle_perlayer"+istr, "Score of Layer Cluster per CaloParticle", 200, -1.01, 1.01);
     histograms.h_score_caloparticle2layercl_perlayer[ilayer] = ibook.book1D("Score_caloparticle2layercl_perlayer"+istr, "Score of CaloParticle per Layer Cluster", 200, -1.01, 1.01);
     histograms.h_energy_vs_score_caloparticle2layercl_perlayer[ilayer] = ibook.book2D("Energy_vs_Score_caloparticle2layer_perlayer"+istr, "Energy vs Score of CaloParticle per Layer Cluster Layer "+istr, 100, 0., 1.01, 100, 0., 1.01);
+    histograms.h_energy_vs_score_layercl2caloparticle_perlayer[ilayer] = ibook.book2D("Energy_vs_Score_layer2caloparticle_perlayer"+istr, "Energy vs Score of Layer Cluster per CaloParticle Layer "+istr, 100, 0., 1.01, 100, 0., 1.01);
     histograms.h_sharedenergy_caloparticle2layercl_perlayer[ilayer] = ibook.book1D("SharedEnergy_caloparticle2layercl_perlayer"+istr, "Shared Energy of CaloParticle per Layer Cluster", 100, 0., 1.01);
-    histograms.h_sharedenergy_caloparticle2layercl_vs_eta_perlayer[ilayer] = ibook.bookProfile("SharedEnergy_caloparticle2layercl_vs_eta_perlayer"+istr, "Shared Energy of CaloParticle vs #eta per Layer Cluster", 100, -4., 4., 0., 1.);
-    histograms.h_sharedenergy_caloparticle2layercl_vs_phi_perlayer[ilayer] = ibook.bookProfile("SharedEnergy_caloparticle2layercl_vs_phi_perlayer"+istr, "Shared Energy of CaloParticle vs #phi per Layer Cluster", 100, -4., 4., 0., 1.);
+    histograms.h_sharedenergy_caloparticle2layercl_vs_eta_perlayer[ilayer] = ibook.bookProfile("SharedEnergy_caloparticle2layercl_vs_eta_perlayer"+istr, "Shared Energy of CaloParticle vs #eta per best Layer Cluster", 100, -4., 4., 0., 1.);
+    histograms.h_sharedenergy_caloparticle2layercl_vs_phi_perlayer[ilayer] = ibook.bookProfile("SharedEnergy_caloparticle2layercl_vs_phi_perlayer"+istr, "Shared Energy of CaloParticle vs #phi per best Layer Cluster", 100, -4., 4., 0., 1.);
+    histograms.h_sharedenergy_layercl2caloparticle_perlayer[ilayer] = ibook.book1D("SharedEnergy_layercluster2caloparticle_perlayer"+istr, "Shared Energy of Layer Cluster per Layer Calo Particle", 100, 0., 1.01);
+    histograms.h_sharedenergy_layercl2caloparticle_vs_eta_perlayer[ilayer] = ibook.bookProfile("SharedEnergy_layercl2caloparticle_vs_eta_perlayer"+istr, "Shared Energy of LayerCluster vs #eta per best Calo Particle", 100, -4., 4., 0., 1.);
+    histograms.h_sharedenergy_layercl2caloparticle_vs_phi_perlayer[ilayer] = ibook.bookProfile("SharedEnergy_layercl2caloparticle_vs_phi_perlayer"+istr, "Shared Energy of LayerCluster vs #phi per best Calo Particle", 100, -4., 4., 0., 1.);
     histograms.h_num_caloparticle_eta_perlayer[ilayer] = ibook.book1D("Num_CaloParticle_Eta_perlayer"+istr, "Num CaloParticle Eta per Layer Cluster", 100, -4., 4.);
     histograms.h_numDup_caloparticle_eta_perlayer[ilayer] = ibook.book1D("NumDup_CaloParticle_Eta_perlayer"+istr, "Num Duplicate CaloParticle Eta per Layer Cluster", 100, -4., 4.);
     histograms.h_denom_caloparticle_eta_perlayer[ilayer] = ibook.book1D("Denom_CaloParticle_Eta_perlayer"+istr, "Denom CaloParticle Eta per Layer Cluster", 100, -4., 4.);
     histograms.h_num_caloparticle_phi_perlayer[ilayer] = ibook.book1D("Num_CaloParticle_Phi_perlayer"+istr, "Num CaloParticle Phi per Layer Cluster", 100, -4., 4.);
     histograms.h_numDup_caloparticle_phi_perlayer[ilayer] = ibook.book1D("NumDup_CaloParticle_Phi_perlayer"+istr, "Num Duplicate CaloParticle Phi per Layer Cluster", 100, -4., 4.);
     histograms.h_denom_caloparticle_phi_perlayer[ilayer] = ibook.book1D("Denom_CaloParticle_Phi_perlayer"+istr, "Denom CaloParticle Phi per Layer Cluster", 100, -4., 4.);
+    histograms.h_num_layercl_eta_perlayer[ilayer] = ibook.book1D("Num_LayerCluster_Eta_perlayer"+istr, "Num LayerCluster Eta per Layer Cluster", 100, -4., 4.);
+    histograms.h_numMerge_layercl_eta_perlayer[ilayer] = ibook.book1D("NumMerge_LayerCluster_Eta_perlayer"+istr, "Num Merge LayerCluster Eta per Layer Cluster", 100, -4., 4.);
+    histograms.h_denom_layercl_eta_perlayer[ilayer] = ibook.book1D("Denom_LayerCluster_Eta_perlayer"+istr, "Denom LayerCluster Eta per Layer Cluster", 100, -4., 4.);
+    histograms.h_num_layercl_phi_perlayer[ilayer] = ibook.book1D("Num_LayerCluster_Phi_perlayer"+istr, "Num LayerCluster Phi per Layer Cluster", 100, -4., 4.);
+    histograms.h_numMerge_layercl_phi_perlayer[ilayer] = ibook.book1D("NumMerge_LayerCluster_Phi_perlayer"+istr, "Num Merge LayerCluster Phi per Layer Cluster", 100, -4., 4.);
+    histograms.h_denom_layercl_phi_perlayer[ilayer] = ibook.book1D("Denom_LayerCluster_Phi_perlayer"+istr, "Denom LayerCluster Phi per Layer Cluster", 100, -4., 4.);
     histograms.h_cellAssociation_perlayer[ilayer] = ibook.book1D("cellAssociation_perlayer"+istr, "Cell Association per Layer", 5, -4., 1.);
     histograms.h_cellAssociation_perlayer[ilayer].setBinLabel(2, "TN(purity)");
     histograms.h_cellAssociation_perlayer[ilayer].setBinLabel(3, "FN(ineff.)");
@@ -432,7 +442,7 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
     const std::vector<std::pair<DetId, float> >& hits_and_fractions = clusters[lcId].hitsAndFractions();
     unsigned int numberOfHitsInLC = hits_and_fractions.size();
     auto firstHitDetId = hits_and_fractions[0].first;
-    int lcLayerId = recHitTools_->getLayerWithOffset(firstHitDetId);// + layers * ((recHitTools_->zside(firstHitDetId) + 1) >> 1) - 1;
+    int lcLayerId = recHitTools_->getLayerWithOffset(firstHitDetId) + layers * ((recHitTools_->zside(firstHitDetId) + 1) >> 1) - 1;
     if (clusters[lcId].energy() == 0. && cpsInLayerCluster[lcId].size() != 0) {
       for(auto& cpPair : cpsInLayerCluster[lcId]) {
         cpPair.second = 1.;
@@ -440,7 +450,7 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
           << "\t CP id: \t" << cpPair.first
           << "\t score \t" << cpPair.second
           << std::endl;
-        histograms.h_score_layercl2caloparticle_perlayer.at(lcLayerId).fill(cpPair.second);
+        histograms.h_score_layercl2caloparticle_perlayer.at(lcLayerId%52+1).fill(cpPair.second);
       }
       continue;
     }
@@ -478,8 +488,33 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
                 << "\t CP id: \t" << cpPair.first
                 << "\t score \t" << cpPair.second
                 << std::endl;
-      histograms.h_score_layercl2caloparticle_perlayer.at(lcLayerId).fill(cpPair.second);
+      histograms.h_score_layercl2caloparticle_perlayer.at(lcLayerId%52+1).fill(cpPair.second);
+      auto const & cp_linked = cPOnLayer[cpPair.first][lcLayerId].layerClusterIdToEnergyAndScore[lcId];
+      histograms.h_sharedenergy_layercl2caloparticle_perlayer.at(lcLayerId%52+1).fill(cp_linked.first/clusters[lcId].energy());
+      histograms.h_energy_vs_score_layercl2caloparticle_perlayer.at(lcLayerId%52+1).fill(cpPair.second  > 1. ? 1. : cpPair.second, cp_linked.first/clusters[lcId].energy());
     }
+
+    auto assoc = std::count_if(
+        std::begin(cpsInLayerCluster[lcId]),
+        std::end(cpsInLayerCluster[lcId]),
+        [](const auto &obj){return obj.second < 0.1;});
+    if (assoc) {
+      histograms.h_num_layercl_eta_perlayer.at(lcLayerId%52+1).fill(clusters[lcId].eta());
+      histograms.h_num_layercl_phi_perlayer.at(lcLayerId%52+1).fill(clusters[lcId].phi());
+      if (assoc > 1) {
+        histograms.h_numMerge_layercl_eta_perlayer.at(lcLayerId%52+1).fill(clusters[lcId].eta());
+        histograms.h_numMerge_layercl_phi_perlayer.at(lcLayerId%52+1).fill(clusters[lcId].phi());
+      }
+      auto best = std::min_element(
+          std::begin(cpsInLayerCluster[lcId]),
+          std::end(cpsInLayerCluster[lcId]),
+          [](const auto &obj1, const auto &obj2){return obj1.second < obj2.second;});
+      auto const & best_cp_linked = cPOnLayer[best->first][lcLayerId].layerClusterIdToEnergyAndScore[lcId];
+      histograms.h_sharedenergy_layercl2caloparticle_vs_eta_perlayer.at(lcLayerId%52+1).fill(clusters[lcId].eta(), best_cp_linked.first/clusters[lcId].energy());
+      histograms.h_sharedenergy_layercl2caloparticle_vs_phi_perlayer.at(lcLayerId%52+1).fill(clusters[lcId].phi(), best_cp_linked.first/clusters[lcId].energy());
+    }
+    histograms.h_denom_layercl_eta_perlayer.at(lcLayerId%52+1).fill(clusters[lcId].eta());
+    histograms.h_denom_layercl_phi_perlayer.at(lcLayerId%52+1).fill(clusters[lcId].phi());
   }
 
 
