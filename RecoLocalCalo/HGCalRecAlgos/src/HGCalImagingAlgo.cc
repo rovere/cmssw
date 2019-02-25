@@ -402,7 +402,8 @@ int HGCalImagingAlgo::findAndAssignClusters(
     unsigned int i = rs[oi];
     int ci = nd[i].data.clusterIndex;
     if (ci ==
-        -1) { // clusterIndex is initialised with -1 if not yet used in cluster
+        -1
+        && nd[i].data.delta < delta_c) { // clusterIndex is initialised with -1 if not yet used in cluster
       nd[i].data.clusterIndex = nd[nd[i].data.nearestHigher].data.clusterIndex;
     }
   }
