@@ -47,11 +47,16 @@ _longdepthbarycentre = PlotGroup("longdepthbarycentre", [
         Plot("longdepthbarycentre", xtitle="", **_common),
         ],ncols=1)
 
+_common_layerperthickness = {}
+_common_layerperthickness.update(_common)
+_common_layerperthickness['xmin'] = 0.
+_common_layerperthickness['xmax'] = 100
 _totclusternum_thick = PlotGroup("totclusternum_thick", [
-    Plot("totclusternum_thick_120", xtitle="", **_common),
-    Plot("totclusternum_thick_200", xtitle="", **_common),
-    Plot("totclusternum_thick_300", xtitle="", **_common),
-    Plot("totclusternum_thick_-1", xtitle="", **_common),
+    Plot("totclusternum_thick_120", xtitle="", **_common_layerperthickness),
+    Plot("totclusternum_thick_200", xtitle="", **_common_layerperthickness),
+    Plot("totclusternum_thick_300", xtitle="", **_common_layerperthickness),
+    Plot("totclusternum_thick_-1", xtitle="", **_common_layerperthickness),
+    Plot("mixedhitscluster", xtitle="", **_common_layerperthickness),
     ])
 
 _totclusternum_layer_EE = PlotGroup("totclusternum_layer_EE", [
@@ -546,8 +551,10 @@ _common_assoc = {#"title": "Cell Association Table",
                  "stat": False,
                  "legend": False,
                  "xbinlabels": ["", "TN(pur)", "FN(ineff.)", "FP(fake)", "TP(eff)"],
-                 "drawStyle": "hist"
-                }
+                 "drawStyle": "hist",
+                 "ymin": 0.1,
+                 "ymax": 10000,
+                 "ylog": True}
 _common_assoc.update(_legend_common)
 _cell_association_table = PlotGroup("cellAssociation_table", [
         Plot("cellAssociation_perlayer{:02d}".format(i+1), xtitle="Layer {:02d}".format(i+1), **_common_assoc) for i in range(0,maxlayer)
