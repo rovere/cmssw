@@ -502,9 +502,13 @@ _distancetoseedcell_perthickperlayer_eneweighted_scint_BH = PlotGroup("distancet
 
 _common_score = {"title": "Score CaloParticle to LayerClusters",
                  "stat": False,
-                 "xmin": 0.,
+                 "ymin": 0.1,
+                 "ymax": 1000,
+                 "xmin": 0,
+                 "xmax": 1,
                  "drawStyle": "hist",
-                 "lineWidth": 1
+                 "lineWidth": 1,
+                 "ylog": True
                 }
 _common_score.update(_legend_common)
 _score_caloparticle_to_layerclusters = PlotGroup("score_caloparticle_to_layercluster", [
@@ -515,9 +519,13 @@ _score_caloparticle_to_layerclusters = PlotGroup("score_caloparticle_to_layerclu
 
 _common_score = {"title": "Score LayerCluster to CaloParticles",
                  "stat": False,
-                 "xmin": 0.,
+                 "ymin": 0.1,
+                 "ymax": 1000,
+                 "xmin": 0,
+                 "xmax": 1,
                  "drawStyle": "hist",
-                 "lineWidth": 1
+                 "lineWidth": 1,
+                 "ylog": True
                 }
 _common_score.update(_legend_common)
 _score_layercluster_to_caloparticles = PlotGroup("score_layercluster_to_caloparticle", [
@@ -601,7 +609,7 @@ _mergeplots.extend([Plot("globalEfficiencies", xtitle="Global merge Rate", **_co
 _merges = PlotGroup("MergeRate", _mergeplots, ncols=8)
 
 
-_common_energy_score = dict(removeEmptyBins=True, xbinlabelsize=10, xbinlabeloption="d", ncols=4)
+_common_energy_score = dict(removeEmptyBins=False, xbinlabelsize=10, xbinlabeloption="d", ncols=4)
 _energyscore_cp2lc = []
 for i in range(0, maxlayer):
   _energyscore_cp2lc.append(PlotOnSideGroup("Energy_vs_Score_Layer{:02d}".format(i+1), Plot("Energy_vs_Score_caloparticle2layer_perlayer{:02d}".format(i+1), drawStyle="COLZ", adjustMarginLeft=0.1, adjustMarginRight=0.1, **_common_energy_score)))
