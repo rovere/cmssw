@@ -719,13 +719,17 @@ void HGVHistoProducerAlgo::fill_generic_cluster_histos(const Histograms& histogr
 
       // thickness = (rh_detid.det() == DetId::Forward || rh_detid.det() == DetId::HGCalEE || rh_detid.det() == DetId::HGCalHSi) ? recHitTools_->getSiThickness(rh_detid) : -1;
       //Count here only once the layer cluster and save the combination thick_lay
-      std::string curistr = std::to_string( (int) thickness ) + "_" + std::to_string(lay);
+      std::string curistr = std::to_string( (int) thickness );
+      std::string lay_string = std::to_string(lay);
+      while(lay_string.size() < 2)
+        lay_string.insert(0, "0");
+      curistr += "_" + lay_string;
       if (cluslay){ tnlcpl[lay]++; istr = curistr; cluslay = false; }
       if (thickness == 120.) {nthhits120++;}
-      if (thickness == 200.) {nthhits200++;}
-      if (thickness == 300.) {nthhits300++;}
-      if (thickness == -1  ) {nthhitsscint++;}
-
+      else if (thickness == 200.) {nthhits200++;}
+      else if (thickness == 300.) {nthhits300++;}
+      else if (thickness == -1  ) {nthhitsscint++;}
+      else {assert(0);}
       std::map<DetId,const HGCRecHit *>::const_iterator itcheck= hitMap.find(rh_detid);
       if (itcheck == hitMap.end()) {
 	std::cout << " You shouldn't be here - Unable to find a hit " << rh_detid.rawId() << " " << rh_detid.det() << " " << HGCalDetId(rh_detid) << std::endl;
@@ -774,7 +778,11 @@ void HGVHistoProducerAlgo::fill_generic_cluster_histos(const Histograms& histogr
     std::vector<int> bigamoth; bigamoth.clear();
     bigamoth.push_back(nthhits120);bigamoth.push_back(nthhits200);bigamoth.push_back(nthhits300);bigamoth.push_back(nthhitsscint);
     auto bgth = std::max_element(bigamoth.begin(),bigamoth.end());
-    istr = std::to_string(thicknesses[ std::distance(bigamoth.begin(), bgth) ]) + "_" + std::to_string(lay);
+    istr = std::to_string(thicknesses[ std::distance(bigamoth.begin(), bgth) ]);
+    std::string lay_string = std::to_string(lay);
+    while(lay_string.size() < 2)
+      lay_string.insert(0, "0");
+    istr += "_" + lay_string;
     // std::cout << istr << std::endl;
 
     //Here for the per cluster plots that need the thickness_layer info
