@@ -103,77 +103,84 @@ _cellsenedens_thick =  PlotGroup("cellsenedens_thick", [
 
 #----------------------------------------------------------------------------------------------------------------
 #120 um
+_common_cells = {}
+_common_cells.update(_common)
+_common_cells["xmin"] = 0
+_common_cells["xmax"] = 50
+_common_cells["ymin"] = 0.1
+_common_cells["ymax"] = 10000
+_common_cells["ylog"] = True
 _cellsnum_perthick_perlayer_120_EE = PlotGroup("cellsnum_perthick_perlayer_120_EE", [
-  Plot("cellsnum_perthick_perlayer_120_{:02}".format(i+1), xtitle="", **_common) for i in range(lastLayerEE)
+  Plot("cellsnum_perthick_perlayer_120_{:02}".format(i+1), xtitle="", **_common_cells) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
 _cellsnum_perthick_perlayer_120_FH = PlotGroup("cellsnum_perthick_perlayer_120_FH", [
-        Plot("cellsnum_perthick_perlayer_120_{:02d}".format(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH)
+        Plot("cellsnum_perthick_perlayer_120_{:02d}".format(i+1), xtitle="", **_common_cells) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
 _cellsnum_perthick_perlayer_120_BH = PlotGroup("cellsnum_perthick_perlayer_120_BH", [
-        Plot("cellsnum_perthick_perlayer_120_{:02d}".format(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer)
+        Plot("cellsnum_perthick_perlayer_120_{:02d}".format(i+1), xtitle="", **_common_cells) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
 #200 um
 _cellsnum_perthick_perlayer_200_EE = PlotGroup("cellsnum_perthick_perlayer_200_EE", [
-        Plot("cellsnum_perthick_perlayer_200_{:02d}".format(i+1), xtitle="", **_common) for i in range(lastLayerEE)
+        Plot("cellsnum_perthick_perlayer_200_{:02d}".format(i+1), xtitle="", **_common_cells) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
 _cellsnum_perthick_perlayer_200_FH = PlotGroup("cellsnum_perthick_perlayer_200_FH", [
-        Plot("cellsnum_perthick_perlayer_200_{:02d}".format(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH)
+        Plot("cellsnum_perthick_perlayer_200_{:02d}".format(i+1), xtitle="", **_common_cells) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
 _cellsnum_perthick_perlayer_200_BH = PlotGroup("cellsnum_perthick_perlayer_200_BH", [
-        Plot("cellsnum_perthick_perlayer_200_{:02d}".format(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer)
+        Plot("cellsnum_perthick_perlayer_200_{:02d}".format(i+1), xtitle="", **_common_cells) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
 #300 um
 _cellsnum_perthick_perlayer_300_EE = PlotGroup("cellsnum_perthick_perlayer_300_EE", [
-        Plot("cellsnum_perthick_perlayer_300_{:02d}".format(i+1), xtitle="", **_common) for i in range(lastLayerEE)
+        Plot("cellsnum_perthick_perlayer_300_{:02d}".format(i+1), xtitle="", **_common_cells) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
 _cellsnum_perthick_perlayer_300_FH = PlotGroup("cellsnum_perthick_perlayer_300_FH", [
-        Plot("cellsnum_perthick_perlayer_300_{:02d}".format(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH)
+        Plot("cellsnum_perthick_perlayer_300_{:02d}".format(i+1), xtitle="", **_common_cells) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
 _cellsnum_perthick_perlayer_300_BH = PlotGroup("cellsnum_perthick_perlayer_300_BH", [
-        Plot("cellsnum_perthick_perlayer_300_{:02d}".format(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer)
+        Plot("cellsnum_perthick_perlayer_300_{:02d}".format(i+1), xtitle="", **_common_cells) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
 
 #scint um
 _cellsnum_perthick_perlayer_scint_EE = PlotGroup("cellsnum_perthick_perlayer_-1_EE", [
-        Plot("cellsnum_perthick_perlayer_-1_{:02d}".format(i+1), xtitle="", **_common) for i in range(lastLayerEE)
+        Plot("cellsnum_perthick_perlayer_-1_{:02d}".format(i+1), xtitle="", **_common_cells) for i in range(lastLayerEE)
         ],
                                     ncols=4
                                     )
 
 _cellsnum_perthick_perlayer_scint_FH = PlotGroup("cellsnum_perthick_perlayer_-1_FH", [
-        Plot("cellsnum_perthick_perlayer_-1_{:02d}".format(i+1), xtitle="", **_common) for i in range(lastLayerEE,lastLayerFH)
+        Plot("cellsnum_perthick_perlayer_-1_{:02d}".format(i+1), xtitle="", **_common_cells) for i in range(lastLayerEE,lastLayerFH)
         ],
                                     ncols=4
                                     )
 
 _cellsnum_perthick_perlayer_scint_BH = PlotGroup("cellsnum_perthick_perlayer_-1_BH", [
-        Plot("cellsnum_perthick_perlayer_-1_{:02d}".format(i+1), xtitle="", **_common) for i in range(lastLayerFH,maxlayer)
+        Plot("cellsnum_perthick_perlayer_-1_{:02d}".format(i+1), xtitle="", **_common_cells) for i in range(lastLayerFH,maxlayer)
         ],
                                     ncols=4
                                     )
@@ -571,7 +578,10 @@ _cell_association_table = PlotGroup("cellAssociation_table", [
                                     )
 
 _bin_count = 0
-_common_eff = {"stat": False, "legend": False}
+_label_period = 4
+_xbinlabels = ["%d"%(i+1) if (i+1)%_label_period==0 else "" for i in range(0,maxlayer)]
+_xbinlabels.extend(["%d"%(i+1) if (i+1)%_label_period == 0 else "" for i in range(0,maxlayer)])
+_common_eff = {"stat": False, "legend": False, "xbinlabels": _xbinlabels, "xbinlabelsize": 12, "xbinlabeloptions": "v"}
 _effplots = [Plot("effic_eta_layer{:02d}".format(i+1), xtitle="", **_common_eff) for i in range(0,maxlayer)]
 _effplots.extend([Plot("effic_phi_layer{:02d}".format(i+1), xtitle="", **_common_eff) for i in range(0,maxlayer)])
 _common_eff["xmin"] = 0.
@@ -581,7 +591,7 @@ _effplots.extend([Plot("globalEfficiencies", xtitle="Global Efficiencies", **_co
 _efficiencies = PlotGroup("Efficiencies", _effplots, ncols=8)
 
 
-_common_dup = {"stat": False, "legend": False, "title": "Global Duplicates"}
+_common_dup = {"stat": False, "legend": False, "title": "Global Duplicates", "xbinlabels": _xbinlabels, "xbinlabelsize": 12, "xbinlabeloptions": "v"}
 _dupplots = [Plot("duplicate_eta_layer{:02d}".format(i+1), xtitle="", **_common_dup) for i in range(0,maxlayer)]
 _dupplots.extend([Plot("duplicate_phi_layer{:02d}".format(i+1), xtitle="", **_common_dup) for i in range(0,maxlayer)])
 _common_dup["xmin"] = _bin_count+1
@@ -590,7 +600,7 @@ _common_dup["xmax"] = _bin_count
 _dupplots.extend([Plot("globalEfficiencies", xtitle="Global Duplicates", **_common_dup)])
 _duplicates = PlotGroup("Duplicates", _dupplots, ncols=8)
 
-_common_fake = {"stat": False, "legend": False, "title": "Global Fake Rates"}
+_common_fake = {"stat": False, "legend": False, "title": "Global Fake Rates", "xbinlabels": _xbinlabels, "xbinlabelsize": 12, "xbinlabeloptions": "v"}
 _fakeplots = [Plot("fake_eta_layer{:02d}".format(i+1), xtitle="", **_common_fake) for i in range(0,maxlayer)]
 _fakeplots.extend([Plot("fake_phi_layer{:02d}".format(i+1), xtitle="", **_common_fake) for i in range(0,maxlayer)])
 _common_fake["xmin"] = _bin_count+1
@@ -599,7 +609,7 @@ _common_fake["xmax"] = _bin_count
 _fakeplots.extend([Plot("globalEfficiencies", xtitle="Global Fake Rate", **_common_fake)])
 _fakes = PlotGroup("FakeRate", _fakeplots, ncols=8)
 
-_common_merge = {"stat": False, "legend": False, "title": "Global Merge Rates"}
+_common_merge = {"stat": False, "legend": False, "title": "Global Merge Rates", "xbinlabels": _xbinlabels, "xbinlabelsize": 12, "xbinlabeloptions": "v"}
 _mergeplots = [Plot("merge_eta_layer{:02d}".format(i+1), xtitle="", **_common_merge) for i in range(0,maxlayer)]
 _mergeplots.extend([Plot("merge_phi_layer{:02d}".format(i+1), xtitle="", **_common_merge) for i in range(0,maxlayer)])
 _common_merge["xmin"] = _bin_count+1
