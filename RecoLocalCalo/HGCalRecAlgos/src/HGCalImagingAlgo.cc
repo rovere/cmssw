@@ -115,7 +115,7 @@ std::vector<reco::BasicCluster> HGCalImagingAlgo::getClusters(bool doSharing) {
     for (unsigned int i = 0; i < clsOnLayer.size(); ++i) {
       double energy = 0;
       Point position;
-      
+
       //Will save the maximum density hit of the cluster
       size_t rsmax = max_index(clsOnLayer[i]);
 
@@ -666,6 +666,9 @@ void HGCalImagingAlgo::computeThreshold() {
           (fcPerMip_[ithick] * thicknessCorrection_[ithick]);
       thresholds_[ilayer - 1][ithick] = sigmaNoise * ecut_;
       v_sigmaNoise_[ilayer - 1][ithick] = sigmaNoise;
+      std::cout << "Layer: " << ilayer
+        << "\tThickness: " << ithick
+        << "\tNoise[Gev]: " << sigmaNoise << std::endl;
     }
     float scintillators_sigmaNoise = 0.001f * noiseMip_ * dEdXweights_[ilayer];
     thresholds_[ilayer - 1][maxNumberOfThickIndices] = ecut_ * scintillators_sigmaNoise;
