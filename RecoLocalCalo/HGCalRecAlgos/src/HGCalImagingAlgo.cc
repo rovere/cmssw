@@ -403,7 +403,7 @@ int HGCalImagingAlgo::findAndAssignClusters(
     int ci = nd[i].data.clusterIndex;
     if (ci ==
         -1
-        && nd[i].data.delta < delta_c) { // clusterIndex is initialised with -1 if not yet used in cluster
+        && nd[i].data.delta < 2. * delta_c) { // clusterIndex is initialised with -1 if not yet used in cluster
       nd[i].data.clusterIndex = nd[nd[i].data.nearestHigher].data.clusterIndex;
     }
   }
@@ -470,8 +470,8 @@ int HGCalImagingAlgo::findAndAssignClusters(
   for (unsigned int i = 0; i < nd_size; ++i) {
     int ci = nd[i].data.clusterIndex;
     if (ci != -1) {
-      if (nd[i].data.rho <= rho_b[ci])
-        nd[i].data.isHalo = true;
+//      if (nd[i].data.rho <= rho_b[ci])
+//        nd[i].data.isHalo = true;
       clustersOnLayer[ci].push_back(nd[i]);
       if (verbosity_ < pINFO) {
         std::cout << "Pushing hit " << i << " into cluster with index " << ci
