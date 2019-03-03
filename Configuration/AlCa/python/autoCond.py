@@ -2,35 +2,35 @@ autoCond = {
 
     ### NEW KEYS ###
     # GlobalTag for MC production with perfectly aligned and calibrated detector for Run1
-    'run1_design'       :   '105X_mcRun1_design_v1',
+    'run1_design'       :   '103X_mcRun1_design_v1',
     # GlobalTag for MC production (pp collisions) with realistic alignment and calibrations for Run1
-    'run1_mc'           :   '105X_mcRun1_realistic_v1',
+    'run1_mc'           :   '103X_mcRun1_realistic_v1',
     # GlobalTag for MC production (Heavy Ions collisions) with realistic alignment and calibrations for Run1
-    'run1_mc_hi'        :   '105X_mcRun1_HeavyIon_v1',
+    'run1_mc_hi'        :   '103X_mcRun1_HeavyIon_v1',
     # GlobalTag for MC production (p-Pb collisions) with realistic alignment and calibrations for Run1
-    'run1_mc_pa'        :   '105X_mcRun1_pA_v1',
+    'run1_mc_pa'        :   '103X_mcRun1_pA_v1',
     # GlobalTag for MC production with pessimistic alignment and calibrations for Run2
-    'run2_mc_50ns'      :   '105X_mcRun2_startup_v2',
+    'run2_mc_50ns'      :   '103X_mcRun2_startup_v3',
     # GlobalTag for MC production (L1 Trigger Stage1) with starup-like alignment and calibrations for Run2, L1 trigger in Stage1 mode
-    'run2_mc_l1stage1'  :   '105X_mcRun2_asymptotic_l1stage1_v2',
+    'run2_mc_l1stage1'  :   '103X_mcRun2_asymptotic_l1stage1_v1',
     # GlobalTag for MC production with perfectly aligned and calibrated detector for Run2
-    'run2_design'       :   '105X_mcRun2_design_v3',
+    'run2_design'       :   '105X_mcRun2_design_v1',
     #GlobalTag for MC production with optimistic alignment and calibrations for Run2
     'run2_mc'           :   '105X_mcRun2_asymptotic_v2',
     # GlobalTag for MC production (cosmics) with starup-like alignment and calibrations for Run2, Strip tracker in peak mode
     'run2_mc_cosmics'   :   '105X_mcRun2cosmics_startup_deco_v2',
     # GlobalTag for MC production (Heavy Ions collisions) with optimistic alignment and calibrations for Run2
-    'run2_mc_hi'        :   '105X_mcRun2_HeavyIon_v2',
+    'run2_mc_hi'        :   '103X_mcRun2_HeavyIon_v3',
     # GlobalTag for MC production (p-Pb collisions) with realistic alignment and calibrations for Run2
-    'run2_mc_pa'        :   '105X_mcRun2_pA_v2',
+    'run2_mc_pa'        :   '103X_mcRun2_pA_v3',
     # GlobalTag for Run1 data reprocessing
-    'run1_data'         :   '105X_dataRun2_v8',
+    'run1_data'         :   '105X_dataRun2_v6',
     # GlobalTag for Run2 data reprocessing
-    'run2_data'         :   '105X_dataRun2_v8',
+    'run2_data'         :   '105X_dataRun2_v6',
     # GlobalTag for Run2 data relvals: allows customization to run with fixed L1 menu
-    'run2_data_relval'  :   '105X_dataRun2_relval_v8',
+    'run2_data_relval'  :   '105X_dataRun2_relval_v6',
     # GlobalTag for Run2 data 2018B relvals only: HEM-15-16 fail
-    'run2_data_promptlike_HEfail' : '105X_dataRun2_PromptLike_HEfail_v7',
+    'run2_data_promptlike_HEfail' : '105X_dataRun2_PromptLike_HEfail_v5',
     # GlobalTag for Run2 data 2016H relvals only: Prompt Conditions + fixed L1 menu (to be removed)
     'run2_data_promptlike'    : '105X_dataRun2_PromptLike_v6',
     'run2_data_promptlike_hi' : '105X_dataRun2_PromptLike_HI_v1',
