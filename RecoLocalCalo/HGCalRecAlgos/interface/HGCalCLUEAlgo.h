@@ -271,13 +271,6 @@ class HGCalCLUEAlgo : public HGCalClusteringAlgoBase {
   int findAndAssignClusters(std::vector<KDNode> &, KDTree &, double, KDTreeBox &,
                             const unsigned int, std::vector<std::vector<KDNode> > &) const;
   math::XYZPoint calculatePosition(std::vector<KDNode> &) const;
-
-  // attempt to find subclusters within a given set of hexels
-  std::vector<unsigned> findLocalMaximaInCluster(const std::vector<KDNode> &);
-  math::XYZPoint calculatePositionWithFraction(const std::vector<KDNode> &,
-                                               const std::vector<double> &);
-  double calculateEnergyWithFraction(const std::vector<KDNode> &, const std::vector<double> &);
-  // outputs
 };
 
 #endif
