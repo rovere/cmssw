@@ -1,6 +1,8 @@
 #ifndef RecoLocalCalo_HGCalRecAlgos_HGCalImagingAlgo_h
 #define RecoLocalCalo_HGCalRecAlgos_HGCalImagingAlgo_h
 
+#include "RecoLocalCalo/HGCalRecAlgos/interface/HGCalClusteringAlgoBase.h"
+
 #include "Geometry/HGCalGeometry/interface/HGCalGeometry.h"
 #include "Geometry/CaloTopology/interface/HGCalTopology.h"
 #include "DataFormats/DetId/interface/DetId.h"
@@ -54,19 +56,16 @@ size_t max_index(const std::vector<T> &v) {
         return (*maxidx);
 }
 
-class HGCalImagingAlgo
+class HGCalImagingAlgo : public HGCalClusteringAlgoBase
 {
-
-
 public:
 
-enum VerbosityLevel { pDEBUG = 0, pWARNING = 1, pINFO = 2, pERROR = 3 };
 
- HGCalImagingAlgo() : thresholdW0_(), positionDeltaRho_c_(),
-        vecDeltas_(), kappa_(1.), ecut_(0.),
-        sigma2_(1.0),
-        algoId_(reco::CaloCluster::undefined),
-        verbosity_(pERROR),initialized_(false){
+ HGCalImagingAlgo() : HGCalClusteringAlgoBase(pERROR, reco::CaloCluster::undefined),
+  thresholdW0_(), positionDeltaRho_c_(),
+  vecDeltas_(), kappa_(1.), ecut_(0.),
+  sigma2_(1.0),
+  initialized_(false) {
 }
 
  HGCalImagingAlgo(const std::vector<double>& thresholdW0_in, const std::vector<double>& positionDeltaRho_c_in,
@@ -80,12 +79,12 @@ enum VerbosityLevel { pDEBUG = 0, pWARNING = 1, pINFO = 2, pERROR = 3 };
                  const std::vector<double>& nonAgedNoises_in,
                  double noiseMip_in,
                  VerbosityLevel the_verbosity = pERROR) :
+        HGCalClusteringAlgoBase(the_verbosity, algoId_in),
         thresholdW0_(thresholdW0_in),
         positionDeltaRho_c_(positionDeltaRho_c_in),
         vecDeltas_(vecDeltas_in), kappa_(kappa_in),
         ecut_(ecut_in),
         sigma2_(1.0),
-        algoId_(algoId_in),
         dependSensor_(dependSensor_in),
         dEdXweights_(dEdXweights_in),
         thicknessCorrection_(thicknessCorrection_in),
@@ -93,7 +92,6 @@ enum VerbosityLevel { pDEBUG = 0, pWARNING = 1, pINFO = 2, pERROR = 3 };
         fcPerEle_(fcPerEle_in),
         nonAgedNoises_(nonAgedNoises_in),
         noiseMip_(noiseMip_in),
-        verbosity_(the_verbosity),
         initialized_(false),
         points_(2*(maxlayer+1)),
         minpos_(2*(maxlayer+1),{
@@ -115,12 +113,12 @@ HGCalImagingAlgo(const std::vector<double>& thresholdW0_in, const std::vector<do
                  const std::vector<double>& nonAgedNoises_in,
                  double noiseMip_in,
                  VerbosityLevel the_verbosity = pERROR) :
+        HGCalClusteringAlgoBase(the_verbosity, algoId_in),
         thresholdW0_(thresholdW0_in),
         positionDeltaRho_c_(positionDeltaRho_c_in),
         vecDeltas_(vecDeltas_in), kappa_(kappa_in),
         ecut_(ecut_in),
         sigma2_(std::pow(showerSigma,2.0)),
-        algoId_(algoId_in),
         dependSensor_(dependSensor_in),
         dEdXweights_(dEdXweights_in),
         thicknessCorrection_(thicknessCorrection_in),
@@ -128,7 +126,6 @@ HGCalImagingAlgo(const std::vector<double>& thresholdW0_in, const std::vector<do
         fcPerEle_(fcPerEle_in),
         nonAgedNoises_(nonAgedNoises_in),
         noiseMip_(noiseMip_in),
-        verbosity_(the_verbosity),
         initialized_(false),
         points_(2*(maxlayer+1)),
         minpos_(2*(maxlayer+1),{
@@ -138,27 +135,20 @@ HGCalImagingAlgo(const std::vector<double>& thresholdW0_in, const std::vector<do
 {
 }
 
-virtual ~HGCalImagingAlgo()
-{
-}
+virtual ~HGCalImagingAlgo() {}
 
-void setVerbosity(VerbosityLevel the_verbosity)
-{
-        verbosity_ = the_verbosity;
-}
 
-void populate(const HGCRecHitCollection &hits);
+virtual void populate(const HGCRecHitCollection &hits) override;
 // this is the method that will start the clusterisation (it is possible to invoke this method more than once - but make sure it is with
 // different hit collections (or else use reset)
-void makeClusters();
+
+virtual void makeClusters() override;
+
 // this is the method to get the cluster collection out
-std::vector<reco::BasicCluster> getClusters(bool);
-// needed to switch between EE and HE with the same algorithm object (to get a single cluster collection)
-void getEventSetup(const edm::EventSetup& es){
-        rhtools_.getEventSetup(es);
-}
+virtual std::vector<reco::BasicCluster> getClusters(bool) override;
+
 // use this if you want to reuse the same cluster object but don't want to accumulate clusters (hardly useful?)
-void reset(){
+virtual void reset() override {
         clusters_v_.clear();
         layerClustersPerLayer_.clear();
         for( auto& it: points_)
@@ -177,14 +167,7 @@ void computeThreshold();
 /// point in the space
 typedef math::XYZPoint Point;
 
-//max number of layers
-static const unsigned int maxlayer = 52;
-
-
 private:
-// last layer per subdetector
-static const unsigned int lastLayerEE = 28;
-static const unsigned int lastLayerFH = 40;
 
 // To compute the cluster position
 std::vector<double> thresholdW0_;
@@ -200,14 +183,6 @@ double ecut_;
 // for energy sharing
 double sigma2_;   // transverse shower size
 
-// The vector of clusters
-std::vector<reco::BasicCluster> clusters_v_;
-
-hgcal::RecHitTools rhtools_;
-
-// The algo id
-reco::CaloCluster::AlgoId algoId_;
-
 // various parameters used for calculating the noise levels for a given sensor (and whether to use them)
 bool dependSensor_;
 std::vector<double> dEdXweights_;
@@ -218,9 +193,6 @@ std::vector<double> nonAgedNoises_;
 double noiseMip_;
 std::vector<std::vector<double> > thresholds_;
 std::vector<std::vector<double> > v_sigmaNoise_;
-
-// The verbosity level
-VerbosityLevel verbosity_;
 
 // initialization bool
 bool initialized_;
