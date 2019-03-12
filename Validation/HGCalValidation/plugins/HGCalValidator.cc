@@ -11,6 +11,7 @@ HGCalValidator::HGCalValidator(const edm::ParameterSet& pset):
   SaveGeneralInfo_(pset.getUntrackedParameter<bool>("SaveGeneralInfo")),
   doCaloParticlePlots_(pset.getUntrackedParameter<bool>("doCaloParticlePlots")),
   dolayerclustersPlots_(pset.getUntrackedParameter<bool>("dolayerclustersPlots")),
+  domulticlustersPlots_(pset.getUntrackedParameter<bool>("domulticlustersPlots")),
   cummatbudinxo_(pset.getParameter<edm::FileInPath>("cummatbudinxo"))
 {
 
@@ -116,7 +117,7 @@ void HGCalValidator::bookHistograms(DQMStore::ConcurrentBooker& ibook, edm::Run 
     ibook.setCurrentFolder(dirName);
 
     //Booking histograms concerning with hgcal layer clusters
-    if(dolayerclustersPlots_) {
+    if(dolayerclustersPlots_ || domulticlustersPlots_) {
       histoProducerAlgo_->bookClusterHistos(ibook, histograms.histoProducerAlgo, totallayers_to_monitor_, thicknesses_to_monitor_, cummatbudinxo_.fullPath() );
     }
 
@@ -204,7 +205,7 @@ void HGCalValidator::dqmAnalyze(const edm::Event& event, const edm::EventSetup& 
   // ##############################################
   // fill cluster histograms (LOOP OVER CLUSTERS)
   // ##############################################
-  if(!dolayerclustersPlots_){
+  if(dolayerclustersPlots_){
 
     histoProducerAlgo_->fill_generic_cluster_histos(histograms.histoProducerAlgo,
 						    w,clusters,densities,caloParticles,
@@ -215,6 +216,14 @@ void HGCalValidator::dqmAnalyze(const edm::Event& event, const edm::EventSetup& 
     for (unsigned int layerclusterIndex = 0; layerclusterIndex < clusters.size(); layerclusterIndex++) {
       histoProducerAlgo_->fill_cluster_histos(histograms.histoProducerAlgo,w,clusters[layerclusterIndex]);
     }
+  }
+
+  if(domulticlustersPlots_){
+    w++;
+    histoProducerAlgo_->fill_multi_cluster_histos(histograms.histoProducerAlgo,
+						  w,multiClusters,caloParticles,
+						  hitMap,
+						  totallayers_to_monitor_);
   }
   
   //General Info

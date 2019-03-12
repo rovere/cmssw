@@ -985,6 +985,28 @@ void HGVHistoProducerAlgo::fill_generic_cluster_histos(const Histograms& histogr
 
 }
 
+void HGVHistoProducerAlgo::multiClusters_to_CaloParticles (const Histograms& histograms,
+							   const std::vector<reco::HGCalMultiCluster> &multiClusters,
+							   std::vector<CaloParticle> const & cP,
+							   std::map<DetId, const HGCRecHit *> const & hitMap,
+							   unsigned layers) const
+{
+
+
+}
+
+void HGVHistoProducerAlgo::fill_multi_cluster_histos(const Histograms& histograms,
+						     int count,
+						     const std::vector<reco::HGCalMultiCluster> &multiClusters,
+						     std::vector<CaloParticle> const & cP,
+						     std::map<DetId, const HGCRecHit*> const & hitMap,
+						     unsigned layers) const {
+
+  multiClusters_to_CaloParticles(histograms, multiClusters, cP, hitMap, layers);
+
+}
+
+
 double HGVHistoProducerAlgo::distance2(const double x1, const double y1, const double x2, const double y2) const {   //distance squared
   const double dx = x1 - x2;
   const double dy = y1 - y2;

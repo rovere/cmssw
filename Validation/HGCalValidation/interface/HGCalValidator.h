@@ -59,6 +59,7 @@ class HGCalValidator : public DQMGlobalEDAnalyzer<HGCalValidatorHistograms> {
   const bool SaveGeneralInfo_;
   const bool doCaloParticlePlots_;
   const bool dolayerclustersPlots_;
+  const bool domulticlustersPlots_;
   const edm::FileInPath cummatbudinxo_;
 
   std::vector<edm::EDGetTokenT<reco::CaloClusterCollection> > labelToken;

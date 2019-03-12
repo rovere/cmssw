@@ -17,6 +17,7 @@
 #include "DataFormats/HGCRecHit/interface/HGCRecHitCollections.h"
 #include "DataFormats/ForwardDetId/interface/HGCalDetId.h"
 #include "DataFormats/HGCRecHit/interface/HGCRecHit.h"
+#include "DataFormats/ParticleFlowReco/interface/HGCalMultiCluster.h"
 
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
 #include "SimDataFormats/CaloAnalysis/interface/CaloParticle.h"
@@ -108,20 +109,24 @@ class HGVHistoProducerAlgo {
   void bookClusterHistos(DQMStore::ConcurrentBooker& ibook, Histograms& histograms,unsigned layers,
 			 std::vector<int> thicknesses, std::string pathtomatbudfile);
   void layerClusters_to_CaloParticles(const Histograms& histograms,
-      const reco::CaloClusterCollection &clusters,
-      std::vector<CaloParticle> const & cP,
-      std::map<DetId, const HGCRecHit*> const &,
-      unsigned layers) const ;
+				      const reco::CaloClusterCollection &clusters,
+				      std::vector<CaloParticle> const & cP,
+				      std::map<DetId, const HGCRecHit*> const &,
+				      unsigned layers) const ;
+  void multiClusters_to_CaloParticles(const Histograms& histograms,
+				      const std::vector<reco::HGCalMultiCluster> &multiClusters,
+				      std::vector<CaloParticle> const & cP,
+				      std::map<DetId, const HGCRecHit*> const &,
+				      unsigned layers) const ;
+
   void fill_info_histos(const Histograms& histograms, unsigned layers) const;
   void fill_caloparticle_histos(const Histograms& histograms,
 				int pdgid,
 				const CaloParticle & caloparticle,
 				std::vector<SimVertex> const & simVertices) const ;
-
   void fill_cluster_histos(const Histograms& histograms,
 			   int count,
 			   const reco::CaloCluster & cluster) const;
-
   void fill_generic_cluster_histos(const Histograms& histograms,
 				   int count,
 				   const reco::CaloClusterCollection &clusters,
@@ -131,7 +136,12 @@ class HGVHistoProducerAlgo {
 				   std::map<double, double> cummatbudg,
 				   unsigned layers,
 				   std::vector<int> thicknesses) const ;
-
+  void fill_multi_cluster_histos(const Histograms& histograms,
+				 int count,
+				 const std::vector<reco::HGCalMultiCluster> &multiClusters,
+				 std::vector<CaloParticle> const & cP,
+				 std::map<DetId, const HGCRecHit*> const &,
+				 unsigned layers) const ;
   double distance2(const double x1, const double y1, const double x2, const double y2) const;
   double distance(const double x1, const double y1, const double x2, const double y2) const;
 
