@@ -157,6 +157,14 @@ class HGVHistoProducerAlgo {
     float fraction;
   };
 
+  struct detIdInfoInMultiCluster
+  {
+    bool operator==(const detIdInfoInCluster& o) const { return clusterId == o.clusterId;};
+    unsigned int multiclusterId;
+    unsigned int clusterId;
+    float fraction;
+  };
+
   struct caloParticleOnLayer
   {
     unsigned int caloParticleId;
