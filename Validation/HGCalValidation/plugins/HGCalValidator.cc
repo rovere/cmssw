@@ -117,8 +117,13 @@ void HGCalValidator::bookHistograms(DQMStore::ConcurrentBooker& ibook, edm::Run 
     ibook.setCurrentFolder(dirName);
 
     //Booking histograms concerning with hgcal layer clusters
-    if(dolayerclustersPlots_ || domulticlustersPlots_) {
+    if(dolayerclustersPlots_) {
       histoProducerAlgo_->bookClusterHistos(ibook, histograms.histoProducerAlgo, totallayers_to_monitor_, thicknesses_to_monitor_, cummatbudinxo_.fullPath() );
+    }
+    
+    //Booking histograms concerning for hgcal multi clusters
+    if(domulticlustersPlots_) {
+      histoProducerAlgo_->bookMultiClusterHistos(ibook, histograms.histoProducerAlgo, totallayers_to_monitor_);
     }
 
   }//end loop www

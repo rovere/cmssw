@@ -92,6 +92,18 @@ struct HGVHistoProducerAlgoHistograms {
   std::unordered_map<int, ConcurrentMonitorElement > h_caloparticle_pt;
   std::unordered_map<int, ConcurrentMonitorElement > h_caloparticle_phi;
 
+  //For multiclusters
+  ConcurrentMonitorElement h_score_multicl2caloparticle;
+  ConcurrentMonitorElement h_energy_vs_score_multicl2caloparticle;
+  ConcurrentMonitorElement h_num_multicl_eta;
+  ConcurrentMonitorElement h_num_multicl_phi;
+  ConcurrentMonitorElement h_numMerge_multicl_eta;
+  ConcurrentMonitorElement h_numMerge_multicl_phi;
+  ConcurrentMonitorElement h_sharedenergy_multicl2caloparticle;
+  ConcurrentMonitorElement h_sharedenergy_multicl2caloparticle_vs_eta;
+  ConcurrentMonitorElement h_sharedenergy_multicl2caloparticle_vs_phi;
+  ConcurrentMonitorElement h_denom_multicl_eta;
+  ConcurrentMonitorElement h_denom_multicl_phi;
 };
 
 using Density = hgcal_clustering::Density;
@@ -108,6 +120,7 @@ class HGVHistoProducerAlgo {
 
   void bookClusterHistos(DQMStore::ConcurrentBooker& ibook, Histograms& histograms,unsigned layers,
 			 std::vector<int> thicknesses, std::string pathtomatbudfile);
+  void bookMultiClusterHistos(DQMStore::ConcurrentBooker& ibook, Histograms& histograms,unsigned layers);
   void layerClusters_to_CaloParticles(const Histograms& histograms,
 				      const reco::CaloClusterCollection &clusters,
 				      std::vector<CaloParticle> const & cP,
