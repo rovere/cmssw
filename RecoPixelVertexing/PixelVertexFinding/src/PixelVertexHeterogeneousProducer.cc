@@ -206,7 +206,7 @@ void PixelVertexHeterogeneousProducer::produceGPUCuda(
       assert(it< (*tuples_).indToEdm.size());
       auto k = (*tuples_).indToEdm[it];
       if (k>tracks.size()) {
-        edm::LogWarning("PixelVertexHeterogeneousProducer") << "oops track " << it << " does not exists on CPU " << k;
+        std::cout << "oops track " << it << " does not exists on CPU " << k << std::endl;
         continue;
       }
       auto tk = reco::TrackRef(trackCollection, k);
