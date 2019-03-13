@@ -94,16 +94,28 @@ struct HGVHistoProducerAlgoHistograms {
 
   //For multiclusters
   ConcurrentMonitorElement h_score_multicl2caloparticle;
+  ConcurrentMonitorElement h_score_caloparticle2multicl;
   ConcurrentMonitorElement h_energy_vs_score_multicl2caloparticle;
+  ConcurrentMonitorElement h_energy_vs_score_caloparticle2multicl;
   ConcurrentMonitorElement h_num_multicl_eta;
   ConcurrentMonitorElement h_num_multicl_phi;
   ConcurrentMonitorElement h_numMerge_multicl_eta;
   ConcurrentMonitorElement h_numMerge_multicl_phi;
   ConcurrentMonitorElement h_sharedenergy_multicl2caloparticle;
+  ConcurrentMonitorElement h_sharedenergy_caloparticle2multicl;
   ConcurrentMonitorElement h_sharedenergy_multicl2caloparticle_vs_eta;
   ConcurrentMonitorElement h_sharedenergy_multicl2caloparticle_vs_phi;
+  ConcurrentMonitorElement h_sharedenergy_caloparticle2multicl_vs_eta;
+  ConcurrentMonitorElement h_sharedenergy_caloparticle2multicl_vs_phi;
   ConcurrentMonitorElement h_denom_multicl_eta;
   ConcurrentMonitorElement h_denom_multicl_phi;
+  ConcurrentMonitorElement h_num_caloparticle_eta;
+  ConcurrentMonitorElement h_num_caloparticle_phi;
+  ConcurrentMonitorElement h_numDup_caloparticle_eta;
+  ConcurrentMonitorElement h_numDup_caloparticle_phi;
+  ConcurrentMonitorElement h_denom_caloparticle_eta;
+  ConcurrentMonitorElement h_denom_caloparticle_phi;
+
 };
 
 using Density = hgcal_clustering::Density;
