@@ -115,7 +115,8 @@ struct HGVHistoProducerAlgoHistograms {
   ConcurrentMonitorElement h_numDup_caloparticle_phi;
   ConcurrentMonitorElement h_denom_caloparticle_eta;
   ConcurrentMonitorElement h_denom_caloparticle_phi;
-
+  ConcurrentMonitorElement h_cellAssociation;
+  
 };
 
 using Density = hgcal_clustering::Density;
@@ -216,6 +217,7 @@ class HGVHistoProducerAlgo {
   double minEneClperlay_, maxEneClperlay_; int nintEneClperlay_;
   double minScore_, maxScore_; int nintScore_;
   double minSharedEneFrac_,maxSharedEneFrac_; int nintSharedEneFrac_;
+  double minMCLSharedEneFrac_,maxMCLSharedEneFrac_; int nintMCLSharedEneFrac_;
   double minTotNClsperthick_, maxTotNClsperthick_; int nintTotNClsperthick_;
   double minTotNcellsperthickperlayer_, maxTotNcellsperthickperlayer_; int nintTotNcellsperthickperlayer_;
   double minDisToSeedperthickperlayer_, maxDisToSeedperthickperlayer_; int nintDisToSeedperthickperlayer_;
