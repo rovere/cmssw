@@ -1324,6 +1324,76 @@ _energyscore_mcl2cp = PlotOnSideGroup("_energyscore_mcl2cp",Plot("Energy_vs_Scor
 
 #_energyclustered =
 
+#Coming back to the usual box definition
+_common = {"stat": True, "drawStyle": "hist", "staty": 0.65 }
+
+_totmulticlusternum = PlotGroup("totmulticlusternum", [
+  Plot("totmulticlusternum", xtitle="", **_common)
+],ncols=1)
+
+_clusternum_in_multicluster = PlotGroup("clusternum_in_multicluster",[
+  Plot("clusternum_in_multicluster", xtitle="", **_common)
+],ncols=1)
+
+#--------------------------------------------------------------------------------------------
+# z-
+#--------------------------------------------------------------------------------------------
+_clusternum_in_multicluster_perlayer_zminus_EE = PlotGroup("clusternum_in_multicluster_perlayer_zminus_EE", [ 
+  Plot("clusternum_in_multicluster_perlayer{:02d}".format(i), xtitle="", **_common) for i in range(lastLayerEEzm) 
+], ncols=4)
+
+_clusternum_in_multicluster_perlayer_zminus_FH = PlotGroup("clusternum_in_multicluster_perlayer_zminus_FH", [ 
+  Plot("clusternum_in_multicluster_perlayer{:02d}".format(i), xtitle="", **_common) for i in range(lastLayerEEzm,lastLayerFHzm) 
+], ncols=4)
+
+_clusternum_in_multicluster_perlayer_zminus_BH = PlotGroup("clusternum_in_multicluster_perlayer_zminus_BH", [ 
+  Plot("clusternum_in_multicluster_perlayer{:02d}".format(i), xtitle="", **_common) for i in range(lastLayerFHzm,maxlayerzm) 
+], ncols=4)
+
+#--------------------------------------------------------------------------------------------
+# z+
+#--------------------------------------------------------------------------------------------
+_clusternum_in_multicluster_perlayer_zplus_EE = PlotGroup("clusternum_in_multicluster_perlayer_zplus_EE", [ 
+  Plot("clusternum_in_multicluster_perlayer{:02d}".format(i), xtitle="", **_common) for i in range(maxlayerzm,lastLayerEEzp) 
+], ncols=4)
+
+_clusternum_in_multicluster_perlayer_zplus_FH = PlotGroup("clusternum_in_multicluster_perlayer_zplus_FH", [ 
+  Plot("clusternum_in_multicluster_perlayer{:02d}".format(i), xtitle="", **_common) for i in range(lastLayerEEzp,lastLayerFHzp) 
+], ncols=4)
+
+_clusternum_in_multicluster_perlayer_zplus_BH = PlotGroup("clusternum_in_multicluster_perlayer_zplus_BH", [ 
+  Plot("clusternum_in_multicluster_perlayer{:02d}".format(i), xtitle="", **_common) for i in range(lastLayerFHzp,maxlayerzp) 
+], ncols=4)
+
+#Some multiclusters quantities
+_multicluster_pt = PlotGroup("multicluster_pt", [
+  Plot("multicluster_pt", xtitle="", **_common)
+],ncols=1)
+
+_multicluster_eta = PlotGroup("multicluster_eta", [
+  Plot("multicluster_eta", xtitle="", **_common)
+],ncols=1)
+
+_multicluster_phi = PlotGroup("multicluster_phi", [
+  Plot("multicluster_phi", xtitle="", **_common)
+],ncols=1)
+
+_multicluster_energy = PlotGroup("multicluster_energy", [
+  Plot("multicluster_energy", xtitle="", **_common)
+],ncols=1)
+
+_multicluster_x = PlotGroup("multicluster_x", [
+  Plot("multicluster_x", xtitle="", **_common)
+],ncols=1)
+
+_multicluster_y = PlotGroup("multicluster_y", [
+  Plot("multicluster_y", xtitle="", **_common)
+],ncols=1)
+
+_multicluster_z = PlotGroup("multicluster_z", [
+  Plot("multicluster_z", xtitle="", **_common)
+],ncols=1)
+
 #=================================================================================================
 hgcalLayerClustersPlotter = Plotter()
 #We follow Chris categories in folders
@@ -1923,3 +1993,42 @@ hgcalMultiClustersPlotter.append("Energy_vs_Score_MCL2CP", [
             _energyscore_mcl2cp, 
             loopSubFolders=False,
             purpose=PlotPurpose.Timing, page="Energy_vs_Score_MCL2CP"))
+
+#[K] Number of multiclusters per event. 
+hgcalMultiClustersPlotter.append("NumberofMultiClusters", [
+        "DQMData/Run 1/HGCAL/Run summary/HGCalValidator/hgcalMultiClusters",
+        ], PlotFolder(
+        _totmulticlusternum,
+        loopSubFolders=False,
+        purpose=PlotPurpose.Timing, page="NumberofMultiClusters"
+        ))
+
+#[L] total number of layer clusters in multicluster per event and per layer
+hgcalMultiClustersPlotter.append("NumberofLayerClustersinMultiClusterPerEventAndPerLayer", [
+        "DQMData/Run 1/HGCAL/Run summary/HGCalValidator/hgcalMultiClusters",
+        ], PlotFolder(
+        _clusternum_in_multicluster,
+        _clusternum_in_multicluster_perlayer_zminus_EE,
+        _clusternum_in_multicluster_perlayer_zminus_FH,
+        _clusternum_in_multicluster_perlayer_zminus_BH,
+        _clusternum_in_multicluster_perlayer_zplus_EE,
+        _clusternum_in_multicluster_perlayer_zplus_FH,
+        _clusternum_in_multicluster_perlayer_zplus_BH,
+        loopSubFolders=False,
+        purpose=PlotPurpose.Timing, page="NumberofLayerClustersinMultiClusterPerEventAndPerLayer"
+        ))
+
+#[M] For each multicluster: pt, eta, phi, energy, x, y, z.
+hgcalMultiClustersPlotter.append("MultiClustersPtEtaPhiEneXYZ", [
+        "DQMData/Run 1/HGCAL/Run summary/HGCalValidator/hgcalMultiClusters",
+        ], PlotFolder(
+        _multicluster_pt,
+        _multicluster_eta,  
+        _multicluster_phi,  
+        _multicluster_energy,  
+        _multicluster_x,  
+        _multicluster_y,  
+        _multicluster_z,  
+        loopSubFolders=False,
+        purpose=PlotPurpose.Timing, page="MultiClustersPtEtaPhiEneXYZ"
+        ))

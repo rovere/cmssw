@@ -133,7 +133,38 @@ HGVHistoProducerAlgo::HGVHistoProducerAlgo(const edm::ParameterSet& pset) :
   //Parameters for the energy density of cluster cells per thickness 
   minCellsEneDensperthick_(pset.getParameter<double>("minCellsEneDensperthick")),
   maxCellsEneDensperthick_(pset.getParameter<double>("maxCellsEneDensperthick")),
-  nintCellsEneDensperthick_(pset.getParameter<int>("nintCellsEneDensperthick"))
+  nintCellsEneDensperthick_(pset.getParameter<int>("nintCellsEneDensperthick")), 
+
+  //Parameters for the total number of multiclusters per event
+  //We always treet one event as two events, one in +z one in -z
+  minTotNMCLs_(pset.getParameter<double>("minTotNMCLs")),
+  maxTotNMCLs_(pset.getParameter<double>("maxTotNMCLs")),
+  nintTotNMCLs_(pset.getParameter<int>("nintTotNMCLs")),
+  
+  //Parameters for the total number of layer clusters in multicluster
+  minTotNClsinMCLs_(pset.getParameter<double>("minTotNClsinMCLs")),
+  maxTotNClsinMCLs_(pset.getParameter<double>("maxTotNClsinMCLs")),
+  nintTotNClsinMCLs_(pset.getParameter<int>("nintTotNClsinMCLs")),
+
+  //Parameters for the total number of layer clusters in multicluster per layer
+  minTotNClsinMCLsperlayer_(pset.getParameter<double>("minTotNClsinMCLsperlayer")),
+  maxTotNClsinMCLsperlayer_(pset.getParameter<double>("maxTotNClsinMCLsperlayer")),
+  nintTotNClsinMCLsperlayer_(pset.getParameter<int>("nintTotNClsinMCLsperlayer")),
+
+  //parameters for x
+  minX_(pset.getParameter<double>("minX")),
+  maxX_(pset.getParameter<double>("maxX")),
+  nintX_(pset.getParameter<int>("nintX")),
+
+  //parameters for y
+  minY_(pset.getParameter<double>("minY")),
+  maxY_(pset.getParameter<double>("maxY")),
+  nintY_(pset.getParameter<int>("nintY")),
+
+  //parameters for z
+  minZ_(pset.getParameter<double>("minZ")),
+  maxZ_(pset.getParameter<double>("maxZ")),
+  nintZ_(pset.getParameter<int>("nintZ"))
 
 {}
 
@@ -317,6 +348,9 @@ void HGVHistoProducerAlgo::bookMultiClusterHistos(DQMStore::ConcurrentBooker& ib
       histograms.h_cellAssociation_perlayer[ilayer].setBinLabel(3, "FN(ineff.)");
       histograms.h_cellAssociation_perlayer[ilayer].setBinLabel(4, "FP(fake)");
       histograms.h_cellAssociation_perlayer[ilayer].setBinLabel(5, "TP(eff.)");
+      
+      histograms.h_clusternum_in_multicluster_perlayer[ilayer] = ibook.book1D("clusternum_in_multicluster_perlayer"+istr1,"Number of layer clusters in multicluster for layer "+istr2, nintTotNClsinMCLsperlayer_, minTotNClsinMCLsperlayer_, maxTotNClsinMCLsperlayer_);
+      
     }
 
     histograms.h_cellAssociation = ibook.book1D("cellAssociation", "Cell Association per multicluster", 5, -4., 1.);
@@ -325,7 +359,18 @@ void HGVHistoProducerAlgo::bookMultiClusterHistos(DQMStore::ConcurrentBooker& ib
     histograms.h_cellAssociation.setBinLabel(4, "FP(fake)");
     histograms.h_cellAssociation.setBinLabel(5, "TP(eff.)");
 
-
+    histograms.h_multiclusternum = ibook.book1D("totmulticlusternum","total number of multiclusters",nintTotNMCLs_,minTotNMCLs_,maxTotNMCLs_);
+    histograms.h_clusternum_in_multicluster = ibook.book1D("clusternum_in_multicluster","total number of layer clusters in multicluster",nintTotNClsinMCLs_, minTotNClsinMCLs_, maxTotNClsinMCLs_);
+    histograms.h_multicluster_pt = ibook.book1D("multicluster_pt","Pt of the multicluster", nintPt_,minPt_,maxPt_);
+    histograms.h_multicluster_eta = ibook.book1D("multicluster_eta","Eta of the multicluster", nintEta_, minEta_, maxEta_);
+    histograms.h_multicluster_phi = ibook.book1D("multicluster_phi","Phi of the multicluster", nintPhi_, minPhi_, maxPhi_);
+    histograms.h_multicluster_energy = ibook.book1D("multicluster_energy","Energy of the multicluster", nintEne_,minEne_,maxEne_);
+    histograms.h_multicluster_x = ibook.book1D("multicluster_x","X position of the multicluster", nintX_,minX_,maxX_);
+    histograms.h_multicluster_y = ibook.book1D("multicluster_y","Y position of the multicluster", nintY_,minY_,maxY_);
+    histograms.h_multicluster_z = ibook.book1D("multicluster_z","Z position of the multicluster", nintZ_,minZ_,maxZ_);
+    histograms.h_multicluster_firstlayer = ibook.book1D("multicluster_firstlayer","First layer of the multicluster", 2*layers, 0., (float) 2*layers);
+    histograms.h_multicluster_lastlayer = ibook.book1D("multicluster_lastlayer","Last layer of the multicluster", 2*layers, 0., (float) 2*layers);
+    histograms.h_multicluster_layersnum = ibook.book1D("multicluster_layersnum","Number of layers of the multicluster", 2*layers, 0., (float) 2*layers);
 
 }
 
@@ -1647,6 +1692,85 @@ void HGVHistoProducerAlgo::fill_multi_cluster_histos(const Histograms& histogram
 						     unsigned layers) const {
 
   multiClusters_to_CaloParticles(histograms, multiClusters, cP, hitMap, layers);
+
+  //Each event to be treated as two events: 
+  //an event in +ve endcap, plus another event in -ve endcap. 
+
+  //To keep track of total num of multilusters
+  int tnmclmz = 0; //-z
+  int tnmclpz = 0; //+z
+
+  auto nMultiClusters = multiClusters.size();
+  //loop through multiclusters of the event
+  for (unsigned int mclId = 0; mclId < nMultiClusters; ++mclId){
+    
+    const auto layerClusters = multiClusters[mclId].clusters();
+    auto nLayerClusters = layerClusters.size();
+    if (multiClusters[mclId].z() < 0. ) {tnmclmz++;}
+    if (multiClusters[mclId].z() > 0. ) {tnmclpz++;}
+
+    //Total number of layer clusters in multicluster
+    int tnlcinmclmz = 0; //-z
+    int tnlcinmclpz = 0; //+z
+ 
+    //To keep track of total num of layer clusters per multicluster
+    //tnlcinmclperlaypz[layerid], tnlcinmclperlaymz[layerid]
+    std::vector<int> tnlcinmclperlaypz(1000, 0); //+z
+    std::vector<int> tnlcinmclperlaymz(1000, 0); //-z
+
+    //For the layers the multicluster expands to. 
+    std::set<int> multicluster_layers;
+
+    //Loop through layer clusters
+    for (unsigned int lcId = 0; lcId < nLayerClusters; ++lcId){
+
+      //take the hits and their fraction of the specific layer cluster. 
+      const std::vector<std::pair<DetId, float> >& hits_and_fractions = layerClusters[lcId]->hitsAndFractions();
+      
+      const auto firstHitDetId = hits_and_fractions[0].first;
+      //The layer that the layer cluster belongs to
+      int layerid = recHitTools_->getLayerWithOffset(firstHitDetId) + layers * ((recHitTools_->zside(firstHitDetId) + 1) >> 1) - 1;
+      multicluster_layers.insert(layerid);
+      
+      if ( recHitTools_->zside(firstHitDetId) > 0. ) {
+	tnlcinmclpz++;
+	tnlcinmclperlaypz[layerid]++;
+      } 
+      if ( recHitTools_->zside(firstHitDetId) < 0. ) {
+	tnlcinmclmz++;
+      	tnlcinmclperlaymz[layerid]++;
+      } 
+
+      
+    }//end of loop through layerclusters
+
+    //Per layer : Loop 0->103
+    for (unsigned ilayer = 0; ilayer < layers*2; ++ilayer) {
+      if (histograms.h_clusternum_in_multicluster_perlayer.count(ilayer)){ 
+	histograms.h_clusternum_in_multicluster_perlayer.at(ilayer).fill( tnlcinmclperlaypz[ilayer] ); 
+	histograms.h_clusternum_in_multicluster_perlayer.at(ilayer).fill( tnlcinmclperlaymz[ilayer] ); 
+      }
+    }//end of loop over layers 
+
+    histograms.h_clusternum_in_multicluster.fill(tnlcinmclpz);
+    histograms.h_clusternum_in_multicluster.fill(tnlcinmclmz);
+
+    histograms.h_multicluster_pt.fill(multiClusters[mclId].pt());
+    histograms.h_multicluster_eta.fill(multiClusters[mclId].eta());
+    histograms.h_multicluster_phi.fill(multiClusters[mclId].phi());
+    histograms.h_multicluster_energy.fill(multiClusters[mclId].energy());
+    histograms.h_multicluster_x.fill(multiClusters[mclId].x());
+    histograms.h_multicluster_y.fill(multiClusters[mclId].y());
+    histograms.h_multicluster_z.fill(multiClusters[mclId].z());
+    histograms.h_multicluster_firstlayer.fill( (float) *multicluster_layers.begin());
+    histograms.h_multicluster_lastlayer.fill( (float) *multicluster_layers.rbegin());
+    histograms.h_multicluster_layersnum.fill( (float) multicluster_layers.size());
+
+  }//end of loop through multiclusters
+
+  histograms.h_multiclusternum.fill(tnmclmz);
+  histograms.h_multiclusternum.fill(tnmclpz);
+
 
 }
 

@@ -116,7 +116,22 @@ struct HGVHistoProducerAlgoHistograms {
   ConcurrentMonitorElement h_denom_caloparticle_eta;
   ConcurrentMonitorElement h_denom_caloparticle_phi;
   ConcurrentMonitorElement h_cellAssociation;
-  
+  ConcurrentMonitorElement h_multiclusternum;
+  ConcurrentMonitorElement h_clusternum_in_multicluster;
+  std::unordered_map<int, ConcurrentMonitorElement > h_clusternum_in_multicluster_perlayer;
+  ConcurrentMonitorElement h_multicluster_pt;
+  ConcurrentMonitorElement h_multicluster_eta;
+  ConcurrentMonitorElement h_multicluster_phi;
+  ConcurrentMonitorElement h_multicluster_energy;
+  ConcurrentMonitorElement h_multicluster_x;
+  ConcurrentMonitorElement h_multicluster_y;
+  ConcurrentMonitorElement h_multicluster_z;
+  ConcurrentMonitorElement h_multicluster_firstlayer;
+  ConcurrentMonitorElement h_multicluster_lastlayer;
+  ConcurrentMonitorElement h_multicluster_layersnum;
+
+
+
 };
 
 using Density = hgcal_clustering::Density;
@@ -227,6 +242,12 @@ class HGVHistoProducerAlgo {
   double minDisSeedToMaxperthickperlayer_, maxDisSeedToMaxperthickperlayer_; int nintDisSeedToMaxperthickperlayer_;
   double minClEneperthickperlayer_, maxClEneperthickperlayer_; int nintClEneperthickperlayer_;
   double minCellsEneDensperthick_, maxCellsEneDensperthick_; int nintCellsEneDensperthick_;
+  double minTotNMCLs_,maxTotNMCLs_; int nintTotNMCLs_;
+  double minTotNClsinMCLs_, maxTotNClsinMCLs_; int nintTotNClsinMCLs_;
+  double minTotNClsinMCLsperlayer_, maxTotNClsinMCLsperlayer_; int nintTotNClsinMCLsperlayer_;
+  double minX_, maxX_;  int nintX_;
+  double minY_, maxY_;  int nintY_;
+  double minZ_, maxZ_;  int nintZ_;
 
 };
 
