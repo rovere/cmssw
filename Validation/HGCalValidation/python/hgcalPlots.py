@@ -1224,7 +1224,7 @@ for i in range(maxlayerzm,maxlayerzp):
 #--------------------------------------------------------------------------------------------
 # MULTICLUSTERS
 #--------------------------------------------------------------------------------------------
-_common_score = {"title": "Score CaloParticle to MultiClusters",
+_common_score = {#"title": "Score CaloParticle to MultiClusters",
                  "stat": False,
                  "ymin": 0.1,
                  "ymax": 1000,
@@ -1236,10 +1236,12 @@ _common_score = {"title": "Score CaloParticle to MultiClusters",
                 }
 _common_score.update(_legend_common)
 _score_caloparticle_to_multiclusters = PlotGroup("score_caloparticle_to_multicluster", [
-        Plot("Score_caloparticle2multicl", **_common_score) 
-        ])
+        Plot("Score_caloparticle2multicl", **_common_score), 
+        Plot("Score_caloparticle2contimulticl", **_common_score), 
+        Plot("Score_caloparticle2noncontimulticl", **_common_score) 
+        ], ncols=3)
 
-_common_score = {"title": "Score MultiCluster to CaloParticles",
+_common_score = {#"title": "Score MultiCluster to CaloParticles",
                  "stat": False,
                  "ymin": 0.1,
                  "ymax": 1000,
@@ -1251,7 +1253,9 @@ _common_score = {"title": "Score MultiCluster to CaloParticles",
                 }
 _common_score.update(_legend_common)
 _score_multicluster_to_caloparticles = PlotGroup("score_multicluster_to_caloparticle", [
-        Plot("Score_multicl2caloparticle", **_common_score) 
+        Plot("Score_multicl2caloparticle", **_common_score), 
+        Plot("Score_contimulticl2caloparticle", **_common_score), 
+        Plot("Score_noncontimulticl2caloparticle", **_common_score) 
         ])
 
 _common_shared= {"title": "Shared Energy CaloParticle To Multi Cluster ",
@@ -1318,9 +1322,13 @@ _merges = PlotGroup("MergeRate", _mergeplots, ncols=3)
 
 _common_energy_score = dict(removeEmptyBins=True, xbinlabelsize=10, xbinlabeloption="d")
 _common_energy_score["ymax"] = 1.
-_energyscore_cp2mcl = PlotOnSideGroup("_energyscore_cp2mcl",Plot("Energy_vs_Score_caloparticle2multi", drawStyle="COLZ", adjustMarginRight=0.1, **_common_energy_score))
+_energyscore_cp2mcl = PlotOnSideGroup("_energyscore_cp2mcl", Plot("Energy_vs_Score_caloparticle2multi", drawStyle="COLZ", adjustMarginRight=0.1, **_common_energy_score))
+_energyscore_cp2contimcl = PlotOnSideGroup("_energyscore_cp2contimcl", Plot("Energy_vs_Score_caloparticle2contimulti", drawStyle="COLZ", adjustMarginRight=0.1, **_common_energy_score))
+_energyscore_cp2noncontimcl = PlotOnSideGroup("_energyscore_cp2noncontimcl", Plot("Energy_vs_Score_caloparticle2noncontimulti", drawStyle="COLZ", adjustMarginRight=0.1, **_common_energy_score))
 _common_energy_score["ymax"] = 8.
-_energyscore_mcl2cp = PlotOnSideGroup("_energyscore_mcl2cp",Plot("Energy_vs_Score_multi2caloparticle", drawStyle="COLZ", adjustMarginRight=0.1, **_common_energy_score))
+_energyscore_mcl2cp = PlotOnSideGroup("_energyscore_mcl2cp", Plot("Energy_vs_Score_multi2caloparticle", drawStyle="COLZ", adjustMarginRight=0.1, **_common_energy_score))
+_energyscore_contimcl2cp = PlotOnSideGroup("_energyscore_contimcl2cp", Plot("Energy_vs_Score_contimulti2caloparticle", drawStyle="COLZ", adjustMarginRight=0.1, **_common_energy_score))
+_energyscore_noncontimcl2cp = PlotOnSideGroup("_energyscore_noncontimcl2cp", Plot("Energy_vs_Score_noncontimulti2caloparticle", drawStyle="COLZ", adjustMarginRight=0.1, **_common_energy_score))
 
 #_energyclustered =
 
@@ -1329,6 +1337,14 @@ _common = {"stat": True, "drawStyle": "hist", "staty": 0.65 }
 
 _totmulticlusternum = PlotGroup("totmulticlusternum", [
   Plot("totmulticlusternum", xtitle="", **_common)
+],ncols=1)
+
+_contmulticlusternum = PlotGroup("contmulticlusternum", [
+  Plot("contmulticlusternum", xtitle="", **_common)
+],ncols=1)
+
+_noncontmulticlusternum = PlotGroup("noncontmulticlusternum", [
+  Plot("noncontmulticlusternum", xtitle="", **_common)
 ],ncols=1)
 
 _clusternum_in_multicluster = PlotGroup("clusternum_in_multicluster",[
@@ -1983,6 +1999,8 @@ hgcalMultiClustersPlotter.append("Energy_vs_Score_CP2MCL_MCL2CP", [
             ], PlotFolder(
             #_energyscore_cp2mcl_mcl2cp,
             _energyscore_cp2mcl, 
+            _energyscore_cp2contimcl, 
+            _energyscore_cp2noncontimcl, 
             loopSubFolders=False,
             purpose=PlotPurpose.Timing, page="Energy_vs_Score_CP2MCL"))
 
@@ -1991,16 +2009,20 @@ hgcalMultiClustersPlotter.append("Energy_vs_Score_MCL2CP", [
             "DQMData/Run 1/HGCAL/Run summary/HGCalValidator/hgcalMultiClusters",
             ], PlotFolder(
             _energyscore_mcl2cp, 
+            _energyscore_contimcl2cp, 
+            _energyscore_noncontimcl2cp, 
             loopSubFolders=False,
             purpose=PlotPurpose.Timing, page="Energy_vs_Score_MCL2CP"))
 
 #[K] Number of multiclusters per event. 
-hgcalMultiClustersPlotter.append("NumberofMultiClusters", [
+hgcalMultiClustersPlotter.append("NumberofMultiClusters_All_Contiguous_NonContiguous", [
         "DQMData/Run 1/HGCAL/Run summary/HGCalValidator/hgcalMultiClusters",
         ], PlotFolder(
         _totmulticlusternum,
+        _contmulticlusternum,
+        _noncontmulticlusternum,
         loopSubFolders=False,
-        purpose=PlotPurpose.Timing, page="NumberofMultiClusters"
+        purpose=PlotPurpose.Timing, page="NumberofMultiClusters_All_Contiguous_NonContiguous"
         ))
 
 #[L] total number of layer clusters in multicluster per event and per layer

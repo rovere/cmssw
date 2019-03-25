@@ -96,7 +96,18 @@ struct HGVHistoProducerAlgoHistograms {
   ConcurrentMonitorElement h_score_multicl2caloparticle;
   ConcurrentMonitorElement h_score_caloparticle2multicl;
   ConcurrentMonitorElement h_energy_vs_score_multicl2caloparticle;
-  ConcurrentMonitorElement h_energy_vs_score_caloparticle2multicl;
+  ConcurrentMonitorElement h_energy_vs_score_caloparticle2multicl;	
+  //contiguous multiclusters
+  ConcurrentMonitorElement h_score_contimulticl2caloparticle;
+  ConcurrentMonitorElement h_score_caloparticle2contimulticl;
+  ConcurrentMonitorElement h_energy_vs_score_contimulticl2caloparticle;
+  ConcurrentMonitorElement h_energy_vs_score_caloparticle2contimulticl;
+  //non contiguous multiclusters
+  ConcurrentMonitorElement h_score_noncontimulticl2caloparticle;
+  ConcurrentMonitorElement h_score_caloparticle2noncontimulticl;
+  ConcurrentMonitorElement h_energy_vs_score_noncontimulticl2caloparticle;
+  ConcurrentMonitorElement h_energy_vs_score_caloparticle2noncontimulticl;
+  //Back to all multiclusters
   ConcurrentMonitorElement h_num_multicl_eta;
   ConcurrentMonitorElement h_num_multicl_phi;
   ConcurrentMonitorElement h_numMerge_multicl_eta;
@@ -117,6 +128,8 @@ struct HGVHistoProducerAlgoHistograms {
   ConcurrentMonitorElement h_denom_caloparticle_phi;
   ConcurrentMonitorElement h_cellAssociation;
   ConcurrentMonitorElement h_multiclusternum;
+  ConcurrentMonitorElement h_contmulticlusternum;
+  ConcurrentMonitorElement h_noncontmulticlusternum;
   ConcurrentMonitorElement h_clusternum_in_multicluster;
   std::unordered_map<int, ConcurrentMonitorElement > h_clusternum_in_multicluster_perlayer;
   ConcurrentMonitorElement h_multicluster_pt;
@@ -158,8 +171,8 @@ class HGVHistoProducerAlgo {
 				      const std::vector<reco::HGCalMultiCluster> &multiClusters,
 				      std::vector<CaloParticle> const & cP,
 				      std::map<DetId, const HGCRecHit*> const &,
-				      unsigned layers) const ;
-
+				      unsigned layers,
+				      std::vector<bool> contimulti) const ;
   void fill_info_histos(const Histograms& histograms, unsigned layers) const;
   void fill_caloparticle_histos(const Histograms& histograms,
 				int pdgid,
