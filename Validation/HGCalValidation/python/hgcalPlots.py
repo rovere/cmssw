@@ -1227,9 +1227,9 @@ for i in range(maxlayerzm,maxlayerzp):
 _common_score = {#"title": "Score CaloParticle to MultiClusters",
                  "stat": False,
                  "ymin": 0.1,
-                 "ymax": 1000,
+                 "ymax": 100000,
                  "xmin": 0,
-                 "xmax": 1,
+                 "xmax": 0.3,
                  "drawStyle": "hist",
                  "lineWidth": 1,
                  "ylog": True
@@ -1244,9 +1244,9 @@ _score_caloparticle_to_multiclusters = PlotGroup("score_caloparticle_to_multiclu
 _common_score = {#"title": "Score MultiCluster to CaloParticles",
                  "stat": False,
                  "ymin": 0.1,
-                 "ymax": 1000,
+                 "ymax": 100000,
                  "xmin": 0,
-                 "xmax": 1,
+                 "xmax": 1.0,
                  "drawStyle": "hist",
                  "lineWidth": 1,
                  "ylog": True
@@ -1286,7 +1286,7 @@ _common_assoc = {#"title": "Cell Association Table",
                  "xbinlabeloption": "h",
                  "drawStyle": "hist",
                  "ymin": 0.1,
-                 "ymax": 100000,
+                 "ymax": 10000000,
                  "ylog": True}
 _common_assoc.update(_legend_common)
 _cell_association_table = PlotGroup("cellAssociation_table", [
@@ -1322,10 +1322,12 @@ _merges = PlotGroup("MergeRate", _mergeplots, ncols=3)
 
 _common_energy_score = dict(removeEmptyBins=True, xbinlabelsize=10, xbinlabeloption="d")
 _common_energy_score["ymax"] = 1.
+_common_energy_score["xmax"] = 0.3
 _energyscore_cp2mcl = PlotOnSideGroup("_energyscore_cp2mcl", Plot("Energy_vs_Score_caloparticle2multi", drawStyle="COLZ", adjustMarginRight=0.1, **_common_energy_score))
 _energyscore_cp2contimcl = PlotOnSideGroup("_energyscore_cp2contimcl", Plot("Energy_vs_Score_caloparticle2contimulti", drawStyle="COLZ", adjustMarginRight=0.1, **_common_energy_score))
 _energyscore_cp2noncontimcl = PlotOnSideGroup("_energyscore_cp2noncontimcl", Plot("Energy_vs_Score_caloparticle2noncontimulti", drawStyle="COLZ", adjustMarginRight=0.1, **_common_energy_score))
 _common_energy_score["ymax"] = 8.
+_common_energy_score["xmax"] = 1.0
 _energyscore_mcl2cp = PlotOnSideGroup("_energyscore_mcl2cp", Plot("Energy_vs_Score_multi2caloparticle", drawStyle="COLZ", adjustMarginRight=0.1, **_common_energy_score))
 _energyscore_contimcl2cp = PlotOnSideGroup("_energyscore_contimcl2cp", Plot("Energy_vs_Score_contimulti2caloparticle", drawStyle="COLZ", adjustMarginRight=0.1, **_common_energy_score))
 _energyscore_noncontimcl2cp = PlotOnSideGroup("_energyscore_noncontimcl2cp", Plot("Energy_vs_Score_noncontimulti2caloparticle", drawStyle="COLZ", adjustMarginRight=0.1, **_common_energy_score))
@@ -1347,6 +1349,19 @@ _noncontmulticlusternum = PlotGroup("noncontmulticlusternum", [
   Plot("noncontmulticlusternum", xtitle="", **_common)
 ],ncols=1)
 
+_multicluster_firstlayer = PlotGroup("multicluster_firstlayer", [
+  Plot("multicluster_firstlayer", xtitle="", **_common)
+],ncols=1)
+
+_multicluster_lastlayer = PlotGroup("multicluster_lastlayer", [
+  Plot("multicluster_lastlayer", xtitle="", **_common)
+],ncols=1)
+
+_multicluster_layersnum = PlotGroup("multicluster_layersnum", [
+  Plot("multicluster_layersnum", xtitle="", **_common)
+],ncols=1)
+
+_common["xmax"] = 50 
 _clusternum_in_multicluster = PlotGroup("clusternum_in_multicluster",[
   Plot("clusternum_in_multicluster", xtitle="", **_common)
 ],ncols=1)
@@ -1380,6 +1395,9 @@ _clusternum_in_multicluster_perlayer_zplus_FH = PlotGroup("clusternum_in_multicl
 _clusternum_in_multicluster_perlayer_zplus_BH = PlotGroup("clusternum_in_multicluster_perlayer_zplus_BH", [ 
   Plot("clusternum_in_multicluster_perlayer{:02d}".format(i), xtitle="", **_common) for i in range(lastLayerFHzp,maxlayerzp) 
 ], ncols=4)
+
+#Coming back to the usual box definition
+_common = {"stat": True, "drawStyle": "hist", "staty": 0.65 }
 
 #Some multiclusters quantities
 _multicluster_pt = PlotGroup("multicluster_pt", [
@@ -2053,4 +2071,15 @@ hgcalMultiClustersPlotter.append("MultiClustersPtEtaPhiEneXYZ", [
         _multicluster_z,  
         loopSubFolders=False,
         purpose=PlotPurpose.Timing, page="MultiClustersPtEtaPhiEneXYZ"
+        ))
+
+#[N] Multicluster first, last, total number of layers
+hgcalMultiClustersPlotter.append("NumberofMultiClusters_First_Last_NLayers", [
+        "DQMData/Run 1/HGCAL/Run summary/HGCalValidator/hgcalMultiClusters",
+        ], PlotFolder(
+        _multicluster_firstlayer,
+        _multicluster_lastlayer,
+        _multicluster_layersnum,
+        loopSubFolders=False,
+        purpose=PlotPurpose.Timing, page="NumberofMultiClusters_First_Last_NLayers"
         ))
