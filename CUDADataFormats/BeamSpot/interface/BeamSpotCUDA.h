@@ -2,6 +2,7 @@
 #define CUDADataFormats_BeamSpot_interface_BeamSpotCUDA_h
 
 #include "HeterogeneousCore/CUDAUtilities/interface/device_unique_ptr.h"
+#include "HeterogeneousCore/CUDAUtilities/interface/host_unique_ptr.h"
 
 #include <cuda/api_wrappers.h>
 
@@ -21,7 +22,7 @@ public:
   };
 
   BeamSpotCUDA() = default;
-  BeamSpotCUDA(Data const* data_h, cuda::stream_t<>& stream);
+  BeamSpotCUDA(cudautils::host::unique_ptr<Data> data_h, cuda::stream_t<>& stream);
 
   Data const* data() const { return data_d_.get(); }
 

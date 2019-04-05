@@ -10,39 +10,16 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "HeterogeneousCore/CUDACore/interface/CUDAScopedContext.h"
 #include "HeterogeneousCore/CUDAServices/interface/CUDAService.h"
-#include "HeterogeneousCore/CUDAUtilities/interface/host_noncached_unique_ptr.h"
+#include "HeterogeneousCore/CUDAUtilities/interface/host_unique_ptr.h"
 
-#include <cuda_runtime.h>
 
-namespace {
-  class BSHost {
-  public:
-    BSHost():
-      bs{cudautils::make_host_noncached_unique<BeamSpotCUDA::Data>(cudaHostAllocWriteCombined)}
-    {}
-    BeamSpotCUDA::Data *get() { return bs.get(); }
-
-  private:
-    cudautils::host::noncached::unique_ptr<BeamSpotCUDA::Data> bs;
-  };
-}
-
-class BeamSpotToCUDA: public edm::global::EDProducer<edm::StreamCache<BSHost> > {
+class BeamSpotToCUDA: public edm::global::EDProducer<> {
 public:
   explicit BeamSpotToCUDA(const edm::ParameterSet& iConfig);
   ~BeamSpotToCUDA() override = default;
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
-  std::unique_ptr<BSHost> beginStream(edm::StreamID) const {
-    edm::Service<CUDAService> cs;
-    if(cs->enabled()) {
-      return std::make_unique<BSHost>();
-    }
-    else {
-      return nullptr;
-    }
-  }
   void produce(edm::StreamID streamID, edm::Event& iEvent, const edm::EventSetup& iSetup) const override;
 
 private:
@@ -66,8 +43,8 @@ void BeamSpotToCUDA::produce(edm::StreamID streamID, edm::Event& iEvent, const e
 
   const reco::BeamSpot& bs = iEvent.get(bsGetToken_);
 
-  BeamSpotCUDA::Data *bsHost = streamCache(streamID)->get();
-
+  edm::Service<CUDAService> cs;
+  auto bsHost = cs->make_host_unique<BeamSpotCUDA::Data>(ctx.stream());
   bsHost->x = bs.x0();
   bsHost->y = bs.y0();
   bsHost->z = bs.z0();
@@ -81,7 +58,7 @@ void BeamSpotToCUDA::produce(edm::StreamID streamID, edm::Event& iEvent, const e
   bsHost->emittanceY = bs.emittanceY();
   bsHost->betaStar = bs.betaStar();
 
-  ctx.emplace(iEvent, bsPutToken_, bsHost, ctx.stream());
+  ctx.emplace(iEvent, bsPutToken_, std::move(bsHost), ctx.stream());
 }
 
 DEFINE_FWK_MODULE(BeamSpotToCUDA);
