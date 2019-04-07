@@ -9,6 +9,9 @@
 
 #include <TFile.h>
 #include <TH1F.h>
+#include <TMath.h> // Chi2 probabilities
+
+//#define USE_BL
 
 #ifdef USE_BL
 #include "RecoPixelVertexing/PixelTrackFitting/interface/BrokenLine.h"
@@ -55,6 +58,15 @@ constexpr int c_speed = 299792458;
 constexpr double pi = M_PI;
 default_random_engine generator(1);
 
+/**
+ * Returns the points smeared according to the specified errors in the radial
+ * direction (dist_R), in the direction perpendicular to R (dist_Rp) and in Z.
+ * The smearing is customized for the barrel and endcap case differently. The
+ * transition between the 2 region is set by the caller function and passed
+ * here as a boolean paramter.
+*/
+
+
 void smearing(const Vector5d& err, const bool& isbarrel, double& x, double& y, double& z) {
   normal_distribution<double> dist_R(0., err[0]);
   normal_distribution<double> dist_Rp(0., err[1]);
@@ -65,8 +77,12 @@ void smearing(const Vector5d& err, const bool& isbarrel, double& x, double& y, d
     double dev_Rp = dist_Rp(generator);
     double dev_R = dist_R(generator);
     double R = sqrt(Rfit::sqr(x) + Rfit::sqr(y));
-    x += dev_Rp * +y / R + dev_R * -x / R;
-    y += dev_Rp * -x / R + dev_R * -y / R;
+//    x += dev_Rp * +y / R + dev_R * -x / R;
+//    y += dev_Rp * -x / R + dev_R * -y / R;
+    // Original signs seem wrong to me, unless I swapped the direction of the
+    // R correction.
+    x += dev_Rp * +y / R + dev_R * x / R;
+    y += dev_Rp * -x / R + dev_R * y / R;
     z += dist_z(generator);
   } else {
     x += dist_xyh(generator);
@@ -75,19 +91,43 @@ void smearing(const Vector5d& err, const bool& isbarrel, double& x, double& y, d
   }
 }
 
+
 template<int N>
-void Hits_cov(Eigen::Matrix<float,6,4> & V, const unsigned int& i, const unsigned int& n, const Matrix3xNd<N>& hits,
-              const Vector5d& err, bool isbarrel) {
+void Hits_cov(Eigen::Matrix<float,6,4> & V, const unsigned int& i,
+    const unsigned int& n, const Matrix3xNd<N>& hits,
+    const Vector5d& err, bool isbarrel) {
   if (isbarrel) {
+    /**
+     * Index of the covariance matrix:
+     *
+     * Errors computed starting from (in the barrel case):
+     * x ==> x + delta_r*x/R + delta_rp*y/R = x + delta_x
+     * y ==> y + delta_r*y/R - delta_rp*x/R = y + delta_y
+     * z ==> z + delta_z
+     *
+     * 0 = Cov(x,x) = (delta_r^2*x^2 + delta_rp^2*y^2) / R^2
+     * 1 = Cov(x,y) = Cov(y,x) = (delta_r^2 - delta_rp^2) * (x*y)/R^2
+     * 2 = Cov(y,y) = (delta_r^2*y^2 + delta_rp^2*x^2) / R^2
+     * 5 = Cov(z,z)
+     * All other terms are set to 0
+     *
+     * Forward case:
+     * 0 = Cov(x,x) = delta_rp**2
+     * 2 = Cov(y,y) = delta_rp**2
+     * 5 = Cov(z,z) = delta_z**2
+     *
+     * All other terms are set to 0
+     *
+     */
     double R2 = Rfit::sqr(hits(0, i)) + Rfit::sqr(hits(1, i));
     V.col(i)[0] =
         (Rfit::sqr(err[1]) * Rfit::sqr(hits(1, i)) + Rfit::sqr(err[0]) * Rfit::sqr(hits(0, i))) /
         R2;
+    V.col(i)[1] =
+        (Rfit::sqr(err[0]) - Rfit::sqr(err[1])) * hits(1, i) * hits(0, i) / R2;
     V.col(i)[2] =
         (Rfit::sqr(err[1]) * Rfit::sqr(hits(0, i)) + Rfit::sqr(err[0]) * Rfit::sqr(hits(1, i))) /
         R2;
-    V.col(i)[1] =
-        (Rfit::sqr(err[0]) - Rfit::sqr(err[1])) * hits(1, i) * hits(0, i) / R2;
     V.col(i)[5] = Rfit::sqr(err[2]);
   } else {
     V.col(i)[0] = Rfit::sqr(err[3]);
@@ -108,12 +148,15 @@ hits_gen Hits_gen(const unsigned int& n, const Matrix<double, 6, 1>& gen_par) {
   // {72./10000, 38./10000, 25./10000, 56./10000, 72./10000, 38./10000, 25./10000, 56./10000};
   constexpr double R_err[8] = {10. / 10000, 10. / 10000, 10. / 10000, 10. / 10000,
                                10. / 10000, 10. / 10000, 10. / 10000, 10. / 10000};
-  constexpr double Rp_err[8] = {35. / 10000, 18. / 10000, 15. / 10000, 34. / 10000,
-                                35. / 10000, 18. / 10000, 15. / 10000, 34. / 10000};
-  constexpr double z_err[8] = {72. / 10000, 38. / 10000, 25. / 10000, 56. / 10000,
-                               72. / 10000, 38. / 10000, 25. / 10000, 56. / 10000};
+  constexpr double Rp_err[8] = {35. / 10000, 35. / 10000, 35. / 10000, 35. / 10000,
+                                35. / 10000, 35. / 10000, 35. / 10000, 35. / 10000};
+  constexpr double z_err[8] = {70. / 10000, 70. / 10000, 70. / 10000, 70. / 10000,
+                               70. / 10000, 70. / 10000, 70. / 10000, 70. / 10000};
+  // (x2, y2) is the center of the circle in the transverse plane
   const double x2 = gen_par(0) + gen_par(4) * cos(gen_par(3) * pi / 180);
   const double y2 = gen_par(1) + gen_par(4) * sin(gen_par(3) * pi / 180);
+  // alpha is the angle between the X-Axis and the center of the circle in the
+  // transverse plane. It is identical to gen_par(3), in radians.
   const double alpha = atan2(y2, x2);
 
   for (unsigned int i = 0; i < n; ++i) {
@@ -129,15 +172,48 @@ hits_gen Hits_gen(const unsigned int& n, const Matrix<double, 6, 1>& gen_par) {
                                                 Rfit::sqr((gen_par(1) - gen.hits(1, i)))) /
                                            (2. * gen_par(4))) *
                                       gen_par(4);
-    // isbarrel(i) = ??
+    // We ideally stop being in the barrel if our abs(z) position is beyond
+    // 27cm. Quite arbitrary but not far from reality for CMS.
+    bool isbarrel = (std::abs(gen.hits(2, i)) < 27);
     Vector5d err;
-    err << R_err[i], Rp_err[i], z_err[i], 0, 0;
-    smearing(err, true, gen.hits(0, i), gen.hits(1, i), gen.hits(2, i));
-    Hits_cov(gen.hits_ge, i, n, gen.hits, err, true);
+    // The first 3 errors are used in the barrel case and represent the error
+    // in the radial direction (usually very small), the error in the direction
+    // orthogonal to the radial one, usually on the plane of the detector (tens
+    // of microns) and along the Z axis (several tens of microns, since that's
+    // the least precise coordinate for the barrel case). The last 2 errors are
+    // used in the forward case: the fourth in the plane of the forward
+    // detector (tens of microns) and the fifth is along Z (few microns, since
+    // this is the most precise coordinates in the forward region).
+    err << R_err[i], Rp_err[i], z_err[i], Rp_err[i], R_err[i];
+    smearing(err, isbarrel, gen.hits(0, i), gen.hits(1, i), gen.hits(2, i));
+    Hits_cov(gen.hits_ge, i, n, gen.hits, err, isbarrel);
   }
 
   return gen;
 }
+
+/**
+ * Take the input 6 parameters: x,y,z,phi,R,theta and generate the parameters
+ * that are actually fit using the helix and line fit. In particular:
+ *
+ * X0 and Y0 are the center of the circle in the tansverse plane
+ *
+ * The radius of the circle in the transverse plane, in cm, is left unchanged.
+ *
+ * Finally, the three parameters (X0, Y0, R) are translated back into (phi,
+ * Tip, p_t). Phi, in this case, is the angle between p_t and the X-Axis, as on
+ * page 5 of the CMS Note. Tip is the signed distance of the circle with
+ * respect to the origin. P_t is in GeV/c.
+ *
+ * The fourth parameter becomes the cot(Theta), in radians.
+ *
+ * The fifth parameters should become Zip (to be checked, the aritmetic I saw
+ * should add up to 0 correction, but with lots of useless computations???)
+ *
+ * This function therefore returns:
+ *
+ * (Phi, Tip(signed), p_t, cot(theta)[radians], Zip).
+ */
 
 Vector5d True_par(const Matrix<double, 6, 1>& gen_par, const int& charge, const double& B_field) {
   Vector5d true_par;
@@ -162,6 +238,37 @@ Vector5d True_par(const Matrix<double, 6, 1>& gen_par, const int& charge, const 
                     gen_par(4);
   return true_par;
 }
+
+/**
+ * Take the input parameters: x,y,z,phi,p_t and eta and transform them in the
+ * format that is most useful to generate the points along the helix.
+ *
+ * The x, y and z floats are left unchanges and represent the d0 and Zip of the
+ * helix at the reference point, which is the point of closest approach to the
+ * beamline.
+ *
+ * Phi is, instead, translated by 90 degrees according to the charge of the
+ * particle: if negative we add 90 degrees, otherwise we subtract 90.  This is
+ * very much evident from the usual right-hand rule, the Lorentz force and the
+ * drawing of the circle in the transverse plane, considering B along the
+ * positive Z axis. Phi is basically the angle between the origin and the
+ * center of the circle in the transverse plane.
+ *
+ * The fifth parameter, p_t, is translated into the radius of the circle in the
+ * transverse plane using the usual convention:
+ *
+ * p_t = 0.299 * R[m] * B[T] =
+ *
+ * so that:
+ *
+ * R[cm] = p_t/b_field, where:
+ *
+ * b_field = c[m/s] * 10^-9 * 10^-2(m->cm)
+ *
+ * The sixth parameter, eta, is translated into the corresponding theta angle,
+ * in degrees.
+ *
+ */
 
 Matrix<double, 6, 1> New_par(const Matrix<double, 6, 1>& gen_par, const int& charge,
                              const double& B_field) {
@@ -209,6 +316,18 @@ void computePull(std::array<Fit, N> & fit, const char * label,
   histo_name = "Pt error ";
   histo_name += label;
   TH1F pt_error(histo_name.data(), histo_name.data(), 100, 0., 0.1);
+  histo_name = "Chi2 Line";
+  histo_name += label;
+  TH1F chi2_line(histo_name.data(), histo_name.data(), 100, 0., 10.);
+  histo_name = "Chi2 Circle";
+  histo_name += label;
+  TH1F chi2_circle(histo_name.data(), histo_name.data(), 100, 0., 10.);
+  histo_name = "Chi2 Line Prob";
+  histo_name += label;
+  TH1F chi2_lineProb(histo_name.data(), histo_name.data(), 100, 0., 1.);
+  histo_name = "Chi2 Circle Prob";
+  histo_name += label;
+  TH1F chi2_circleProb(histo_name.data(), histo_name.data(), 100, 0., 1.);
   for (int x = 0; x < iteration; x++) {
     // Compute PULLS information
     score(0, x) = (fit[x].par(0) - true_par(0)) / sqrt(fit[x].cov(0, 0));
@@ -226,6 +345,10 @@ void computePull(std::array<Fit, N> & fit, const char * label,
     pt_error.Fill(sqrt(fit[x].cov(2, 2)));
     theta_error.Fill(sqrt(fit[x].cov(3, 3)));
     dz_error.Fill(sqrt(fit[x].cov(4, 4)));
+    chi2_circle.Fill(fit[x].chi2_circle);
+    chi2_line.Fill(fit[x].chi2_line);
+    chi2_circleProb.Fill(TMath::Prob(fit[x].chi2_circle, n_ - 3));
+    chi2_lineProb.Fill(TMath::Prob(fit[x].chi2_line, n_ - 2));
     score(5, x) =
       (fit[x].par(0) - true_par(0)) * (fit[x].par(1) - true_par(1)) / (fit[x].cov(0, 1));
     score(6, x) =
@@ -269,7 +392,6 @@ void computePull(std::array<Fit, N> & fit, const char * label,
     score(37, x) = sqrt(fit[x].cov(2,2));
     score(38, x) = sqrt(fit[x].cov(3,3));
     score(39, x) = sqrt(fit[x].cov(4,4));
-
   }
 
   double phi_ = score.row(0).mean();
@@ -333,6 +455,10 @@ void computePull(std::array<Fit, N> & fit, const char * label,
   dz_error.Write();
   theta_error.Write();
   pt_error.Write();
+  chi2_circle.Write();
+  chi2_line.Write();
+  chi2_circleProb.Write();
+  chi2_lineProb.Write();
 }
 
 
@@ -365,23 +491,41 @@ void test_helix_fit(bool getcin) {
      n_ = 4;
      gen_par(0) = -0.1;  // x
      gen_par(1) = 0.1;   // y
-     gen_par(2) = -1.;  // z
+     gen_par(2) = -1.;   // z
      gen_par(3) = 45.;   // phi
      gen_par(4) = 10.;   // R (p_t)
-     gen_par(5) = 1.;   // eta
+     gen_par(5) = 1.;    // eta
   }
+
+  std::cout << "\nInput parameters:\n" << std::setprecision(4)
+    << "x:        " << gen_par(0) << "\n"
+    << "y:        " << gen_par(1) << "\n"
+    << "z:        " << gen_par(2) << "\n"
+    << "phi:      " << gen_par(3) << "\n"
+    << "phi(rad): " << gen_par(3)*M_PI/180. << "\n"
+    << "p_t:      " << gen_par(4) << "\n"
+    << "eta:      " << gen_par(5) << std::endl;
 
   const int iteration = 5000;
   gen_par = New_par(gen_par, 1, B_field);
   true_par = True_par(gen_par, 1, B_field);
   std::array<helix_fit, iteration> helixRiemann_fit;
 
-  std::cout << "\nTrue parameters: "
-    << "phi: " << true_par(0) << " "
-    << "dxy: " << true_par(1) << " "
-    << "pt: " << true_par(2) << " "
-    << "CotT: " << true_par(3) << " "
-    << "Zip: " << true_par(4) << " "
+  std::cout << "\nTransformed Input parameters:\n" << std::setprecision(4)
+    << "x:     " << gen_par(0) << "\n"
+    << "y:     " << gen_par(1) << "\n"
+    << "z:     " << gen_par(2) << "\n"
+    << "phi_c: " << gen_par(3) << "\n"
+    << "R:     " << gen_par(4) << "\n"
+    << "theta: " << gen_par(5) << "\n"
+    << "dxy:   " << std::sqrt(gen_par(0)*gen_par(0) + gen_par(1)*gen_par(1)) << "\n"
+    << std::endl;
+  std::cout << "\nTrue parameters:\n" << std::setprecision(4)
+    << "phi:  " << true_par(0) << "\n"
+    << "dxy:  " << true_par(1) << "\n"
+    << "pt:   " << true_par(2) << "\n"
+    << "CotT: " << true_par(3) << "\n"
+    << "Zip:  " << true_par(4) << "\n"
     << std::endl;
   auto start = std::chrono::high_resolution_clock::now();
   auto delta = start-start;
@@ -421,7 +565,7 @@ void test_helix_fit(bool getcin) {
         << helixRiemann_fit[i].cov << endl
         << "Initial hits:\n" << gen.hits << endl
         << "Initial Covariance:\n" << gen.hits_ge << endl;
-        
+
   }
   std::cout << "elapsted time " << double(std::chrono::duration_cast<std::chrono::nanoseconds>(delta).count())/1.e6 << std::endl;
   computePull(helixRiemann_fit, "Riemann", n_, iteration, true_par);
