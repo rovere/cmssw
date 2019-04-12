@@ -1229,7 +1229,7 @@ _common_score = {#"title": "Score CaloParticle to MultiClusters",
                  "ymin": 0.1,
                  "ymax": 100000,
                  "xmin": 0,
-                 "xmax": 0.3,
+                 "xmax": 1.0,
                  "drawStyle": "hist",
                  "lineWidth": 1,
                  "ylog": True
@@ -1322,7 +1322,7 @@ _merges = PlotGroup("MergeRate", _mergeplots, ncols=3)
 
 _common_energy_score = dict(removeEmptyBins=True, xbinlabelsize=10, xbinlabeloption="d")
 _common_energy_score["ymax"] = 1.
-_common_energy_score["xmax"] = 0.3
+_common_energy_score["xmax"] = 1.0
 _energyscore_cp2mcl = PlotOnSideGroup("_energyscore_cp2mcl", Plot("Energy_vs_Score_caloparticle2multi", drawStyle="COLZ", adjustMarginRight=0.1, **_common_energy_score))
 _energyscore_cp2contimcl = PlotOnSideGroup("_energyscore_cp2contimcl", Plot("Energy_vs_Score_caloparticle2contimulti", drawStyle="COLZ", adjustMarginRight=0.1, **_common_energy_score))
 _energyscore_cp2noncontimcl = PlotOnSideGroup("_energyscore_cp2noncontimcl", Plot("Energy_vs_Score_caloparticle2noncontimulti", drawStyle="COLZ", adjustMarginRight=0.1, **_common_energy_score))
