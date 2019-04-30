@@ -94,5 +94,4 @@ _pixelTracksTask_ntupleFit = pixelTracksTask.copy()
 _pixelTracksTask_ntupleFit.replace(pixelFitterByHelixProjections, pixelNtupletsFitter)
 ntupleFit.toReplaceWith(pixelTracksTask, _pixelTracksTask_ntupleFit)
 
-riemannFit.toReplaceWith(pixelTracksSequence, _pixelTracksSequence_riemannFit)
-brokenLine.toReplaceWith(pixelTracksSequence, _pixelTracksSequence_brokenLine)
+pixelTracksSequence = cms.Sequence(pixelTracksTask)

@@ -6,6 +6,8 @@
 #include "test_common.h"
 #include "HeterogeneousCore/CUDAUtilities/interface/cudaCheck.h"
 
+#include "HeterogeneousCore/CUDAUtilities/interface/exitSansCUDADevices.h"
+
 using namespace Eigen;
 
 using Matrix5d = Matrix<double, 5, 5>;
@@ -218,14 +220,13 @@ std::cout << "*************************\n\n" << std::endl;
 
 
 int main (int argc, char * argv[]) {
-	
-	//cudaDeviceSetLimit(cudaLimitStackSize, 8500);
-	//cudaCheck(cudaDeviceSynchronize());
+  exitSansCUDADevices();
 
   testEigenvalues();
   testInverse3x3();
   testInverse4x4();
-	testInverse5x5();
+  testInverse5x5();
+
   testMultiply<1, 2, 2, 1>();
   testMultiply<1, 2, 2, 2>();
   testMultiply<1, 2, 2, 3>();

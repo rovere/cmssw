@@ -56,6 +56,7 @@ public:
   using CPUProduct = trackerHitAssociationHeterogeneousProduct::CPUProduct;
   using Output = trackerHitAssociationHeterogeneousProduct::ClusterTPAHeterogeneousProduct;
 
+
   using Clus2TP    = ClusterSLGPU::Clus2TP;
 
   explicit ClusterTPAssociationHeterogeneous(const edm::ParameterSet&);

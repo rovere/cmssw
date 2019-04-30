@@ -15,7 +15,7 @@ public:
   explicit PixelNtupletsFitter(float nominalB, const MagneticField *field, bool useRiemannFit);
   ~PixelNtupletsFitter() override = default;
   std::unique_ptr<reco::Track> run(const std::vector<const TrackingRecHit *>& hits,
-                                   const TrackingRegion& region) const override;
+                                   const TrackingRegion& region, const edm::EventSetup& es) const override;
 
 private:
   float nominalB_;

@@ -37,7 +37,7 @@ PixelNtupletsFitter::PixelNtupletsFitter(float nominalB, const MagneticField* fi
     useRiemannFit_(useRiemannFit) {}
 
 std::unique_ptr<reco::Track> PixelNtupletsFitter::run(
-    const std::vector<const TrackingRecHit*>& hits, const TrackingRegion& region) const {
+    const std::vector<const TrackingRecHit*>& hits, const TrackingRegion& region, const edm::EventSetup& ) const {
 
   using namespace Rfit;
 
