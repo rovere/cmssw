@@ -26,7 +26,6 @@
 #include "RecoPixelVertexing/PixelTrackFitting/interface/PixelTrackErrorParam.h"
 
 #include "CommonTools/Utils/interface/DynArray.h"
-#include <chrono>
 
 using namespace std;
 
@@ -61,9 +60,8 @@ std::unique_ptr<reco::Track> PixelFitterByRiemannParaboloid::run(
     isBarrel[i] = recHit->detUnit()->type().isBarrel();
   }
 
-  float bField = 1 / PixelRecoUtilities::fieldInInvGev(*es_);
-
-  Matrix<double, 3, Dynamic, 0, 3, max_nop> riemannHits(3, nhits);
+   assert(nhits==4);
+   Rfit::Matrix3xNd<4> riemannHits;
 
   Eigen::Matrix<float,6,4> riemannHits_ge = Eigen::Matrix<float,6,4>::Zero();
 
@@ -74,8 +72,8 @@ std::unique_ptr<reco::Track> PixelFitterByRiemannParaboloid::run(
                               errors[i].czx(), errors[i].czy(), errors[i].czz();
   }
 
-  helix_fit fittedTrack = Rfit::Helix_fit(riemannHits, riemannHits_cov, bField, useErrors_);
-
+  float bField = 1 / PixelRecoUtilities::fieldInInvGev(setup);
+  helix_fit fittedTrack = Rfit::Helix_fit(riemannHits, riemannHits_ge, bField, useErrors_);
   int iCharge = fittedTrack.q;
 
   // parameters are:

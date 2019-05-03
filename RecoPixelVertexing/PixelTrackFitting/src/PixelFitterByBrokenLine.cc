@@ -32,12 +32,11 @@
 using namespace std;
 
 
-PixelFitterByBrokenLine::PixelFitterByBrokenLine(const edm::EventSetup* es,
-                                                               const MagneticField* field)
-    : es_(es), field_(field) {}
+PixelFitterByBrokenLine::PixelFitterByBrokenLine(const MagneticField* field)
+    : field_(field) {}
 
 std::unique_ptr<reco::Track> PixelFitterByBrokenLine::run(
-    const std::vector<const TrackingRecHit*>& hits, const TrackingRegion& region) const {
+    const std::vector<const TrackingRecHit *>& hits, const TrackingRegion& region, const edm::EventSetup& setup) const {
 
   using namespace BrokenLine;
 
@@ -58,7 +57,7 @@ std::unique_ptr<reco::Track> PixelFitterByBrokenLine::run(
     isBarrel[i] = recHit->detUnit()->type().isBarrel();
   }
 
-  float bField = 1 / PixelRecoUtilities::fieldInInvGev(*es_);
+  float bField = 1 / PixelRecoUtilities::fieldInInvGev(setup);
 
   Matrix<double, 3, Dynamic, 0, 3, max_nop> brokenLineHits(3, nhits);
 

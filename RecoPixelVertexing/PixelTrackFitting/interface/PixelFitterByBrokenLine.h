@@ -14,13 +14,11 @@
 
 class PixelFitterByBrokenLine final : public PixelFitterBase {
 public:
-  explicit PixelFitterByBrokenLine(const edm::EventSetup *es, const MagneticField *field);
+  explicit PixelFitterByBrokenLine(const MagneticField *field);
   virtual ~PixelFitterByBrokenLine() = default;
-  virtual std::unique_ptr<reco::Track> run(const std::vector<const TrackingRecHit *>& hits,
-                                           const TrackingRegion& region) const override;
+  std::unique_ptr<reco::Track> run(const std::vector<const TrackingRecHit *>& hits, const TrackingRegion& region, const edm::EventSetup& setup) const override;
 
 private:
-  const edm::EventSetup *es_;
   const MagneticField *field_;
 };
 #endif

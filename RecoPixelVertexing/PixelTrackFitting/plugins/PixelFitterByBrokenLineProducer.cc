@@ -38,8 +38,7 @@ void PixelFitterByBrokenLineProducer::produce(edm::StreamID, edm::Event& iEvent,
   edm::ESHandle<MagneticField> fieldESH;
   iSetup.get<IdealMagneticFieldRecord>().get(fieldESH);
 
-  auto impl = std::make_unique<PixelFitterByBrokenLine>(&iSetup,
-      fieldESH.product());
+  auto impl = std::make_unique<PixelFitterByBrokenLine>(fieldESH.product());
   auto prod = std::make_unique<PixelFitter>(std::move(impl));
   iEvent.put(std::move(prod));
 }

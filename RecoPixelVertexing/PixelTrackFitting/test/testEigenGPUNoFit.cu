@@ -3,10 +3,10 @@
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
 
-#include "test_common.h"
 #include "HeterogeneousCore/CUDAUtilities/interface/cudaCheck.h"
-
 #include "HeterogeneousCore/CUDAUtilities/interface/exitSansCUDADevices.h"
+
+#include "test_common.h"
 
 using namespace Eigen;
 
@@ -163,7 +163,7 @@ void testInverse5x5() {
 	Matrix5d *mGPU = nullptr;
 	Matrix5d *mGPUret = nullptr;
 	Matrix5d *mCPUret = new Matrix5d();
-	
+
 #if TEST_DEBUG
 	std::cout << "Here is the matrix m:" << std::endl << m << std::endl;
 	std::cout << "Its inverse is:" << std::endl << m.inverse() << std::endl;
@@ -171,10 +171,10 @@ void testInverse5x5() {
 	cudaMalloc((void **)&mGPU, sizeof(Matrix5d));
 	cudaMalloc((void **)&mGPUret, sizeof(Matrix5d));
 	cudaMemcpy(mGPU, &m, sizeof(Matrix5d), cudaMemcpyHostToDevice);
-	
+
 	kernelInverse5x5<<<1,1>>>(mGPU, mGPUret);
 	cudaDeviceSynchronize();
-	
+
 	cudaMemcpy(mCPUret, mGPUret, sizeof(Matrix5d), cudaMemcpyDeviceToHost);
 #if TEST_DEBUG
 	std::cout << "Its GPU inverse is:" << std::endl << (*mCPUret) << std::endl;
@@ -218,14 +218,12 @@ std::cout << "*************************\n\n" << std::endl;
 
 
 int main (int argc, char * argv[]) {
-	
-	//cudaDeviceSetLimit(cudaLimitStackSize, 8500);
-	//cudaCheck(cudaDeviceSynchronize());
+  exitSansCUDADevices();
 
   testEigenvalues();
   testInverse3x3();
   testInverse4x4();
-	testInverse5x5();
+  testInverse5x5();
   testMultiply<1, 2, 2, 1>();
   testMultiply<1, 2, 2, 2>();
   testMultiply<1, 2, 2, 3>();
