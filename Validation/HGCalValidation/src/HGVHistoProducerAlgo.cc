@@ -14,8 +14,8 @@ using namespace std;
 //configuration parameter for the HGCAL associator.
 const double ScoreCutLCtoCP_ = 0.2;
 const double ScoreCutCPtoLC_ = 0.2;
-const double ScoreCutMCLtoCP_ = 0.01;
-const double ScoreCutCPtoMCL_ = 0.01;   
+const double ScoreCutMCLtoCP_ = 1.0; //0.01
+const double ScoreCutCPtoMCL_ = 1.0; //0.01  
 
 HGVHistoProducerAlgo::HGVHistoProducerAlgo(const edm::ParameterSet& pset) :
   //parameters for eta
@@ -1124,7 +1124,7 @@ void HGVHistoProducerAlgo::multiClusters_to_CaloParticles (const Histograms& his
   //cPOnLayer[caloparticle][layer] 
   //This defines a "calo particle on layer" concept. It is only filled in case 
   //that calo particle has a reconstructed hit related via detid. So, a cPOnLayer[i][j] connects a 
-  //specific calo particle i with: 
+  //specific calo particle i in layer j with: 
   //1. the sum of all rechits energy times fraction of the relevant simhit in layer j related to that calo particle i.
   //2. the hits and fractions of that calo particle i in layer j. 
   //3. the layer clusters with matched rechit id. 
@@ -1293,10 +1293,7 @@ void HGVHistoProducerAlgo::multiClusters_to_CaloParticles (const Histograms& his
 		//We are in the case where there are calo particles with simhits connected via detid with the rechit under study
 		//So, from all layers clusters, find the rechits that are connected with a calo particle and save/calculate the 
 		//energy of that calo particle as the sum over all rechits of the rechits energy weighted
-		//by the caloparticle's fraction related to that rechit. Keep in mind that a calo particle's fraction in a detid contains 
-		//contributions from other caloparticles fractions in that detid also . Namely, if CaloParticle A 
-		//contributes to Cell 1 and CaloParticle B contributes in Cell 1 then CaloParticle A fraction at Cell 1
-		//would be fr_A + fr_B, same as CaloParticle B. 
+		//by the caloparticle's fraction related to that rechit. 
 		CPEnergyInMCL[h.clusterId] += h.fraction*hit->energy();
 		//Same but for layer clusters for the cell association per layer
 		CPEnergyInLC[h.clusterId] += h.fraction*hit->energy();
@@ -1307,7 +1304,7 @@ void HGVHistoProducerAlgo::multiClusters_to_CaloParticles (const Histograms& his
 		//Connects a multi cluster with all related caloparticles. 
 		cpsInMultiCluster[mclId].emplace_back(std::make_pair<int, float>(h.clusterId, 0.f));
 		//From all CaloParticles related to a layer cluster, he saves id and energy of the calo particle 
-		//with the maximum fraction. 
+		//that after simhit-rechit matching in layer has the maximum energy. 
 		if(h.fraction >maxCPEnergyInLC)
 		  {
 		    //energy is used only here. cpid is saved for multiclusters
@@ -1318,13 +1315,14 @@ void HGVHistoProducerAlgo::multiClusters_to_CaloParticles (const Histograms& his
 	    //Keep in mind here maxCPId could be zero. So, below ask for negative not including zero to count noise. 
 	    hitsToCaloParticleId[hitId] = maxCPId;
 	  }
-	histograms.h_cellAssociation_perlayer.at(lcLayerId%52+1).fill(hitsToCaloParticleId[hitId] > 0. ? 0. : hitsToCaloParticleId[hitId]);	
+	histograms.h_cellAssociation_perlayer.at(lcLayerId).fill(hitsToCaloParticleId[hitId] > 0. ? 0. : hitsToCaloParticleId[hitId]);	
 	histograms.h_cellAssociation.fill(hitsToCaloParticleId[hitId] > 0. ? 0. : hitsToCaloParticleId[hitId]);
 
       } //end of loop through rechits of the layer cluster. 
 
-      //Loop through all rechits to cound how many of them are noise and how many are matched. 
-      //In case they are matched, he counts and saves the number of rechits related to the maximum energy CaloParticle. 
+      //Loop through all rechits to count how many of them are noise and how many are matched. 
+      //In case they are matched, he counts and saves the number of matched rechits. So, essentially 
+      //the related to the maximum energy CaloParticle. 
       for(auto& c: hitsToCaloParticleId)
 	{
 	  if(c < 0)
@@ -1480,8 +1478,11 @@ void HGVHistoProducerAlgo::multiClusters_to_CaloParticles (const Histograms& his
 	  if(!hitWithNoCP)
 	    {
 	      auto findHitIt = std::find(detIdToCaloParticleId_Map[rh_detid].begin(), detIdToCaloParticleId_Map[rh_detid].end(), HGVHistoProducerAlgo::detIdInfoInCluster{cpPair.first,0.f});
-	      if(findHitIt != detIdToCaloParticleId_Map[rh_detid].end())
+	      if(findHitIt != detIdToCaloParticleId_Map[rh_detid].end()){
 		cpFraction = findHitIt->fraction;
+		std::cout << "AM I IN HEREEEEEE? 1"<< cpFraction << std::endl;
+	      }
+	      std::cout << "AM I IN HEREEEEEE? 2"<< cpFraction << std::endl;
 	    }
 	  cpPair.second += (rhFraction - cpFraction)*(rhFraction - cpFraction)*hitEnergyWeight*invMultiClusterEnergyWeight;
 	}
@@ -1632,7 +1633,7 @@ void HGVHistoProducerAlgo::multiClusters_to_CaloParticles (const Histograms& his
 	      auto findHitIt = std::find(
 					 detIdToMultiClusterId_Map[cp_hitDetId].begin(),
 					 detIdToMultiClusterId_Map[cp_hitDetId].end(),
-					 HGVHistoProducerAlgo::detIdInfoInCluster{multiClusterId, 0.f}
+					 HGVHistoProducerAlgo::detIdInfoInMultiCluster{multiClusterId, 0, 0.f}
 					 );
 	      if(findHitIt != detIdToMultiClusterId_Map[cp_hitDetId].end())
 		mclFraction = findHitIt->fraction;

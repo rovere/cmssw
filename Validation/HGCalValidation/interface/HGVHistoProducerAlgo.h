@@ -213,7 +213,7 @@ class HGVHistoProducerAlgo {
 
   struct detIdInfoInMultiCluster
   {
-    bool operator==(const detIdInfoInCluster& o) const { return clusterId == o.clusterId;};
+    bool operator==(const detIdInfoInMultiCluster& o) const { return multiclusterId == o.multiclusterId;};
     unsigned int multiclusterId;
     unsigned int clusterId;
     float fraction;
