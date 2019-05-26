@@ -1321,8 +1321,7 @@ void HGVHistoProducerAlgo::multiClusters_to_CaloParticles (const Histograms& his
       } //end of loop through rechits of the layer cluster. 
 
       //Loop through all rechits to count how many of them are noise and how many are matched. 
-      //In case they are matched, he counts and saves the number of matched rechits. So, essentially 
-      //the related to the maximum energy CaloParticle. 
+      //In case of matched rechit-simhit, he counts and saves the number of rechits related to the maximum energy CaloParticle.
       for(auto& c: hitsToCaloParticleId)
 	{
 	  if(c < 0)
@@ -1348,8 +1347,7 @@ void HGVHistoProducerAlgo::multiClusters_to_CaloParticles (const Histograms& his
 	  }
       }
 
-    //In CPEnergyInMCL one CaloParticle could be related to more than one multi clusters. Find the 
-    //Caloparticle that has the maximum energy, in which more than one multi clusters may have contributed. 
+    //Find the CaloParticle that has the maximum energy shared with the multicluster under study.
     for(auto&c : CPEnergyInMCL)
       {
 	if(c.second > maxEnergySharedMCLandCP)
@@ -1358,7 +1356,7 @@ void HGVHistoProducerAlgo::multiClusters_to_CaloParticles (const Histograms& his
 	    maxEnergySharedMCLandCP = c.second;
 	  }
       }
-    //The energy of the CaloParticle that found to have the maximum energy in layer clusters. 
+    //The energy of the CaloParticle that found to have the maximum energy shared with the multicluster under study. 
     float totalCPEnergyFromLayerCP = 0.f;
     if(maxCPId_byEnergy >=0) {
       //Loop through all layers
@@ -1371,55 +1369,32 @@ void HGVHistoProducerAlgo::multiClusters_to_CaloParticles (const Histograms& his
 	  energyFractionOfMCLinCP = maxEnergySharedMCLandCP/multiClusters[mclId].energy();
 	}
     }
-    // LogDebug("HGCalValidator")  << std::setw(12) << "multiCluster"<<  "\t"
-    // 				<< std::setw(10) << "mulcl energy"<< "\t"
-    // 				<< std::setw(5)  << "nhits" << "\t"
-    // 				<< std::setw(12) << "noise hits" << "\t"
-    // 				<< std::setw(22) << "maxCPId_byNumberOfHits" << "\t"
-    // 				<< std::setw(8)  << "nhitsCP"<< "\t"
-    // 				<< std::setw(16) << "maxCPId_byEnergy" << "\t"
-    // 				<< std::setw(23) << "maxEnergySharedLCandCP" << "\t"
-    // 				<< std::setw(22) << "totalCPEnergyOnLayer" << "\t"
-    // 				<< std::setw(22) << "energyFractionOfLCinCP" << "\t"
-    // 				<< std::setw(25) << "energyFractionOfCPinLC" << "\t" <<  "\n";
-    // LogDebug("HGCalValidator")  << std::setw(12) <<  mclId << "\t"
-    // 				<< std::setw(10) <<  multiClusters[mclId].energy()<< "\t"
-    // 				<< std::setw(5)  <<  numberOfHitsInMCL << "\t"
-    // 				<< std::setw(12) <<  numberOfNoiseHitsInMCL << "\t"
-    // 				<< std::setw(22) <<  maxCPId_byNumberOfHits << "\t"
-    // 				<< std::setw(8)  <<  maxCPNumberOfHitsInMCL<< "\t"
-    // 				<< std::setw(16) <<  maxCPId_byEnergy << "\t"
-    // 				<< std::setw(23)  <<  maxEnergySharedMCLandCP << "\t"
-    // 				<< std::setw(22) <<  totalCPEnergyFromLayerCP << "\t"
-    // 				<< std::setw(22) <<  energyFractionOfMCLinCP << "\t"
-    // 				<< std::setw(25) <<  energyFractionOfCPinMCL << "\n";
-    std::cout << std::setw(12) << "multiCluster"<<  "\t"
+    std::cout << std::setw(12) << "multiCluster"<<  "\t" //LogDebug("HGCalValidator")
 	      << std::setw(10) << "mulcl energy"<< "\t"
 	      << std::setw(5)  << "nhits" << "\t"
 	      << std::setw(12) << "noise hits" << "\t"
 	      << std::setw(22) << "maxCPId_byNumberOfHits" << "\t"
 	      << std::setw(8)  << "nhitsCP"<< "\t"
 	      << std::setw(16) << "maxCPId_byEnergy" << "\t"
-	      << std::setw(23) << "maxEnergySharedLCandCP" << "\t"
-	      << std::setw(22) << "totalCPEnergyOnLayer" << "\t"
-	      << std::setw(22) << "energyFractionOfLCinCP" << "\t"
-	      << std::setw(25) << "energyFractionOfCPinLC" << "\t" <<  std::endl;
-    std::cout << std::setw(12) <<  mclId << "\t"
+	      << std::setw(23) << "maxEnergySharedMCLandCP" << "\t"
+	      << std::setw(22) << "totalCPEnergyFromAllLayerCP" << "\t"
+	      << std::setw(22) << "energyFractionOfMCLinCP" << "\t"
+	      << std::setw(25) << "energyFractionOfCPinMCL" << "\t" <<  std::endl;
+    std::cout << std::setw(12) <<  mclId << "\t"//LogDebug("HGCalValidator")
 	      << std::setw(10) <<  multiClusters[mclId].energy()<< "\t"
 	      << std::setw(5)  <<  numberOfHitsInMCL << "\t"
 	      << std::setw(12) <<  numberOfNoiseHitsInMCL << "\t"
 	      << std::setw(22) <<  maxCPId_byNumberOfHits << "\t"
 	      << std::setw(8)  <<  maxCPNumberOfHitsInMCL<< "\t"
 	      << std::setw(16) <<  maxCPId_byEnergy << "\t"
-	      << std::setw(23)  <<  maxEnergySharedMCLandCP << "\t"
+	      << std::setw(23)  << maxEnergySharedMCLandCP << "\t"
 	      << std::setw(22) <<  totalCPEnergyFromLayerCP << "\t"
 	      << std::setw(22) <<  energyFractionOfMCLinCP << "\t"
 	      << std::setw(25) <<  energyFractionOfCPinMCL << std::endl;
-    
-
 
 
   }//end of loop through multi clusters
+
 
   //Loop through multiclusters
   for (unsigned int mclId = 0; mclId < nMultiClusters; ++mclId){
@@ -1480,9 +1455,7 @@ void HGVHistoProducerAlgo::multiClusters_to_CaloParticles (const Histograms& his
 	      auto findHitIt = std::find(detIdToCaloParticleId_Map[rh_detid].begin(), detIdToCaloParticleId_Map[rh_detid].end(), HGVHistoProducerAlgo::detIdInfoInCluster{cpPair.first,0.f});
 	      if(findHitIt != detIdToCaloParticleId_Map[rh_detid].end()){
 		cpFraction = findHitIt->fraction;
-		std::cout << "AM I IN HEREEEEEE? 1"<< cpFraction << std::endl;
 	      }
-	      std::cout << "AM I IN HEREEEEEE? 2"<< cpFraction << std::endl;
 	    }
 	  cpPair.second += (rhFraction - cpFraction)*(rhFraction - cpFraction)*hitEnergyWeight*invMultiClusterEnergyWeight;
 	}
