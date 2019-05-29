@@ -352,7 +352,7 @@ void HGVHistoProducerAlgo::bookMultiClusterHistos(DQMStore::ConcurrentBooker& ib
     if (ilayer < layers){
       istr2 = std::to_string(ilayer + 1) + " in z-";
     }else { //Then for the +z
-      istr2 = std::to_string(ilayer - 51) + " in z+";
+      istr2 = std::to_string(ilayer - (layers - 1) ) + " in z+";
     }
     histograms.h_cellAssociation_perlayer[ilayer] = ibook.book1D("cellAssociation_perlayer"+istr1, "Cell Association for layer "+istr2, 5, -4., 1.);
     histograms.h_cellAssociation_perlayer[ilayer].setBinLabel(2, "TN(purity)");
@@ -1148,7 +1148,8 @@ void HGVHistoProducerAlgo::multiClusters_to_CaloParticles (const Histograms& his
       const auto& hits_and_fractions = simCluster.hits_and_fractions();
       for (const auto& it_haf : hits_and_fractions) {
         DetId hitid = (it_haf.first);
-	//maps the layers in -z: 0->51 and in +z: 52->103
+	//V9:maps the layers in -z: 0->51 and in +z: 52->103
+	//V10:maps the layers in -z: 0->49 and in +z: 50->99
         int cpLayerId = recHitTools_->getLayerWithOffset(hitid) + layers * ((recHitTools_->zside(hitid) + 1) >> 1) - 1;
         std::map<DetId,const HGCRecHit *>::const_iterator itcheck= hitMap.find(hitid);
 	//Checks whether the current hit belonging to sim cluster has a reconstructed hit.  
@@ -1189,7 +1190,6 @@ void HGVHistoProducerAlgo::multiClusters_to_CaloParticles (const Histograms& his
     }//end of loop through simclusters
   }// end of loop through caloparticles
 
-
   //Loop through multiclusters
   for (unsigned int mclId = 0; mclId < nMultiClusters; ++mclId){
     
@@ -1215,6 +1215,7 @@ void HGVHistoProducerAlgo::multiClusters_to_CaloParticles (const Histograms& his
 
       //take the hits and their fraction of the specific layer cluster. 
       const std::vector<std::pair<DetId, float> >& hits_and_fractions = layerClusters[lcId]->hitsAndFractions();
+      //keep the detids of the current cluster
       //number of hits related to that cluster. 
       unsigned int numberOfHitsInLC = hits_and_fractions.size();
       numberOfHitsInMCL += numberOfHitsInLC;
