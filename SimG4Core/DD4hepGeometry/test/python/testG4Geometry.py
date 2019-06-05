@@ -45,8 +45,8 @@ process.DDDetectorESProducer = cms.ESSource("DDDetectorESProducer",
 process.DDVectorRegistryESProducer = cms.ESProducer("DDVectorRegistryESProducer",
                                                     appendToDataLabel = cms.string('MUON'))
 
-process.test = cms.EDAnalyzer("DDTestG4Geometry",
-                              DDDetector = cms.ESInputTag('MUON')
+process.test = cms.EDAnalyzer("DD4hepTestG4Geometry",
+                              DDDetector = cms.ESInputTag('MUON','')
                               )
 
 process.p = cms.Path(process.test)
