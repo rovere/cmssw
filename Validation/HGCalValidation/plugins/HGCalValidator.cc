@@ -120,7 +120,7 @@ void HGCalValidator::bookHistograms(DQMStore::ConcurrentBooker& ibook, edm::Run 
     if(dolayerclustersPlots_ && algo.label() == "hgcalLayerClusters") {
       histoProducerAlgo_->bookClusterHistos(ibook, histograms.histoProducerAlgo, totallayers_to_monitor_, thicknesses_to_monitor_, cummatbudinxo_.fullPath() );
     }
-    
+
     //Booking histograms concerning for hgcal multi clusters
     if(domulticlustersPlots_ && algo.label() == "hgcalMultiClusters") {
       histoProducerAlgo_->bookMultiClusterHistos(ibook, histograms.histoProducerAlgo, totallayers_to_monitor_);
@@ -177,8 +177,8 @@ void HGCalValidator::dqmAnalyze(const edm::Event& event, const edm::EventSetup& 
 
   std::map<DetId, const HGCRecHit* > hitMap;
   fillHitMap(hitMap, *recHitHandleEE,*recHitHandleFH,*recHitHandleBH);
-  
-  //Some general info on layers etc. 
+
+  //Some general info on layers etc.
   if (SaveGeneralInfo_){
     histoProducerAlgo_->fill_info_histos(histograms.histoProducerAlgo,totallayers_to_monitor_);
   }
@@ -191,7 +191,7 @@ void HGCalValidator::dqmAnalyze(const edm::Event& event, const edm::EventSetup& 
   cpParametersAndSelection(histograms, caloParticles, simVertices, selected_cPeff);
 
   int w=0; //counter counting the number of sets of histograms
-  //get collections from the event 
+  //get collections from the event
   //Layer clusters
   edm::Handle<reco::CaloClusterCollection> clusterHandle;
   event.getByToken(layerclusters_,clusterHandle);
@@ -201,12 +201,12 @@ void HGCalValidator::dqmAnalyze(const edm::Event& event, const edm::EventSetup& 
   edm::Handle<std::vector<reco::HGCalMultiCluster>> multiClusterHandle;
   event.getByToken(multiClusters_, multiClusterHandle);
   const std::vector<reco::HGCalMultiCluster> &multiClusters = *multiClusterHandle;
-  
+
   //Density
   edm::Handle<Density> densityHandle;
   event.getByToken( density_, densityHandle);
   const Density &densities = *densityHandle;
-  
+
   // ##############################################
   // fill cluster histograms (LOOP OVER CLUSTERS)
   // ##############################################
@@ -215,7 +215,7 @@ void HGCalValidator::dqmAnalyze(const edm::Event& event, const edm::EventSetup& 
     histoProducerAlgo_->fill_generic_cluster_histos(histograms.histoProducerAlgo,
 						    w,clusters,densities,caloParticles,
 						    hitMap,
-						    cummatbudg,totallayers_to_monitor_, 
+						    cummatbudg,totallayers_to_monitor_,
 						    thicknesses_to_monitor_);
 
     for (unsigned int layerclusterIndex = 0; layerclusterIndex < clusters.size(); layerclusterIndex++) {
@@ -230,22 +230,22 @@ void HGCalValidator::dqmAnalyze(const edm::Event& event, const edm::EventSetup& 
 						  hitMap,
 						  totallayers_to_monitor_);
   }
-  
+
   //General Info
   for (auto& itag : label) {
-    if (itag.label() == "hgcalLayerClusters"){ 
+    if (itag.label() == "hgcalLayerClusters"){
       LogTrace("HGCalValidator") << "\n# of layer clusters with "
 				 << itag.process()<<":"
 				 << itag.label()<<":"
 				 << itag.instance()
 				 << ": " << clusters.size() << "\n";
-    } else if (itag.label() == "hgcalMultiClusters"){ 
+    } else if (itag.label() == "hgcalMultiClusters"){
       LogTrace("HGCalValidator") << "\n# of multi clusters with "
 				 << itag.process()<<":"
 				 << itag.label()<<":"
 				 << itag.instance()
 				 << ": " << multiClusters.size() << "\n";
-      
+
     }
   } //end of loop over input labels
 
