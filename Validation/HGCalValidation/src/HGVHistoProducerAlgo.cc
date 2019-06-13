@@ -490,7 +490,19 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
             }
           }
           cPOnLayer[cpId][cpLayerId].energy += it_haf.second*hit->energy();
-          cPOnLayer[cpId][cpLayerId].hits_and_fractions.emplace_back(hitid,it_haf.second);
+          // We need to compress the hits and fractions in order to have a
+          // reasonable score between CP and LC. Imagine, for example, that a
+          // CP has detID X used by 2 SimClusters with different fractions. If
+          // a single LC uses X with fraction 1 and is compared to the 2
+          // contributions separately, it will be assigned a score != 0, which
+          // is wrong.
+          auto & haf = cPOnLayer[cpId][cpLayerId].hits_and_fractions;
+          auto found = std::find_if(std::begin(haf), std::end(haf), [&hitid](const std::pair<DetId, float> & v){return v.first == hitid;});
+          if (found != haf.end()) {
+            found->second += it_haf.second;
+          } else {
+            cPOnLayer[cpId][cpLayerId].hits_and_fractions.emplace_back(hitid,it_haf.second);
+          }
         }
       }
     }
@@ -510,7 +522,7 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
       }
       std::cout << "    Tot Sum haf: " << tot_energy << std::endl;
       for (auto const & lc : cPOnLayer[cp][cpp].layerClusterIdToEnergyAndScore) {
-        std::cout << "      LayerIdx/energy/score: " << lc.first << "/" << lc.second.first << "/" << lc.second.second << std::endl;
+        std::cout << "      lcIdx/energy/score: " << lc.first << "/" << lc.second.first << "/" << lc.second.second << std::endl;
       }
     }
   }
@@ -678,6 +690,35 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
 				<< std::setw(25) <<  energyFractionOfCPinLC << "\n";
   }  // End of loop over LayerClusters
 
+  std::cout << "Improved cPOnLayer INFO" << std::endl;
+  for (size_t cp = 0; cp <  cPOnLayer.size(); ++cp) {
+    std::cout << "For CaloParticle Idx: " << cp << " we have: " << std::endl;
+    for (size_t cpp = 0; cpp < cPOnLayer[cp].size(); ++cpp) {
+      std::cout << "  On Layer: " << cpp << " we have:" << std::endl;
+      std::cout << "    CaloParticleIdx: " << cPOnLayer[cp][cpp].caloParticleId << std::endl;
+      std::cout << "    Energy:          " << cPOnLayer[cp][cpp].energy << std::endl;
+      double tot_energy = 0.;
+      for (auto const & haf : cPOnLayer[cp][cpp].hits_and_fractions) {
+        std::cout << "      Hits/fraction/energy: " << (uint32_t)haf.first << "/" << haf.second << "/" << haf.second*hitMap.at(haf.first)->energy() <<  std::endl;
+        tot_energy += haf.second*hitMap.at(haf.first)->energy();
+      }
+      std::cout << "    Tot Sum haf: " << tot_energy << std::endl;
+      for (auto const & lc : cPOnLayer[cp][cpp].layerClusterIdToEnergyAndScore) {
+        std::cout << "      lcIdx/energy/score: " << lc.first << "/" << lc.second.first << "/" << lc.second.second << std::endl;
+      }
+    }
+  }
+
+  std::cout << "Improved detIdToCaloParticleId_Map INFO" << std::endl;
+  for (auto const & cp : detIdToCaloParticleId_Map) {
+    std::cout << "For detId: " << (uint32_t)cp.first << " we have found the following connections with CaloParticles:" << std::endl;
+    for (auto const & cpp : cp.second) {
+      std::cout << "  CaloParticle Id: " << cpp.clusterId
+        << " with fraction: " << cpp.fraction
+        << " and energy: " << cpp.fraction*hitMap.at(cp.first)->energy() << std::endl;
+    }
+  }
+
   for (unsigned int lcId = 0; lcId < nLayerClusters; ++lcId)
   {
     // find the unique caloparticles id contributing to the layer clusters
@@ -688,6 +729,7 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
     unsigned int numberOfHitsInLC = hits_and_fractions.size();
     auto firstHitDetId = hits_and_fractions[0].first;
     int lcLayerId = recHitTools_->getLayerWithOffset(firstHitDetId) + layers * ((recHitTools_->zside(firstHitDetId) + 1) >> 1) - 1;
+    // If a reconstructed LayerCluster has energy 0 but is linked to a CaloParticle, assigned score 1
     if (clusters[lcId].energy() == 0. && !cpsInLayerCluster[lcId].empty()) {
       for(auto& cpPair : cpsInLayerCluster[lcId]) {
         cpPair.second = 1.;
@@ -723,7 +765,8 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
         }
         cpPair.second += (rhFraction - cpFraction)*(rhFraction - cpFraction)*hitEnergyWeight*invLayerClusterEnergyWeight;
       }
-    }
+    }  // End of loop over Hits within a LayerCluster
+
 
     if(cpsInLayerCluster[lcId].empty()) std::cout << "layerCluster Id: \t" << lcId << "\tCP id:\t-1 " << "\t score \t-1" <<"\n";
 
@@ -760,7 +803,7 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
     }
     histograms.h_denom_layercl_eta_perlayer.at(lcLayerId).fill(clusters[lcId].eta());
     histograms.h_denom_layercl_phi_perlayer.at(lcLayerId).fill(clusters[lcId].phi());
-  }
+  }  // End of loop over LayerClusters
 
 
 
@@ -831,17 +874,17 @@ void HGVHistoProducerAlgo::layerClusters_to_CaloParticles (const Histograms& his
             if(findHitIt != detIdToLayerClusterId_Map[cp_hitDetId].end())
               lcFraction = findHitIt->fraction;
           }
-          if (lcFraction == 0.) {
-            lcFraction = -1.;
-          }
+//          if (lcFraction == 0.) {
+//            lcFraction = -1.;
+//          }
           lcPair.second.second += (lcFraction - cpFraction)*(lcFraction - cpFraction)*hitEnergyWeight*invCPEnergyWeight;
-          std::cout << "layerClusterId:\t" << layerClusterId << "\t"
+          std::cout << "cpDetId:\t" << (uint32_t)cp_hitDetId << "\tlayerClusterId:\t" << layerClusterId << "\t"
                     << "lcfraction,cpfraction:\t" << lcFraction << ", " << cpFraction << "\t"
                     << "hitEnergyWeight:\t" << hitEnergyWeight << "\t"
-                    << "currect score:\t" << lcPair.second.second << "\t"
+                    << "current score:\t" << lcPair.second.second << "\t"
                     << "invCPEnergyWeight:\t" << invCPEnergyWeight << "\n";
-        }
-      }
+        }  // End of loop over LayerClusters linked to hits of this CaloParticle
+      } // End of loop over hits of CaloParticle on a Layer
 
 
 
