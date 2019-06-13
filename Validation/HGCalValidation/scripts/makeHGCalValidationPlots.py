@@ -24,8 +24,11 @@ def main(opts):
     val = SimpleValidation([sample], opts.outputDir)
     htmlReport = val.createHtmlReport(validationName=opts.html_validation_name)
 
-    hgclayclus = [hgcalPlots.hgcalLayerClustersPlotter]
-    val.doPlots(hgclayclus, plotterDrawArgs=drawArgs)
+    #hgclayclus = [hgcalPlots.hgcalLayerClustersPlotter]
+    #val.doPlots(hgclayclus, plotterDrawArgs=drawArgs)
+
+    hgclaymulticlus = [hgcalPlots.hgcalMultiClustersPlotter]
+    val.doPlots(hgclaymulticlus, plotterDrawArgs=drawArgs)
     print()
     if opts.no_html:
         print("Plots created into directory '%s'." % opts.outputDir)
@@ -58,6 +61,7 @@ if __name__ == "__main__":
     opts = parser.parse_args()
 
     for f in opts.files:
+        #print (f)
         if not os.path.exists(f):
             parser.error("DQM file %s does not exist" % f)
 
