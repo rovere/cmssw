@@ -26,14 +26,10 @@ public:
     adcToGeVConstantIsSet_ = false;
   }
 
-  void setLayerWeights(const std::vector<float>& weights) override {
-    weights_ = weights;
-  }
+  void setLayerWeights(const std::vector<float>& weights) override { weights_ = weights; }
 
-  void setNoseLayerWeights(const std::vector<float>& weights) {
-    weightsNose_ = weights;
-  }
-  
+  void setNoseLayerWeights(const std::vector<float>& weights) { weightsNose_ = weights; }
+
   void setADCToGeVConstant(const float value) override {
     adcToGeVConstant_ = value;
     adcToGeVConstantIsSet_ = true;
@@ -52,29 +48,30 @@ public:
     DetId baseid = uncalibRH.id();
     unsigned layer = 0;
     bool hfnose(false);
-    if ( DetId::HGCalEE == baseid.det() ) {
+    if (DetId::HGCalEE == baseid.det()) {
       layer = HGCSiliconDetId(baseid).layer();
     } else if (DetId::HGCalHSi == baseid.det()) {
       layer = HGCSiliconDetId(baseid).layer() + 28;
     } else if (DetId::HGCalHSc == baseid.det()) {
       layer = HGCScintillatorDetId(baseid).layer() + 28;
-    } else if ( DetId::Forward == baseid.det() && HFNose == baseid.subdetId() ) {
-	layer = HFNoseDetId(baseid).layer(); hfnose = true;
-    } else if( DetId::Hcal == baseid.det() && HcalEndcap == baseid.subdetId() ) {
-      layer =  HcalDetId(baseid).depth() + 40;
-    } else if ( DetId::Forward == baseid.det() && HGCEE == baseid.subdetId() ) {
+    } else if (DetId::Forward == baseid.det() && HFNose == baseid.subdetId()) {
+      layer = HFNoseDetId(baseid).layer();
+      hfnose = true;
+    } else if (DetId::Hcal == baseid.det() && HcalEndcap == baseid.subdetId()) {
+      layer = HcalDetId(baseid).depth() + 40;
+    } else if (DetId::Forward == baseid.det() && HGCEE == baseid.subdetId()) {
       layer = HGCalDetId(baseid).layer();
-    } else if ( DetId::Forward == baseid.det() && HGCHEF == baseid.subdetId() ) {
+    } else if (DetId::Forward == baseid.det() && HGCHEF == baseid.subdetId()) {
       layer = HGCalDetId(baseid).layer() + 28;
     } else {
       throw cms::Exception("InvalidRecHit") << "HGCalRecHitSimpleAlgo encountered a non-HGCal det id: " << baseid.det()
                                             << ' ' << baseid.subdetId() << ' ' << baseid.rawId();
     }
 
-    //    float clockToNsConstant = 25;    
-    float energy = (hfnose ? (uncalibRH.amplitude() * weightsNose_[layer] * 0.001f) :
-                    (uncalibRH.amplitude() * weights_[layer] * 0.001f));
-    float time   = uncalibRH.jitter();
+    //    float clockToNsConstant = 25;
+    float energy = (hfnose ? (uncalibRH.amplitude() * weightsNose_[layer] * 0.001f)
+                           : (uncalibRH.amplitude() * weights_[layer] * 0.001f));
+    float time = uncalibRH.jitter();
 
     //if(time<0) time   = 0; // fast-track digi conversion
 
@@ -89,7 +86,7 @@ public:
 
 private:
   float adcToGeVConstant_;
-  bool  adcToGeVConstantIsSet_;
+  bool adcToGeVConstantIsSet_;
   std::vector<float> weights_, weightsNose_;
 };
 #endif

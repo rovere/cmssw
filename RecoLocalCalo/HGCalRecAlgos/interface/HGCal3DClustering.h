@@ -78,14 +78,13 @@ private:
 
   typedef KDTreeLinkerAlgo<ClusterRef> KDTree;
   typedef KDTreeNodeInfo<ClusterRef> KDNode;
-  std::vector< std::vector<KDNode> > points;
-  std::vector<std::array<float,2> > minpos;
-  std::vector<std::array<float,2> > maxpos;
-  std::vector<size_t> es; /*!< vector to contain sorted indices of all clusters. */
-  std::vector<float> zees; /*!< vector to contain z position of each layer. */
+  std::vector<std::vector<KDNode>> points;
+  std::vector<std::array<float, 2>> minpos;
+  std::vector<std::array<float, 2>> maxpos;
+  std::vector<size_t> es;                            /*!< vector to contain sorted indices of all clusters. */
+  std::vector<float> zees;                           /*!< vector to contain z position of each layer. */
   std::unique_ptr<hgcal::ClusterTools> clusterTools; /*!< instance of tools to simplify cluster access. */
-  hgcal::RecHitTools rhtools_; /*!< instance of tools to access RecHit information. */
-
+  hgcal::RecHitTools rhtools_;                       /*!< instance of tools to access RecHit information. */
 };
 
 #endif

@@ -67,35 +67,37 @@ std::vector<reco::HGCalMultiCluster> HGCal3DClustering::makeClusters(
       vused[i] = (thecls[es[i]]->z() > 0) ? 1 : -1;
       ++used;
       // Starting from cluster es[i] at from[0] - from[1] - from[2]
-      std::array<double,3> from{ {thecls[es[i]]->x(),thecls[es[i]]->y(),thecls[es[i]]->z()} };
-      unsigned int firstlayer = int(thecls[es[i]]->z()>0)*(maxlayer+1);
-      unsigned int lastlayer = firstlayer+maxlayer+1;
-      for(unsigned int j = firstlayer; j < lastlayer; ++j) {
-	if(zees[j]==0.){
-	  // layer j not yet ever reached?
-	  continue;
-	}
-	std::array<double,3> to{ {0.,0.,zees[j]} };
-	layerIntersection(to,from);
-        unsigned int layer = j > maxlayer ? (j-(maxlayer+1)) : j; //maps back from index used for KD trees to actual layer
+      std::array<double, 3> from{{thecls[es[i]]->x(), thecls[es[i]]->y(), thecls[es[i]]->z()}};
+      unsigned int firstlayer = int(thecls[es[i]]->z() > 0) * (maxlayer + 1);
+      unsigned int lastlayer = firstlayer + maxlayer + 1;
+      for (unsigned int j = firstlayer; j < lastlayer; ++j) {
+        if (zees[j] == 0.) {
+          // layer j not yet ever reached?
+          continue;
+        }
+        std::array<double, 3> to{{0., 0., zees[j]}};
+        layerIntersection(to, from);
+        unsigned int layer =
+            j > maxlayer ? (j - (maxlayer + 1)) : j;  //maps back from index used for KD trees to actual layer
         float radius = radii[2];
-        if(layer <= rhtools_.lastLayerEE()) radius = radii[0];
-        else if(layer <= rhtools_.lastLayerFH()) radius = radii[1];
-        float radius2 = radius*radius;
-	KDTreeBox search_box(float(to[0])-radius,float(to[0])+radius,
-			     float(to[1])-radius,float(to[1])+radius);
-	std::vector<ClusterRef> found;
-	// at layer j in box float(to[0])+/-radius - float(to[1])+/-radius
-	hit_kdtree[j].search(search_box,found);
-	// found found.size() clusters within box
-	for(unsigned int k = 0; k < found.size(); k++){
-	  if(vused[found[k].ind]==0 && distReal2(thecls[es[found[k].ind]],to)<radius2){
-	    temp.push_back(thecls[es[found[k].ind]]);
-	    vused[found[k].ind]=vused[i];
-	    ++used;
-	  }
-	}
-
+        if (layer <= rhtools_.lastLayerEE())
+          radius = radii[0];
+        else if (layer <= rhtools_.lastLayerFH())
+          radius = radii[1];
+        float radius2 = radius * radius;
+        KDTreeBox search_box(
+            float(to[0]) - radius, float(to[0]) + radius, float(to[1]) - radius, float(to[1]) + radius);
+        std::vector<ClusterRef> found;
+        // at layer j in box float(to[0])+/-radius - float(to[1])+/-radius
+        hit_kdtree[j].search(search_box, found);
+        // found found.size() clusters within box
+        for (unsigned int k = 0; k < found.size(); k++) {
+          if (vused[found[k].ind] == 0 && distReal2(thecls[es[found[k].ind]], to) < radius2) {
+            temp.push_back(thecls[es[found[k].ind]]);
+            vused[found[k].ind] = vused[i];
+            ++used;
+          }
+        }
       }
       if (temp.size() > minClusters) {
         math::XYZPoint position = clusterTools->getMultiClusterPosition(temp);
