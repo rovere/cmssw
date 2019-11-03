@@ -130,7 +130,7 @@ bool HGCGraph::areTimeCompatible(int innerIdx,
   float timeIn = layerClustersTime.get(innerIdx);
   float timeOut = layerClustersTime.get(outerIdx);
 
-  return (timeIn == -99 || timeOut == -99 || std::abs(timeIn - timeOut) < maxDeltaTime);
+  return (timeIn == -99. || timeOut == -99. || std::abs(timeIn - timeOut) < maxDeltaTime);
 }
 
 //also return a vector of seedIndex for the reconstructed tracksters
