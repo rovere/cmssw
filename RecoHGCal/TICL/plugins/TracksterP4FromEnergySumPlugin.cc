@@ -85,7 +85,8 @@ namespace ticl {
 
     math::XYZVector direction(barycentre[0] - vertex.x(), barycentre[1] - vertex.y(), barycentre[2] - vertex.z());
     direction = direction.Unit();
-    direction *= energy_from_regression_ ? trackster.regressed_energy : energy;
+    energy = energy_from_regression_ ? trackster.regressed_energy : energy;
+    direction *= energy;
 
     math::XYZTLorentzVector cartesian(direction.X(), direction.Y(), direction.Z(), energy);
     // Convert px, py, pz, E vector to CMS standard pt/eta/phi/m vector
