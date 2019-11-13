@@ -24,19 +24,20 @@ private:
   int m_level;
   std::string m_tag;
   std::string m_outputFileName;
+  edm::ESGetToken<FWRecoGeometry, FWRecoGeometryRecord> m_geometryToken;
 };
 
 DumpFWRecoGeometry::DumpFWRecoGeometry(const edm::ParameterSet& config)
     : m_level(config.getUntrackedParameter<int>("level", 1)),
       m_tag(config.getUntrackedParameter<std::string>("tagInfo", "unknown")),
-
-      m_outputFileName(config.getUntrackedParameter<std::string>("outputFileName", "cmsRecoGeo.root")) {}
+      m_outputFileName(config.getUntrackedParameter<std::string>("outputFileName", "cmsRecoGeo.root")),
+      m_geometryToken(esConsumes<FWRecoGeometry, FWRecoGeometryRecord>(edm::ESInputTag{})) {}
 
 void DumpFWRecoGeometry::analyze(const edm::Event& event, const edm::EventSetup& eventSetup) {
   using namespace edm;
 
-  ESTransientHandle<FWRecoGeometry> geoh;
-  eventSetup.get<FWRecoGeometryRecord>().get(geoh);
+  auto const & geo = eventSetup.getData(m_geometryToken);
+
   TFile file(m_outputFileName.c_str(), "RECREATE");
 
   TTree* tree = new TTree("idToGeo", "raw detector id association with geometry ANT");
@@ -56,7 +57,7 @@ void DumpFWRecoGeometry::analyze(const edm::Event& event, const edm::EventSetup&
   tree->Branch("translation", &v_translation, "translation[3]/F");
   tree->Branch("matrix", &v_matrix, "matrix[9]/F");
 
-  for (FWRecoGeom::InfoMapItr it = geoh.product()->idToName.begin(), end = geoh.product()->idToName.end(); it != end;
+  for (FWRecoGeom::InfoMapItr it = geo.idToName.begin(), end = geo.idToName.end(); it != end;
        ++it) {
     v_id = it->id;
     for (unsigned int i = 0; i < 24; ++i)
@@ -75,10 +76,10 @@ void DumpFWRecoGeometry::analyze(const edm::Event& event, const edm::EventSetup&
 
   file.WriteTObject(new TNamed("CMSSW_VERSION", gSystem->Getenv("CMSSW_VERSION")));
   file.WriteTObject(new TNamed("tag", m_tag.c_str()));
-  file.WriteTObject(&geoh.product()->extraDet, "ExtraDetectors");
+  file.WriteTObject(&geo.extraDet, "ExtraDetectors");
   file.WriteTObject(new TNamed("PRODUCER_VERSION", "1"));  // version 2 changes pixel parameters
 
-  file.WriteTObject(new TNamed("TrackerTopology", geoh.product()->trackerTopologyXML));
+  file.WriteTObject(new TNamed("TrackerTopology", geo.trackerTopologyXML));
 
   file.Close();
 }

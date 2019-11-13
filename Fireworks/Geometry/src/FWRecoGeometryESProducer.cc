@@ -23,7 +23,6 @@
 #include "Geometry/RPCGeometry/interface/RPCGeometry.h"
 #include "Geometry/GEMGeometry/interface/GEMGeometry.h"
 #include "Geometry/GEMGeometry/interface/ME0Geometry.h"
-#include "Geometry/Records/interface/CaloGeometryRecord.h"
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 #include "Geometry/TrackerGeometryBuilder/interface/RectangularPixelTopology.h"
 #include "Geometry/CommonDetUnit/interface/PixelGeomDetUnit.h"
@@ -101,7 +100,9 @@ FWRecoGeometryESProducer::FWRecoGeometryESProducer(const edm::ParameterSet& pset
   m_muon = pset.getUntrackedParameter<bool>("Muon", true);
   m_calo = pset.getUntrackedParameter<bool>("Calo", true);
   m_timing = pset.getUntrackedParameter<bool>("Timing", false);
-  setWhatProduced(this);
+  auto cc = setWhatProduced(this);
+  m_token_tracking = cc.consumesFrom<GlobalTrackingGeometry,GlobalTrackingGeometryRecord>();
+  m_token_calo = cc.consumesFrom<CaloGeometry, CaloGeometryRecord>();
 }
 
 FWRecoGeometryESProducer::~FWRecoGeometryESProducer(void) {}
@@ -111,8 +112,8 @@ std::unique_ptr<FWRecoGeometry> FWRecoGeometryESProducer::produce(const FWRecoGe
 
   auto fwRecoGeometry = std::make_unique<FWRecoGeometry>();
 
+  m_geomRecord = record.getRecord<GlobalTrackingGeometryRecord>().getTransientHandle(m_token_tracking);
   if (m_tracker || m_muon) {
-    record.getRecord<GlobalTrackingGeometryRecord>().get(m_geomRecord);
     DetId detId(DetId::Tracker, 0);
     m_trackerGeom = (const TrackerGeometry*)m_geomRecord->slaveGeometry(detId);
   }
@@ -134,9 +135,7 @@ std::unique_ptr<FWRecoGeometry> FWRecoGeometryESProducer::produce(const FWRecoGe
     addME0Geometry(*fwRecoGeometry);
   }
   if (m_calo) {
-    edm::ESHandle<CaloGeometry> caloGeomH;
-    record.getRecord<CaloGeometryRecord>().get(caloGeomH);
-    m_caloGeom = caloGeomH.product();
+    m_caloGeom = &(record.getRecord<CaloGeometryRecord>().get(m_token_calo));
     addCaloGeometry(*fwRecoGeometry);
   }
 

@@ -6,6 +6,8 @@
 #include "FWCore/Framework/interface/ESProducer.h"
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "DataFormats/GeometryVector/interface/GlobalPoint.h"
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
+#include "Geometry/Records/interface/GlobalTrackingGeometryRecord.h"
 
 namespace edm {
   class ParameterSet;
@@ -56,7 +58,7 @@ private:
   void fillShapeAndPlacement(unsigned int id, const GeomDet* det, FWRecoGeometry&);
   void writeTrackerParametersXML(FWRecoGeometry&);
 
-  edm::ESHandle<GlobalTrackingGeometry> m_geomRecord;
+  edm::ESTransientHandle<GlobalTrackingGeometry> m_geomRecord;
   const CaloGeometry* m_caloGeom;
   edm::ESHandle<FastTimeGeometry> m_ftlBarrelGeom, m_ftlEndcapGeom;
   std::vector<edm::ESHandle<HGCalGeometry> > m_hgcalGeoms;
@@ -67,6 +69,8 @@ private:
   bool m_muon;
   bool m_calo;
   bool m_timing;
+  edm::ESGetToken<GlobalTrackingGeometry, GlobalTrackingGeometryRecord> m_token_tracking;
+  edm::ESGetToken<CaloGeometry, CaloGeometryRecord> m_token_calo;
 };
 
 #endif  // GEOMETRY_FWRECO_GEOMETRY_ES_PRODUCER_H
