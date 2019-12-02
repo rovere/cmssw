@@ -2254,35 +2254,34 @@ void HGVHistoProducerAlgo::multiClusters_to_CaloParticles(const Histograms& hist
     auto assocFakeMerge = tracksters_fakemerge[mclId];
     auto assocDuplicate = tracksters_duplicate[mclId];
     if (assocDuplicate) {
-      histograms.h_numDup_multicl_eta.fill(multiClusters[mclId].eta());
-      histograms.h_numDup_multicl_phi.fill(multiClusters[mclId].phi());
-    } else {
-      if (assocFakeMerge > 0) {
-        histograms.h_num_multicl_eta.fill(multiClusters[mclId].eta());
-        histograms.h_num_multicl_phi.fill(multiClusters[mclId].phi());
-        auto best = std::min_element(std::begin(cpsInMultiCluster[mclId]),
-                                     std::end(cpsInMultiCluster[mclId]),
-                                     [](const auto& obj1, const auto& obj2) { return obj1.second < obj2.second; });
-
-        //This is the shared energy taking the best caloparticle in each layer
-        float sharedeneCPallLayers = 0.;
-        //Loop through all layers
-        for (unsigned int j = 0; j < layers * 2; ++j) {
-          auto const& best_cp_linked = cPOnLayer[best->first][j].layerClusterIdToEnergyAndScore[mclId];
-          sharedeneCPallLayers += best_cp_linked.first;
-        }  //end of loop through layers
-        histograms.h_sharedenergy_multicl2caloparticle_vs_eta.fill(
-            multiClusters[mclId].eta(), sharedeneCPallLayers / multiClusters[mclId].energy());
-        histograms.h_sharedenergy_multicl2caloparticle_vs_phi.fill(
-            multiClusters[mclId].phi(), sharedeneCPallLayers / multiClusters[mclId].energy());
-      }
-      if (assocFakeMerge >= 2) {
-        histograms.h_numMerge_multicl_eta.fill(multiClusters[mclId].eta());
-        histograms.h_numMerge_multicl_phi.fill(multiClusters[mclId].phi());
-      }
+      histograms.h_numDup_multicl_eta[count]->Fill(multiClusters[mclId].eta());
+      histograms.h_numDup_multicl_phi[count]->Fill(multiClusters[mclId].phi());
     }
-    histograms.h_denom_multicl_eta.fill(multiClusters[mclId].eta());
-    histograms.h_denom_multicl_phi.fill(multiClusters[mclId].phi());
+    if (assocFakeMerge > 0) {
+      histograms.h_num_multicl_eta.fill(multiClusters[mclId].eta());
+      histograms.h_num_multicl_phi.fill(multiClusters[mclId].phi());
+      auto best = std::min_element(std::begin(cpsInMultiCluster[mclId]),
+          std::end(cpsInMultiCluster[mclId]),
+          [](const auto& obj1, const auto& obj2) { return obj1.second < obj2.second; });
+
+      //This is the shared energy taking the best caloparticle in each layer
+      float sharedeneCPallLayers = 0.;
+      //Loop through all layers
+      for (unsigned int j = 0; j < layers * 2; ++j) {
+        auto const& best_cp_linked = cPOnLayer[best->first][j].layerClusterIdToEnergyAndScore[mclId];
+        sharedeneCPallLayers += best_cp_linked.first;
+      }  //end of loop through layers
+      histograms.h_sharedenergy_multicl2caloparticle_vs_eta.fill(
+          multiClusters[mclId].eta(), sharedeneCPallLayers / multiClusters[mclId].energy());
+      histograms.h_sharedenergy_multicl2caloparticle_vs_phi.fill(
+          multiClusters[mclId].phi(), sharedeneCPallLayers / multiClusters[mclId].energy());
+    }
+    if (assocFakeMerge >= 2) {
+      histograms.h_numMerge_multicl_eta.fill(multiClusters[mclId].eta());
+      histograms.h_numMerge_multicl_phi.fill(multiClusters[mclId].phi());
+    }
+    histograms.h_denom_multicl_eta[count]->Fill(multiClusters[mclId].eta());
+    histograms.h_denom_multicl_phi[count]->Fill(multiClusters[mclId].phi());
   }
 }
 
