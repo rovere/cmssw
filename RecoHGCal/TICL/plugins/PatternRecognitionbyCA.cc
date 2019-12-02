@@ -9,6 +9,8 @@
 #include "PatternRecognitionbyCA.h"
 #include "HGCGraph.h"
 
+#include "TrackstersPCA.h"
+
 using namespace ticl;
 
 PatternRecognitionbyCA::PatternRecognitionbyCA(const edm::ParameterSet &conf, const CacheBase *cache)
@@ -109,12 +111,25 @@ void PatternRecognitionbyCA::makeTracksters(const PatternRecognitionAlgoBase::In
     for (size_t i = 0; i < trackster.vertices.size(); ++i) {
       trackster.vertex_multiplicity[i] = layer_cluster_usage[trackster.vertices[i]];
       LogDebug("HGCPatterRecoByCA") << "LayerID: " << trackster.vertices[i]
-                                    << " count: " << (int)trackster.vertex_multiplicity[i] << std::endl;
+        << " count: " << (int)trackster.vertex_multiplicity[i] << std::endl;
     }
   }
 
+  ticl::assignPCAtoTracksters(result, input.layerClusters,
+      rhtools_.getPositionLayer(rhtools_.lastLayerEE()).z());
+
   // run energy regression and ID
   energyRegressionAndID(input.layerClusters, result);
+  if (0) {
+    for (auto &trackster : result) {
+      std::cout << "Trackster characteristics: " << std::endl;
+      std::cout << "Size: " << trackster.vertices.size() << std::endl;
+      auto counter = 0;
+      for (auto const & p : trackster.id_probabilities) {
+        std::cout << counter++ << ": " << p << std::endl;
+      }
+    }
+  }
 }
 
 void PatternRecognitionbyCA::energyRegressionAndID(const std::vector<reco::CaloCluster> &layerClusters,
@@ -212,7 +227,7 @@ void PatternRecognitionbyCA::energyRegressionAndID(const std::vector<reco::CaloC
         float *features = &input.tensor<float, 4>()(i, j, seenClusters[j], 0);
 
         // fill features
-        *(features++) = float(cluster.eta());
+        *(features++) = float(std::abs(cluster.eta()));
         *(features++) = float(cluster.phi());
         *features = float(cluster.energy());
 

@@ -11,6 +11,7 @@ from RecoParticleFlow.PFClusterProducer.particleFlowCluster_cff import *
 from TrackingTools.Configuration.TrackingTools_cff import *
 from RecoTracker.MeasurementDet.MeasurementTrackerEventProducer_cfi import *
 from RecoPixelVertexing.PixelLowPtUtilities.siPixelClusterShapeCache_cfi import *
+from RecoHGCal.Configuration.recoHGCAL_cff import *
 
 from Configuration.Eras.Modifier_fastSim_cff import fastSim
 
@@ -134,6 +135,11 @@ globalreco = cms.Sequence(globalreco_tracking*
                           pfTrackingGlobalReco*
                           muoncosmicreco*
                           CastorFullReco)
+
+from Configuration.Eras.Modifier_phase2_hgcal_cff import phase2_hgcal
+_phase2HGALReco = globalreco.copy()
+_phase2HGALReco += iterTICL
+phase2_hgcal.toReplaceWith(globalreco, _phase2HGALReco)
 
 _run3_globalreco = globalreco.copyAndExclude([CastorFullReco])
 run3_common.toReplaceWith(globalreco, _run3_globalreco)

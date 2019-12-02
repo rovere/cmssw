@@ -2171,7 +2171,7 @@ void HGVHistoProducerAlgo::multiClusters_to_CaloParticles(const Histograms& hist
     if (assocDuplicate) {
       histograms.h_numDup_multicl_eta[count]->Fill(multiClusters[mclId].eta());
       histograms.h_numDup_multicl_phi[count]->Fill(multiClusters[mclId].phi());
-    } else {
+    }
       if (assocFakeMerge > 0) {
         histograms.h_num_multicl_eta[count]->Fill(multiClusters[mclId].eta());
         histograms.h_num_multicl_phi[count]->Fill(multiClusters[mclId].phi());
@@ -2192,9 +2192,8 @@ void HGVHistoProducerAlgo::multiClusters_to_CaloParticles(const Histograms& hist
             multiClusters[mclId].phi(), sharedeneCPallLayers / multiClusters[mclId].energy());
       }
       if (assocFakeMerge >= 2) {
-        histograms.h_numMerge_multicl_eta[count]->Fill(multiClusters[mclId].eta());
-        histograms.h_numMerge_multicl_phi[count]->Fill(multiClusters[mclId].phi());
-      }
+      histograms.h_numMerge_multicl_eta.fill(multiClusters[mclId].eta());
+      histograms.h_numMerge_multicl_phi.fill(multiClusters[mclId].phi());
     }
     histograms.h_denom_multicl_eta[count]->Fill(multiClusters[mclId].eta());
     histograms.h_denom_multicl_phi[count]->Fill(multiClusters[mclId].phi());
