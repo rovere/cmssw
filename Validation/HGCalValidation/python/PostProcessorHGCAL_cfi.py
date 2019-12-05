@@ -32,7 +32,14 @@ eff_multiclusters.extend(["merge_eta 'MultiCluster Merge Rate vs #eta' NumMerge_
 eff_multiclusters.extend(["merge_phi 'MultiCluster Merge Rate vs #phi' NumMerge_MultiCluster_Phi Denom_MultiCluster_Phi"])
 
 postProcessorHGCALmulticlusters = DQMEDHarvester('DQMGenericClient',
-subDirs = cms.untracked.vstring('HGCAL/HGCalValidator/hgcalMultiClusters/', 'HGCAL/HGCalValidator/multiClustersFromTrackstersEM_MultiClustersFromTracksterByCA/', 'HGCAL/HGCalValidator/multiClustersFromTrackstersHAD_MultiClustersFromTracksterByCA/'),
+subDirs = cms.untracked.vstring(
+  'HGCAL/HGCalValidator/hgcalMultiClusters/',
+  'HGCAL/HGCalValidator/multiClustersFromTrackstersTrk_TrkMultiClustersFromTracksterByCA/',
+  'HGCAL/HGCalValidator/multiClustersFromTrackstersEM_MultiClustersFromTracksterByCA/',
+  'HGCAL/HGCalValidator/multiClustersFromTrackstersHAD_MultiClustersFromTracksterByCA/',
+  'HGCAL/HGCalValidator/multiClustersFromTrackstersMerge_MultiClustersFromTracksterByCA/',
+  ),
+
 efficiency = cms.vstring(eff_multiclusters),
 resolution = cms.vstring(),
 cumulativeDists = cms.untracked.vstring(),
