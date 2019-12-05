@@ -44,6 +44,9 @@ namespace ticl {
     std::array<Vector, 3> eigenvectors;
     std::array<float, 3> sigmas;
 
+    //BDT for EM vs. HAD
+    float bdt_em_vs_had;
+
     // types considered by the particle identification
     enum class ParticleType {
       photon = 0,

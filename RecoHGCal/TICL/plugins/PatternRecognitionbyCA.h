@@ -7,6 +7,10 @@
 #include "RecoHGCal/TICL/plugins/PatternRecognitionAlgoBase.h"
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
 #include "PhysicsTools/TensorFlow/interface/TensorFlow.h"
+#include "TMVA/Factory.h"
+#include "TMVA/Reader.h"
+#include "CommonTools/MVAUtils/interface/TMVAZipReader.h"
+
 
 class HGCGraph;
 
@@ -17,7 +21,7 @@ namespace ticl {
     ~PatternRecognitionbyCA() override;
 
     void makeTracksters(const PatternRecognitionAlgoBase::Inputs& input, std::vector<Trackster>& result) override;
-
+    void TracksterEmVsHadMVAReader(std::vector<Trackster> & tracksters, TMVA::Reader* reader_);
     void energyRegressionAndID(const std::vector<reco::CaloCluster>& layerClusters, std::vector<Trackster>& result);
 
   private:
@@ -35,6 +39,9 @@ namespace ticl {
     const float eidMinClusterEnergy_;
     const int eidNLayers_;
     const int eidNClusters_;
+
+    TMVA::Reader* reader_;
+    float ts_energy, ts_x, ts_y, ts_z, ts_pcaeigval0, ts_pcasig0, ts_pcaeigval1, ts_pcasig1, ts_pcaeigval2, ts_pcasig2;
 
     hgcal::RecHitTools rhtools_;
     tensorflow::Session* eidSession_;

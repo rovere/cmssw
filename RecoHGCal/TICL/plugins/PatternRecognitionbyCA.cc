@@ -13,6 +13,7 @@
 
 using namespace ticl;
 
+
 PatternRecognitionbyCA::PatternRecognitionbyCA(const edm::ParameterSet &conf, const CacheBase *cache)
     : PatternRecognitionAlgoBase(conf, cache),
       theGraph_(std::make_unique<HGCGraph>()),
@@ -37,6 +38,26 @@ PatternRecognitionbyCA::PatternRecognitionbyCA(const edm::ParameterSet &conf, co
         << "PatternRecognitionbyCA received an empty graph definition from the global cache";
   }
   eidSession_ = tensorflow::createSession(trackstersCache->eidGraphDef);
+
+  // BDT releted stuff
+  // LG: this can be improved but for now suggest to leave it like this
+  reader_ = new TMVA::Reader();
+  reader_->AddVariable("ts_energy", &ts_energy);
+  reader_->AddVariable("ts_x", &ts_x);
+  reader_->AddVariable("ts_y", &ts_y);
+  reader_->AddVariable("ts_z", &ts_z);
+  reader_->AddVariable("ts_pcaeigval0", &ts_pcaeigval0);
+  reader_->AddVariable("ts_pcasig0", &ts_pcasig0);
+  reader_->AddVariable("ts_pcaeigval1", &ts_pcaeigval1);
+  reader_->AddVariable("ts_pcasig1", &ts_pcasig1);
+  reader_->AddVariable("ts_pcaeigval2", &ts_pcaeigval2);
+  reader_->AddVariable("ts_pcasig2", &ts_pcasig2);
+
+  std::string CMSSW_BASE(std::getenv("CMSSW_BASE"));
+  std::string weightfilename_ = CMSSW_BASE+"/src/RecoHGCal/data/em_vs_had_xgboost.xml";
+  std::string tmvaMethod_     = "BDTG method";
+  reco::details::loadTMVAWeights(reader_, tmvaMethod_ , weightfilename_);
+
 }
 
 PatternRecognitionbyCA::~PatternRecognitionbyCA(){};
@@ -118,6 +139,10 @@ void PatternRecognitionbyCA::makeTracksters(const PatternRecognitionAlgoBase::In
   ticl::assignPCAtoTracksters(result, input.layerClusters,
       rhtools_.getPositionLayer(rhtools_.lastLayerEE()).z());
 
+  // add bdt em-vs-had
+  TracksterEmVsHadMVAReader(result, reader_);
+
+
   // run energy regression and ID
   energyRegressionAndID(input.layerClusters, result);
   if (0) {
@@ -131,6 +156,30 @@ void PatternRecognitionbyCA::makeTracksters(const PatternRecognitionAlgoBase::In
     }
   }
 }
+
+
+void PatternRecognitionbyCA::TracksterEmVsHadMVAReader(std::vector<Trackster> & tracksters, TMVA::Reader* reader_) {
+
+  float mva_ = 1.;
+  for (unsigned int itrkster = 0; itrkster<tracksters.size(); ++itrkster) {
+    ts_energy     = tracksters.at(itrkster).raw_energy;
+    ts_x          = tracksters.at(itrkster).barycenter.x();
+    ts_y          = tracksters.at(itrkster).barycenter.y();
+    ts_z          = abs(tracksters.at(itrkster).barycenter.z());
+    ts_pcaeigval0 = tracksters.at(itrkster).eigenvalues.at(0);
+    ts_pcasig0    = tracksters.at(itrkster).sigmas.at(0);
+    ts_pcaeigval1 = tracksters.at(itrkster).eigenvalues.at(1);
+    ts_pcasig1    = tracksters.at(itrkster).sigmas.at(1);
+    ts_pcaeigval2 = tracksters.at(itrkster).eigenvalues.at(2);
+    ts_pcasig2    = tracksters.at(itrkster).sigmas.at(2);
+
+    mva_ = reader_->EvaluateMVA("BDTG method");
+    tracksters.at(itrkster).bdt_em_vs_had = mva_;
+  }
+
+}
+
+
 
 void PatternRecognitionbyCA::energyRegressionAndID(const std::vector<reco::CaloCluster> &layerClusters,
                                                    std::vector<Trackster> &tracksters) {
