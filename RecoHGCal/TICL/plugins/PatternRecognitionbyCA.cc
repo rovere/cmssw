@@ -6,6 +6,7 @@
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "FWCore/Utilities/interface/Exception.h"
+#include "FWCore/ParameterSet/interface/FileInPath.h"
 #include "PatternRecognitionbyCA.h"
 #include "HGCGraph.h"
 
@@ -30,6 +31,7 @@ PatternRecognitionbyCA::PatternRecognitionbyCA(const edm::ParameterSet &conf, co
       eidMinClusterEnergy_(conf.getParameter<double>("eid_min_cluster_energy")),
       eidNLayers_(conf.getParameter<int>("eid_n_layers")),
       eidNClusters_(conf.getParameter<int>("eid_n_clusters")),
+      bdtweights_(conf.getParameter<edm::FileInPath>("bdt_weights")),  
       eidSession_(nullptr) {
   // mount the tensorflow graph onto the session when set
   const TrackstersCache *trackstersCache = dynamic_cast<const TrackstersCache *>(cache);
@@ -42,19 +44,18 @@ PatternRecognitionbyCA::PatternRecognitionbyCA(const edm::ParameterSet &conf, co
   // BDT releted stuff
   // LG: this can be improved but for now suggest to leave it like this
   reader_ = new TMVA::Reader();
-  reader_->AddVariable("ts_energy", &ts_energy);
-  reader_->AddVariable("ts_x", &ts_x);
-  reader_->AddVariable("ts_y", &ts_y);
-  reader_->AddVariable("ts_z", &ts_z);
-  reader_->AddVariable("ts_pcaeigval0", &ts_pcaeigval0);
-  reader_->AddVariable("ts_pcasig0", &ts_pcasig0);
-  reader_->AddVariable("ts_pcaeigval1", &ts_pcaeigval1);
-  reader_->AddVariable("ts_pcasig1", &ts_pcasig1);
-  reader_->AddVariable("ts_pcaeigval2", &ts_pcaeigval2);
-  reader_->AddVariable("ts_pcasig2", &ts_pcasig2);
+  reader_->AddVariable("ts_energy", &ts_energy_);
+  reader_->AddVariable("ts_x", &ts_x_);
+  reader_->AddVariable("ts_y", &ts_y_);
+  reader_->AddVariable("ts_z", &ts_z_);
+  reader_->AddVariable("ts_pcaeigval0", &ts_pcaeigval0_);
+  reader_->AddVariable("ts_pcasig0", &ts_pcasig0_);
+  reader_->AddVariable("ts_pcaeigval1", &ts_pcaeigval1_);
+  reader_->AddVariable("ts_pcasig1", &ts_pcasig1_);
+  reader_->AddVariable("ts_pcaeigval2", &ts_pcaeigval2_);
+  reader_->AddVariable("ts_pcasig2", &ts_pcasig2_);
 
-  std::string CMSSW_BASE(std::getenv("CMSSW_BASE"));
-  std::string weightfilename_ = CMSSW_BASE+"/src/RecoHGCal/data/em_vs_had_xgboost.xml";
+  std::string weightfilename_ = bdtweights_.fullPath();
   std::string tmvaMethod_     = "BDTG method";
   reco::details::loadTMVAWeights(reader_, tmvaMethod_ , weightfilename_);
 
@@ -162,16 +163,16 @@ void PatternRecognitionbyCA::TracksterEmVsHadMVAReader(std::vector<Trackster> & 
 
   float mva_ = 1.;
   for (unsigned int itrkster = 0; itrkster<tracksters.size(); ++itrkster) {
-    ts_energy     = tracksters.at(itrkster).raw_energy;
-    ts_x          = tracksters.at(itrkster).barycenter.x();
-    ts_y          = tracksters.at(itrkster).barycenter.y();
-    ts_z          = abs(tracksters.at(itrkster).barycenter.z());
-    ts_pcaeigval0 = tracksters.at(itrkster).eigenvalues.at(0);
-    ts_pcasig0    = tracksters.at(itrkster).sigmas.at(0);
-    ts_pcaeigval1 = tracksters.at(itrkster).eigenvalues.at(1);
-    ts_pcasig1    = tracksters.at(itrkster).sigmas.at(1);
-    ts_pcaeigval2 = tracksters.at(itrkster).eigenvalues.at(2);
-    ts_pcasig2    = tracksters.at(itrkster).sigmas.at(2);
+    ts_energy_     = tracksters.at(itrkster).raw_energy;
+    ts_x_          = tracksters.at(itrkster).barycenter.x();
+    ts_y_          = tracksters.at(itrkster).barycenter.y();
+    ts_z_          = abs(tracksters.at(itrkster).barycenter.z());
+    ts_pcaeigval0_ = tracksters.at(itrkster).eigenvalues.at(0);
+    ts_pcasig0_    = tracksters.at(itrkster).sigmas.at(0);
+    ts_pcaeigval1_ = tracksters.at(itrkster).eigenvalues.at(1);
+    ts_pcasig1_    = tracksters.at(itrkster).sigmas.at(1);
+    ts_pcaeigval2_ = tracksters.at(itrkster).eigenvalues.at(2);
+    ts_pcasig2_    = tracksters.at(itrkster).sigmas.at(2);
 
     mva_ = reader_->EvaluateMVA("BDTG method");
     tracksters.at(itrkster).bdt_em_vs_had = mva_;

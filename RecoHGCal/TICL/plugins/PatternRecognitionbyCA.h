@@ -39,9 +39,10 @@ namespace ticl {
     const float eidMinClusterEnergy_;
     const int eidNLayers_;
     const int eidNClusters_;
-
+    const edm::FileInPath bdtweights_;
+    
     TMVA::Reader* reader_;
-    float ts_energy, ts_x, ts_y, ts_z, ts_pcaeigval0, ts_pcasig0, ts_pcaeigval1, ts_pcasig1, ts_pcaeigval2, ts_pcasig2;
+    float ts_energy_, ts_x_, ts_y_, ts_z_, ts_pcaeigval0_, ts_pcasig0_, ts_pcaeigval1_, ts_pcasig1_, ts_pcaeigval2_, ts_pcasig2_;
 
     hgcal::RecHitTools rhtools_;
     tensorflow::Session* eidSession_;
