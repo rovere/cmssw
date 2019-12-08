@@ -139,7 +139,11 @@ void TICLCandidateFromTrackstersProducer::produce(edm::Event& evt, const edm::Ev
       } else {
         // Demote them to be neutral, since there's not track associated.
         ticl_cand.setCharge(0);
-        ticl_cand.setPdgId(130);
+        if (pdg_id == -11) {
+          ticl_cand.setPdgId(22);
+        } else {
+          ticl_cand.setPdgId(130);
+        }
       }
     }
   }
