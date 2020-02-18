@@ -5,7 +5,7 @@
 #include <iostream>
 
 void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
-    const std::vector<reco::CaloCluster> &layerClusters, double z_limit_em) {
+    const std::vector<reco::CaloCluster> &layerClusters, double z_limit_em, bool energyWeight) {
   TPrincipal pca(3, "");
   LogDebug("TrackstersPCA") << "-------" << std::endl;
   for (auto &trackster : tracksters) {
@@ -24,8 +24,27 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
         layerClusters[trackster.vertices[i]].y(),
         layerClusters[trackster.vertices[i]].z()
       };
-      pca.AddRow(&point[0]);
+      if (!energyWeight)
+        pca.AddRow(&point[0]);
     }
+
+    float weights_sum = 0.f;
+    if (energyWeight) {
+      for (size_t i = 0; i < trackster.vertices.size(); ++i) {
+        float weight = 1.f;
+        auto fraction = 1.f / trackster.vertex_multiplicity[i];
+        if (trackster.raw_energy)
+          weight = (trackster.vertices.size() / trackster.raw_energy) * layerClusters[trackster.vertices[i]].energy() * fraction;
+        weights_sum += weight;
+        double pointE[3] = {
+          weight * layerClusters[trackster.vertices[i]].x(),
+          weight * layerClusters[trackster.vertices[i]].y(),
+          weight * layerClusters[trackster.vertices[i]].z()
+        };
+        pca.AddRow(&pointE[0]);
+      }
+    }
+
     pca.MakePrincipals();
     trackster.barycenter = ticl::Trackster::Vector((*(pca.GetMeanValues()))[0],
         (*(pca.GetMeanValues()))[1],
@@ -60,6 +79,7 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
     LogDebug("TrackstersPCA") << "Trackster characteristics: " << std::endl;
     LogDebug("TrackstersPCA") << "Size: " << trackster.vertices.size() << std::endl;
     LogDebug("TrackstersPCA") << "Mean: " << mean[0] << ", " << mean[1] << ", " << mean[2] << std::endl;
+    LogDebug("TrackstersPCA") << "Weights sum:" << weights_sum << std::endl;
     LogDebug("TrackstersPCA") << "EigenValues: " << eigenvalues[0] << ", " << eigenvalues[1] << ", " << eigenvalues[2]  << std::endl;
     LogDebug("TrackstersPCA") << "EigeVectors 1: " << eigenvectors(0, 0) << ", " << eigenvectors(1, 0) << ", " << eigenvectors(2, 0) <<std::endl;
     LogDebug("TrackstersPCA") << "EigeVectors 2: " << eigenvectors(0, 1) << ", " << eigenvectors(1, 1) << ", " << eigenvectors(2, 1) <<std::endl;
