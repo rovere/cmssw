@@ -49,26 +49,18 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
     trackster.barycenter = ticl::Trackster::Vector((*(pca.GetMeanValues()))[0],
         (*(pca.GetMeanValues()))[1],
         (*(pca.GetMeanValues()))[2]);
-    trackster.eigenvalues[0] = (float)(*(pca.GetEigenValues()))[0];
-    trackster.eigenvalues[1] = (float)(*(pca.GetEigenValues()))[1];
-    trackster.eigenvalues[2] = (float)(*(pca.GetEigenValues()))[2];
-    trackster.eigenvectors[0] = ticl::Trackster::Vector((*(pca.GetEigenVectors()))[0][0],
-        (*(pca.GetEigenVectors()))[1][0],
-        (*(pca.GetEigenVectors()))[2][0] );
-    trackster.eigenvectors[1] = ticl::Trackster::Vector((*(pca.GetEigenVectors()))[0][1],
-        (*(pca.GetEigenVectors()))[1][1],
-        (*(pca.GetEigenVectors()))[2][1] );
-    trackster.eigenvectors[2] = ticl::Trackster::Vector((*(pca.GetEigenVectors()))[0][2],
-        (*(pca.GetEigenVectors()))[1][2],
-        (*(pca.GetEigenVectors()))[2][2] );
+    for (size_t i=0; i<3; ++i) {
+      trackster.sigmas[i] = (float)(*(pca.GetSigmas()))[i];
+      trackster.eigenvalues[i] = (float)(*(pca.GetEigenValues()))[i];
+      trackster.eigenvectors[i] = ticl::Trackster::Vector((*(pca.GetEigenVectors()))[0][i],
+        (*(pca.GetEigenVectors()))[1][i],
+        (*(pca.GetEigenVectors()))[2][i] );
+    }
     if (trackster.eigenvectors[0].z() * trackster.barycenter.z() < 0.0) {
       trackster.eigenvectors[0] = -ticl::Trackster::Vector((*(pca.GetEigenVectors()))[0][0],
           (*(pca.GetEigenVectors()))[1][0],
           (*(pca.GetEigenVectors()))[2][0] );
     }
-    trackster.sigmas[0] = (float)(*(pca.GetSigmas()))[0];
-    trackster.sigmas[1] = (float)(*(pca.GetSigmas()))[1];
-    trackster.sigmas[2] = (float)(*(pca.GetSigmas()))[2];
     auto norm = std::sqrt(trackster.eigenvectors[0].Unit().perp2());
     trackster.raw_pt = norm * trackster.raw_energy;
     trackster.raw_em_pt = norm * trackster.raw_em_energy;
