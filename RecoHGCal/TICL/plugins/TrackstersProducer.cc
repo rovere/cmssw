@@ -115,6 +115,7 @@ void TrackstersProducer::fillDescriptions(edm::ConfigurationDescriptions& descri
   desc.add<double>("eid_min_cluster_energy", 1.);
   desc.add<int>("eid_n_layers", 50);
   desc.add<int>("eid_n_clusters", 10);
+  desc.add<edm::FileInPath>("bdt_weights" , edm::FileInPath("RecoHGCal/data/em_vs_had_xgboost.xml"));
   descriptions.add("trackstersProducer", desc);
 }
 
