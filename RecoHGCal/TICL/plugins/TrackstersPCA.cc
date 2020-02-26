@@ -11,7 +11,10 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
   TPrincipal pca(3, "N");
   LogDebug("TrackstersPCA") << "-------" << std::endl;
   for (auto &trackster : tracksters) {
+    double point[3] = {0};
+    auto fillPoint = [&](const reco::CaloCluster & c, const float weight=1) {point[0] = weight*c.x(); point[1] = weight*c.y(); point[2] = weight*c.z();};
     pca.Clear();
+
     trackster.raw_energy = 0.;
     trackster.raw_em_energy = 0.;
     trackster.raw_pt = 0.;
@@ -22,8 +25,8 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
       if (std::abs(layerClusters[trackster.vertices[i]].z()) <= z_limit_em)
         trackster.raw_em_energy += layerClusters[trackster.vertices[i]].energy() * fraction;
       if (!energyWeight) {
-        double point[3];
-        pca.AddRow(vertexToArray(layerClusters[trackster.vertices[i]], point));
+        fillPoint(layerClusters[trackster.vertices[i]]);
+        pca.AddRow(point);
       }
     }
 
@@ -34,8 +37,8 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
         if (trackster.raw_energy)
           weight = (layerClusters[trackster.vertices[i]].energy() / trackster.raw_energy) / trackster.vertex_multiplicity[i];
         weights_sum += weight;
-        double point[3];
-        pca.AddRow(vertexToArray(layerClusters[trackster.vertices[i]], point, weight));
+        fillPoint(layerClusters[trackster.vertices[i]], weight);
+        pca.AddRow(point);
       }
     }
 
@@ -43,9 +46,9 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
     const auto & barycenter = *(pca.GetMeanValues());
     double sigmasPCA[3] = {0};
     for (size_t i = 0; i < trackster.vertices.size(); ++i) {
-      double point[3];
+      fillPoint(layerClusters[trackster.vertices[i]]);
       double p[3];
-      pca.X2P(vertexToArray(layerClusters[trackster.vertices[i]], point), p);
+      pca.X2P(point, p);
       for (size_t j=0; j<3; ++j) {
         sigmasPCA[j] += (p[j] - barycenter[j]) * (p[j] - barycenter[j]);
       }
@@ -86,7 +89,7 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
       if (energyWeight && trackster.raw_energy)
         weight = (layerClusters[trackster.vertices[i]].energy() / trackster.raw_energy) / trackster.vertex_multiplicity[i];
       weights2_sum += weight*weight;
-      *point = *vertexToArray(layerClusters[trackster.vertices[i]], point, weight);
+      fillPoint(layerClusters[trackster.vertices[i]], weight);
       for (size_t x=0; x<3; ++x) {
         for (size_t y=0; y<3; ++y) { // can be improved with for (size_t y=0; y<=x; ++y) and then assigning the symmetric values
           covM(x,y) += weight*(point[x] - barycenter[x])*(point[y] - barycenter[y]);
@@ -129,12 +132,4 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
     std::cout << "SigmasPCA: " << sigmasPCA[0] << ", " << sigmasPCA[1] << ", " << sigmasPCA[2] << std::endl;
     std::cout << "covM: \n" << covM << std::endl;
   }
-}
-
-
-double* ticl::vertexToArray(const reco::CaloCluster cluster, double* point, const float weight) {
-  point[0] = weight * cluster.x();
-  point[1] = weight * cluster.y();
-  point[2] = weight * cluster.z();
-  return point;
 }
