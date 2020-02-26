@@ -8,7 +8,8 @@
 
 namespace ticl {
   void assignPCAtoTracksters(std::vector<Trackster> &, const std::vector<reco::CaloCluster>&, double, bool energyWeight=true);
-}
 
+  double* vertexToArray(const reco::CaloCluster, double*, const float weight=1);
+}
 #endif
 
