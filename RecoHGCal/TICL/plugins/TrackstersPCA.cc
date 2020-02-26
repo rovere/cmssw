@@ -4,6 +4,8 @@
 
 #include <iostream>
 
+#include <Eigen/Dense>
+
 void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
     const std::vector<reco::CaloCluster> &layerClusters, double z_limit_em, bool energyWeight) {
   TPrincipal pca(3, "N");
@@ -29,9 +31,8 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
     if (energyWeight) {
       for (size_t i = 0; i < trackster.vertices.size(); ++i) {
         float weight = 1.f;
-        auto fraction = 1.f / trackster.vertex_multiplicity[i];
         if (trackster.raw_energy)
-          weight = (trackster.vertices.size() / trackster.raw_energy) * layerClusters[trackster.vertices[i]].energy() * fraction;
+          weight = (layerClusters[trackster.vertices[i]].energy() / trackster.raw_energy) / trackster.vertex_multiplicity[i];
         weights_sum += weight;
         double point[3];
         pca.AddRow(vertexToArray(layerClusters[trackster.vertices[i]], point, weight));
@@ -76,6 +77,30 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
     const auto & eigenvalues = *(pca.GetEigenValues());
     const auto & sigmas = *(pca.GetSigmas());
 
+    // Eigen way
+    Eigen::Matrix3d covM = Eigen::Matrix3d::Zero();
+    float weights2_sum = 0.f;
+    for (size_t i = 0; i < trackster.vertices.size(); ++i) {
+      double point[3];
+      float weight = 1.;
+      if (energyWeight && trackster.raw_energy)
+        weight = (layerClusters[trackster.vertices[i]].energy() / trackster.raw_energy) / trackster.vertex_multiplicity[i];
+      weights2_sum += weight*weight;
+      *point = *vertexToArray(layerClusters[trackster.vertices[i]], point, weight);
+      for (size_t x=0; x<3; ++x) {
+        for (size_t y=0; y<3; ++y) { // can be improved with for (size_t y=0; y<=x; ++y) and then assigning the symmetric values
+          covM(x,y) += weight*(point[x] - barycenter[x])*(point[y] - barycenter[y]);
+        }
+      }
+    }
+    covM *= 1. / (1 + weights2_sum);
+
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eigensolver(covM);
+    if (eigensolver.info() != Eigen::Success) abort();
+    const auto & eigenvalues_fromEigen = eigensolver.eigenvalues();
+    const auto & eigenvectors_fromEigen = eigensolver.eigenvectors();
+
+
     LogDebug("TrackstersPCA") << "Trackster characteristics: " << std::endl;
     LogDebug("TrackstersPCA") << "Size: " << trackster.vertices.size() << std::endl;
     LogDebug("TrackstersPCA") << "Mean: " << mean[0] << ", " << mean[1] << ", " << mean[2] << std::endl;
@@ -84,8 +109,9 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
     LogDebug("TrackstersPCA") << "EigeVectors 1: " << eigenvectors(0, 0) << ", " << eigenvectors(1, 0) << ", " << eigenvectors(2, 0) <<std::endl;
     LogDebug("TrackstersPCA") << "EigeVectors 2: " << eigenvectors(0, 1) << ", " << eigenvectors(1, 1) << ", " << eigenvectors(2, 1) <<std::endl;
     LogDebug("TrackstersPCA") << "EigeVectors 3: " << eigenvectors(0, 2) << ", " << eigenvectors(1, 2) << ", " << eigenvectors(2, 2) <<std::endl;
-    LogDebug("TrackstersPCA") << "Original sigmas: " << sigmas[0] << ", " << sigmas[1] << ", " << sigmas[2] << std::endl;
+    LogDebug("TrackstersPCA") << "Original non-weighted sigmas: " << sigmas[0] << ", " << sigmas[1] << ", " << sigmas[2] << std::endl;
     LogDebug("TrackstersPCA") << "SigmasPCA: " << sigmasPCA[0] << ", " << sigmasPCA[1] << ", " << sigmasPCA[2] << std::endl;
+    LogDebug("TrackstersPCA") << "covM: \n" << covM << std::endl;
 
     std::cout << "\nTrackster characteristics: " << std::endl;
     std::cout << "Size: " << trackster.vertices.size() << std::endl;
@@ -93,11 +119,15 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
     std::cout << "Mean: " << mean[0] << ", " << mean[1] << ", " << mean[2] << std::endl;
     std::cout << "Weights sum:" << weights_sum << std::endl;
     std::cout << "EigenValues: " << eigenvalues[0] << ", " << eigenvalues[1] << ", " << eigenvalues[2]  << std::endl;
+    std::cout << "EigenValues from Eigen: " << eigenvalues_fromEigen[0] << ", " << eigenvalues_fromEigen[1] << ", " << eigenvalues_fromEigen[2] << std::endl;
     std::cout << "EigeVectors 1: " << eigenvectors(0, 0) << ", " << eigenvectors(1, 0) << ", " << eigenvectors(2, 0) <<std::endl;
+    std::cout << "EigeVectors 1 from Eigen: " << eigenvectors_fromEigen(0, 0) << ", " << eigenvectors_fromEigen(1, 0) << ", " << eigenvectors_fromEigen(2, 0) <<std::endl;
     std::cout << "EigeVectors 2: " << eigenvectors(0, 1) << ", " << eigenvectors(1, 1) << ", " << eigenvectors(2, 1) <<std::endl;
+    std::cout << "EigeVectors 2 from Eigen: " << eigenvectors_fromEigen(0, 1) << ", " << eigenvectors_fromEigen(1, 1) << ", " << eigenvectors_fromEigen(2, 1) <<std::endl;
     std::cout << "EigeVectors 3: " << eigenvectors(0, 2) << ", " << eigenvectors(1, 2) << ", " << eigenvectors(2, 2) <<std::endl;
-    std::cout << "Original sigmas: " << sigmas[0] << ", " << sigmas[1] << ", " << sigmas[2] << std::endl;
+    std::cout << "Original non-weighted sigmas: " << sigmas[0] << ", " << sigmas[1] << ", " << sigmas[2] << std::endl;
     std::cout << "SigmasPCA: " << sigmasPCA[0] << ", " << sigmasPCA[1] << ", " << sigmasPCA[2] << std::endl;
+    std::cout << "covM: \n" << covM << std::endl;
   }
 }
 
