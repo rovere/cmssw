@@ -39,18 +39,21 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
     }
 
     pca.MakePrincipals();
-    trackster.barycenter = ticl::Trackster::Vector((*(pca.GetMeanValues()))[0],
-        (*(pca.GetMeanValues()))[1],
-        (*(pca.GetMeanValues()))[2]);
+    const auto & barycenter = *(pca.GetMeanValues());
     double sigmasPCA[3] = {0};
     for (size_t i = 0; i < trackster.vertices.size(); ++i) {
       double point[3];
       double p[3];
       pca.X2P(vertexToArray(layerClusters[trackster.vertices[i]], point), p);
-      sigmasPCA[0] += (p[0] - trackster.barycenter.x()) * (p[0] - trackster.barycenter.x());
-      sigmasPCA[1] += (p[1] - trackster.barycenter.y()) * (p[1] - trackster.barycenter.y());
-      sigmasPCA[2] += (p[2] - trackster.barycenter.z()) * (p[2] - trackster.barycenter.z());
+      for (size_t j=0; j<3; ++j) {
+        sigmasPCA[j] += (p[j] - barycenter[j]) * (p[j] - barycenter[j]);
+      }
     }
+
+    // Add trackster attributes
+    trackster.barycenter = ticl::Trackster::Vector(barycenter[0],
+        barycenter[1],
+        barycenter[2]);
     for (size_t i=0; i<3; ++i) {
       sigmasPCA[i] = std::sqrt(sigmasPCA[i]/trackster.vertices.size());
       trackster.sigmas[i] = (float)(*(pca.GetSigmas()))[i];
@@ -81,7 +84,7 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
     LogDebug("TrackstersPCA") << "EigeVectors 1: " << eigenvectors(0, 0) << ", " << eigenvectors(1, 0) << ", " << eigenvectors(2, 0) <<std::endl;
     LogDebug("TrackstersPCA") << "EigeVectors 2: " << eigenvectors(0, 1) << ", " << eigenvectors(1, 1) << ", " << eigenvectors(2, 1) <<std::endl;
     LogDebug("TrackstersPCA") << "EigeVectors 3: " << eigenvectors(0, 2) << ", " << eigenvectors(1, 2) << ", " << eigenvectors(2, 2) <<std::endl;
-    LogDebug("TrackstersPCA") << "Sigmas: " << sigmas[0] << ", " << sigmas[1] << ", " << sigmas[2] << std::endl;
+    LogDebug("TrackstersPCA") << "Original sigmas: " << sigmas[0] << ", " << sigmas[1] << ", " << sigmas[2] << std::endl;
     LogDebug("TrackstersPCA") << "SigmasPCA: " << sigmasPCA[0] << ", " << sigmasPCA[1] << ", " << sigmasPCA[2] << std::endl;
 
     std::cout << "\nTrackster characteristics: " << std::endl;
@@ -93,7 +96,7 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
     std::cout << "EigeVectors 1: " << eigenvectors(0, 0) << ", " << eigenvectors(1, 0) << ", " << eigenvectors(2, 0) <<std::endl;
     std::cout << "EigeVectors 2: " << eigenvectors(0, 1) << ", " << eigenvectors(1, 1) << ", " << eigenvectors(2, 1) <<std::endl;
     std::cout << "EigeVectors 3: " << eigenvectors(0, 2) << ", " << eigenvectors(1, 2) << ", " << eigenvectors(2, 2) <<std::endl;
-    std::cout << "Sigmas: " << sigmas[0] << ", " << sigmas[1] << ", " << sigmas[2] << std::endl;
+    std::cout << "Original sigmas: " << sigmas[0] << ", " << sigmas[1] << ", " << sigmas[2] << std::endl;
     std::cout << "SigmasPCA: " << sigmasPCA[0] << ", " << sigmasPCA[1] << ", " << sigmasPCA[2] << std::endl;
   }
 }
@@ -103,5 +106,5 @@ double* ticl::vertexToArray(const reco::CaloCluster cluster, double* point, cons
   point[0] = weight * cluster.x();
   point[1] = weight * cluster.y();
   point[2] = weight * cluster.z();
-  return &point[0];
+  return point;
 }
