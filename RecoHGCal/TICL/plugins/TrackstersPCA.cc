@@ -30,23 +30,27 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
         trackster.raw_em_energy += layerClusters[trackster.vertices[i]].energy() * fraction;
     }
 
-    float invN = 1.f / N;
-    float weight = invN;
+    //float weight = 1;
+    float weight = 1.f / N;
     float weights_sum = 0.f;
     double barycenter[3] = {0};
     for (size_t i = 0; i < N; ++i) {
-      if (energyWeight && trackster.raw_energy)
-        weight = (layerClusters[trackster.vertices[i]].energy() / trackster.vertex_multiplicity[i]) / trackster.raw_energy;
-      weights_sum += weight;
       fillPoint(layerClusters[trackster.vertices[i]], 1); // ROOT's PCA can not deal with weight
       pca.AddRow(point);
 
+      if (energyWeight && trackster.raw_energy)
+        weight = (layerClusters[trackster.vertices[i]].energy() / trackster.vertex_multiplicity[i]) / trackster.raw_energy;
+      weights_sum += weight;
       fillPoint(layerClusters[trackster.vertices[i]], weight);
+
       for (size_t j=0; j<3; ++j)
-        barycenter[j] += point[j]; // no need to divide by N because weight is normalized such that weights_sum = 1
+        barycenter[j] += point[j];
     }
+    for (size_t j=0; j<3; ++j)
+      barycenter[j] /= weights_sum;
 
     pca.MakePrincipals();
+    const auto & barycenter_ = *(pca.GetMeanValues());
     float weights2_sum = 0.f;
     double sigmas[3] = {0};
     double sigmasPCA[3] = {0};
@@ -67,9 +71,10 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
     trackster.barycenter = ticl::Trackster::Vector(barycenter[0],
         barycenter[1],
         barycenter[2]);
+    double sigmas_[3] = {0};
     for (size_t i=0; i<3; ++i) {
-      //sigmas[i] = std::sqrt(sigmas[i]/(1 - weights2_sum));
-      sigmas[i] = (float)(*(pca.GetSigmas()))[i];
+      sigmas[i] = std::sqrt(sigmas[i]/(weights_sum - weights2_sum/weights_sum));
+      sigmas_[i] = (float)(*(pca.GetSigmas()))[i];
       sigmasPCA[i] = std::sqrt(sigmasPCA[i]/N);
       trackster.sigmas[i] = sigmas[i];
       trackster.sigmasPCA[i] = sigmasPCA[i];
@@ -102,7 +107,7 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
             covM(y,x) = covM(x,y);
         }
     }
-    covM *= 1. / (1 - weights2_sum);
+    covM *= 1. / (weights_sum - weights2_sum/weights_sum);
 
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d>::RealVectorType eigenvalues_fromEigen;
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d>::EigenvectorsType eigenvectors_fromEigen;
@@ -118,7 +123,9 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
 
     LogDebug("TrackstersPCA") << "\nTrackster characteristics: " << std::endl;
     LogDebug("TrackstersPCA") << "Size: " << N << std::endl;
-    LogDebug("TrackstersPCA") << "Mean: " << barycenter[0] << ", " << barycenter[1] << ", " << barycenter[2] << std::endl;
+    LogDebug("TrackstersPCA") << "Energy: " << trackster.raw_energy << std::endl;
+    LogDebug("TrackstersPCA") << "Means: " << barycenter[0] << ", " << barycenter[1] << ", " << barycenter[2] << std::endl;
+    LogDebug("TrackstersPCA") << "Means from PCA: " << barycenter_[0] << ", " << barycenter_[1] << ", " << barycenter_[2] << std::endl;
     LogDebug("TrackstersPCA") << "Weights sum: " << weights_sum << std::endl;
     LogDebug("TrackstersPCA") << "EigenValues: " << eigenvalues[0] << ", " << eigenvalues[1] << ", " << eigenvalues[2]  << std::endl;
     LogDebug("TrackstersPCA") << "EigenValues from Eigen: " << eigenvalues_fromEigen[0] << ", " << eigenvalues_fromEigen[1] << ", " << eigenvalues_fromEigen[2] << std::endl;
@@ -129,7 +136,8 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
     LogDebug("TrackstersPCA") << "EigenVector 3: " << eigenvectors(0, 2) << ", " << eigenvectors(1, 2) << ", " << eigenvectors(2, 2) <<std::endl;
     LogDebug("TrackstersPCA") << "EigenVector 3 from Eigen: " << eigenvectors_fromEigen(0, 2) << ", " << eigenvectors_fromEigen(1, 2) << ", " << eigenvectors_fromEigen(2, 2) <<std::endl;
     LogDebug("TrackstersPCA") << "Original sigmas: " << sigmas[0] << ", " << sigmas[1] << ", " << sigmas[2] << std::endl;
-    LogDebug("TrackstersPCA") << "SigmasPCA: " << sigmasPCA[0] << ", " << sigmasPCA[1] << ", " << sigmasPCA[2] << std::endl;
+    LogDebug("TrackstersPCA") << "Original sigmas from PCA: " << sigmas_[0] << ", " << sigmas_[1] << ", " << sigmas_[2] << std::endl;
     LogDebug("TrackstersPCA") << "covM: \n" << covM << std::endl;
+    LogDebug("TrackstersPCA") << "SigmasPCA: " << sigmasPCA[0] << ", " << sigmasPCA[1] << ", " << sigmasPCA[2] << std::endl;
   }
 }
