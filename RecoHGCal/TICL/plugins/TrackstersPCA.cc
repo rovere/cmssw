@@ -90,15 +90,24 @@ void ticl::assignPCAtoTracksters(std::vector<Trackster> & tracksters,
       if (energyWeight && trackster.raw_energy)
         weight = (layerClusters[trackster.vertices[i]].energy() / trackster.vertex_multiplicity[i]) / trackster.raw_energy;
       for (size_t x=0; x<3; ++x)
-        for (size_t y=0; y<3; ++y) // can be improved with for (size_t y=0; y<=x; ++y) and then assigning the symmetric values
+        for (size_t y=0; y<=x; ++y) {
           covM(x,y) += weight*(point[x] - barycenter[x])*(point[y] - barycenter[y]);
+          if (x != y)
+            covM(y,x) = covM(x,y);
+        }
     }
     covM *= 1. / (1 - weights2_sum);
 
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d>::RealVectorType eigenvalues_fromEigen;
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d>::EigenvectorsType eigenvectors_fromEigen;
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eigensolver(covM);
-    if (eigensolver.info() != Eigen::Success) abort();
-    const auto & eigenvalues_fromEigen = eigensolver.eigenvalues();
-    const auto & eigenvectors_fromEigen = eigensolver.eigenvectors();
+    if (eigensolver.info() != Eigen::Success) {
+      eigenvalues_fromEigen = eigenvalues_fromEigen.Zero();
+      eigenvectors_fromEigen = eigenvectors_fromEigen.Zero();
+    } else {
+      eigenvalues_fromEigen = eigensolver.eigenvalues();
+      eigenvectors_fromEigen = eigensolver.eigenvectors();
+    }
 
 
     LogDebug("TrackstersPCA") << "Trackster characteristics: " << std::endl;
