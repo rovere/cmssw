@@ -164,6 +164,7 @@ void PatternRecognitionbyCA::makeTracksters(const PatternRecognitionAlgoBase::In
   if (oneTracksterPerTrackSeed_) {
     std::vector<Trackster> tmp;
     mergeTrackstersTRK(result, input.layerClusters, tmp, seedToTracksterAssociation);
+
     tmp.swap(result);
   }
 
@@ -175,7 +176,6 @@ void PatternRecognitionbyCA::makeTracksters(const PatternRecognitionAlgoBase::In
   // now adding dummy tracksters from seeds not connected to any shower in the result collection
   // these are marked as charged hadrons with probability 1.
   emptyTrackstersFromSeedsTRK(result, seedToTracksterAssociation, input.regions[0].collectionID);
-
   if (algo_verbosity_ > Advanced) {
     for (auto &trackster : result) {
       LogDebug("HGCPatternRecoByCA") << "Trackster characteristics: " << std::endl;
@@ -241,6 +241,7 @@ void PatternRecognitionbyCA::emptyTrackstersFromSeedsTRK(
       thisSeed.second.emplace_back(tracksters.size() - 1);
     }
   }
+
 }
 
 void PatternRecognitionbyCA::energyRegressionAndID(const std::vector<reco::CaloCluster> &layerClusters,

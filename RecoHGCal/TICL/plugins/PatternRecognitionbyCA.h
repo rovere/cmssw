@@ -30,6 +30,7 @@ namespace ticl {
                             const std::vector<reco::CaloCluster>&,
                             std::vector<Trackster>&,
                             std::unordered_map<int, std::vector<int>>& seedToTracksterAssociation) const;
+
     const std::unique_ptr<HGCGraph> theGraph_;
     const bool oneTracksterPerTrackSeed_;
     const bool out_in_dfs_;
