@@ -12,10 +12,12 @@ bool HGCDoublet::checkCompatibilityAndTag(std::vector<HGCDoublet> &allDoublets,
   double xi[VSIZE];
   double yi[VSIZE];
   double zi[VSIZE];
+  size_t innerCells[VSIZE];
   int seedi[VSIZE];
   auto xo = outerX();
   auto yo = outerY();
   auto zo = outerZ();
+  auto cells = innerSize() + outerSize();
   unsigned int doubletId = theDoubletId_;
 
   auto loop = [&](int i, int vs) {
@@ -25,6 +27,7 @@ bool HGCDoublet::checkCompatibilityAndTag(std::vector<HGCDoublet> &allDoublets,
       xi[j] = otherDoublet.innerX();
       yi[j] = otherDoublet.innerY();
       zi[j] = otherDoublet.innerZ();
+      innerCells[j] = otherDoublet.innerSize();
       seedi[j] = otherDoublet.seedIndex();
       if (debug) {
         LogDebug("HGCDoublet") << i + j << " is doublet " << otherDoubletId << std::endl;
@@ -35,7 +38,8 @@ bool HGCDoublet::checkCompatibilityAndTag(std::vector<HGCDoublet> &allDoublets,
         ok[j] = 0;
         continue;
       }
-      ok[j] = areAligned(xi[j], yi[j], zi[j], xo, yo, zo, minCosTheta, minCosPointing, refDir, debug);
+      ok[j] = areAligned(
+          xi[j], yi[j], zi[j], xo, yo, zo, cells + innerCells[j], minCosTheta, minCosPointing, refDir, debug);
       if (debug) {
         LogDebug("HGCDoublet") << "Are aligned for InnerDoubletId: " << i + j << " is " << ok[j] << std::endl;
       }
@@ -67,6 +71,7 @@ int HGCDoublet::areAligned(double xi,
                            double xo,
                            double yo,
                            double zo,
+                           size_t cells,
                            float minCosTheta,
                            float minCosPointing,
                            const GlobalVector &refDir,
@@ -84,11 +89,20 @@ int HGCDoublet::areAligned(double xi,
   // magnitudes
   auto mag1 = std::sqrt(dx1 * dx1 + dy1 * dy1 + dz1 * dz1);
   auto mag2 = std::sqrt(dx2 * dx2 + dy2 * dy2 + dz2 * dz2);
+
+  // Penalty term on the alignment angle
+  // The penalty term will *multiply* the minCosTheta paramenter, so a value <
+  // 1 imply a looser requirement. The scaling is such that when the two
+  // doublets will have 3 cumulative cells, the penalty will be 90% of the
+  // original value. The penalty will saturate after 9 cumulative cells.
+  float penalty = std::min(0.01666f * cells + 0.85f, 1.f);
+  minCosTheta *= penalty;
   // angle between the vectors
   auto cosTheta = dot / (mag1 * mag2);
   if (debug) {
     LogDebug("HGCDoublet") << "-- Are Aligned -- dot: " << dot << " mag1: " << mag1 << " mag2: " << mag2
-                           << " cosTheta: " << cosTheta << " isWithinLimits: " << (cosTheta > minCosTheta) << std::endl;
+                           << " cells: " << cells << " minCosTheta: " << minCosTheta << " cosTheta: " << cosTheta
+                           << " isWithinLimits: " << (cosTheta > minCosTheta) << std::endl;
   }
 
   // Now check the compatibility with the pointing origin.

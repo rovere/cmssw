@@ -24,6 +24,8 @@ public:
         theDoubletId_(doubletId),
         innerClusterId_(innerClusterId),
         outerClusterId_(outerClusterId),
+        innerSize_((*layerClusters)[innerClusterId].size()),
+        outerSize_((*layerClusters)[outerClusterId].size()),
         innerR_((*layerClusters)[innerClusterId].position().r()),
         outerR_((*layerClusters)[outerClusterId].position().r()),
         innerX_((*layerClusters)[innerClusterId].x()),
@@ -34,6 +36,10 @@ public:
         outerZ_((*layerClusters)[outerClusterId].z()),
         seedIndex_(seedIndex),
         alreadyVisited_(false) {}
+
+  size_t innerSize() const { return innerSize_; }
+
+  size_t outerSize() const { return outerSize_; }
 
   double innerX() const { return innerX_; }
 
@@ -74,6 +80,7 @@ public:
                  double xo,
                  double yo,
                  double zo,
+                 size_t cells,
                  float minCosTheta,
                  float minCosPointing,
                  const GlobalVector &refDir,
@@ -97,6 +104,8 @@ private:
   const int theDoubletId_;
   const int innerClusterId_;
   const int outerClusterId_;
+  const size_t innerSize_;
+  const size_t outerSize_;
 
   const double innerR_;
   const double outerR_;
