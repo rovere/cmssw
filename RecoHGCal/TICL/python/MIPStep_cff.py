@@ -11,7 +11,7 @@ from RecoHGCal.TICL.multiClustersFromTrackstersProducer_cfi import multiClusters
 filteredLayerClustersMIP = _filteredLayerClustersProducer.clone(
     clusterFilter = "ClusterFilterBySize",
     algo_number = 8,
-    max_cluster_size = 2, # inclusive
+    max_cluster_size = 3, # inclusive
     iteration_label = "MIP"
 )
 
@@ -20,13 +20,14 @@ filteredLayerClustersMIP = _filteredLayerClustersProducer.clone(
 ticlTrackstersMIP = _trackstersProducer.clone(
     filtered_mask = cms.InputTag("filteredLayerClustersMIP", "MIP"),
     seeding_regions = "ticlSeedingGlobal",
-    missing_layers = 3,
+    missing_layers = 1,
     min_clusters_per_ntuplet = 10,
-    min_cos_theta = 0.99, # ~10 degrees
+    min_cos_theta = 0.96, # ~16 degrees
     min_cos_pointing = 0.5,
     out_in_dfs = False,
     itername = "MIP",
-    max_delta_time = -1
+    max_delta_time = -1,
+    algo_verbosity = 0
 )
 
 # MULTICLUSTERS

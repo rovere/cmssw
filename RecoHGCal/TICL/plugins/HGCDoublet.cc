@@ -95,7 +95,11 @@ int HGCDoublet::areAligned(double xi,
   // 1 imply a looser requirement. The scaling is such that when the two
   // doublets will have 3 cumulative cells, the penalty will be 90% of the
   // original value. The penalty will saturate after 9 cumulative cells.
-  float penalty = std::min(0.01666f * cells + 0.85f, 1.f);
+  constexpr int minCells = 3;
+  constexpr int maxCells = 21;
+  constexpr float m = 0.1f/((float)(maxCells - minCells));
+  constexpr float q = 0.9f - m*minCells;
+  float penalty = std::min(m * cells + q, 1.f);
   minCosTheta *= penalty;
   // angle between the vectors
   auto cosTheta = dot / (mag1 * mag2);
