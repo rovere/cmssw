@@ -153,7 +153,11 @@ void HGCGraph::makeAndConnectDoublets(const TICLLayerTiles &histo,
                       LogDebug("HGCGraph")
                           << "Creating doubletsId: " << doubletId << " layerLink in-out: [" << currentInnerLayerId
                           << ", " << currentOuterLayerId << "] clusterLink in-out: [" << innerClusterId << ", "
-                          << outerClusterId << "]" << std::endl;
+                          << outerClusterId << "] etaLink in-out: ["
+                          << layerClusters[innerClusterId].eta() << ", "
+                          << layerClusters[outerClusterId].eta() << "] rLink in-out: ["
+                          << layerClusters[innerClusterId].position().Rho() << ", "
+                          << layerClusters[outerClusterId].position().Rho() << "]" << std::endl;
                     }
                     isOuterClusterOfDoublets_[outerClusterId].push_back(doubletId);
                     auto &neigDoublets = isOuterClusterOfDoublets_[innerClusterId];

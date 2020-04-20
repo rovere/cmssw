@@ -30,7 +30,9 @@ bool HGCDoublet::checkCompatibilityAndTag(std::vector<HGCDoublet> &allDoublets,
       innerCells[j] = otherDoublet.innerSize();
       seedi[j] = otherDoublet.seedIndex();
       if (debug) {
-        LogDebug("HGCDoublet") << i + j << " is doublet " << otherDoubletId << std::endl;
+        LogDebug("HGCDoublet") << i + j << " is doublet " << otherDoubletId
+          << " [" << otherDoublet.innerClusterId() << ", "
+          << otherDoublet.outerClusterId() << "]" <<std::endl;
       }
     }
     for (int j = 0; j < vs; ++j) {
@@ -91,7 +93,7 @@ int HGCDoublet::areAligned(double xi,
   auto mag2 = std::sqrt(dx2 * dx2 + dy2 * dy2 + dz2 * dz2);
 
   // Penalty term on the alignment angle
-  // The penalty term will *multiply* the minCosTheta paramenter, so a value <
+  // The penalty term will *multiply* the minCosTheta parameter, so a value <
   // 1 imply a looser requirement. The scaling is such that when the two
   // doublets will have 3 cumulative cells, the penalty will be 90% of the
   // original value. The penalty will saturate after 9 cumulative cells.
