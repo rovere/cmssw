@@ -69,6 +69,7 @@ void PatternRecognitionbyCA<TILES>::makeTracksters(
 
   bool isRegionalIter = (input.regions[0].index != -1);
   std::vector<HGCDoublet::HGCntuplet> foundNtuplets;
+  std::vector<unsigned int> outInHopsV;
   std::vector<int> seedIndices;
   std::vector<uint8_t> layer_cluster_usage(input.layerClusters.size(), 0);
   theGraph_->makeAndConnectDoublets(input.tiles,
@@ -87,7 +88,8 @@ void PatternRecognitionbyCA<TILES>::makeTracksters(
                                     rhtools_.lastLayer(type),
                                     max_delta_time_);
 
-  theGraph_->findNtuplets(foundNtuplets, seedIndices, min_clusters_per_ntuplet_, out_in_dfs_, max_out_in_hops_);
+  theGraph_->findNtuplets(
+      foundNtuplets, seedIndices, min_clusters_per_ntuplet_, out_in_dfs_, max_out_in_hops_, outInHopsV);
   //#ifdef FP_DEBUG
   const auto &doublets = theGraph_->getAllDoublets();
   int tracksterId = 0;
@@ -146,6 +148,7 @@ void PatternRecognitionbyCA<TILES>::makeTracksters(
     if (isRegionalIter) {
       seedToTracksterAssociation[tmp.seedIndex()].push_back(tracksterId);
     }
+    tmp.setOutInHopsPerformed(outInHopsV[tracksterId]);
 
     std::pair<float, float> timeTrackster(-99., -1.);
     hgcalsimclustertime::ComputeClusterTime timeEstimator;
