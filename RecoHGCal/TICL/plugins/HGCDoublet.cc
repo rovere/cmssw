@@ -125,7 +125,7 @@ int HGCDoublet::areAligned(double xi,
                            << " isWithinLimits: " << (cosTheta_pointing_origin > minCosPointing) << std::endl;
   }
 
-  return (cosTheta > minCosTheta) && (cosTheta_pointing_origin < minCosPointing);
+  return (cosTheta > minCosTheta) && (cosTheta_pointing > minCosPointing);
 }
 
 void HGCDoublet::findNtuplets(std::vector<HGCDoublet> &allDoublets,
