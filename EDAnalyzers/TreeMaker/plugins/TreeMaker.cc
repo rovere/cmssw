@@ -398,7 +398,7 @@ void TreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             //"ambiguous %d, "
             
             //"\n"
-            //"\t superClus E %0.2f, "
+            "superClus E %0.2f, "
             //"size %d, "
             //"detId %llu, "
             ////"cell %d (x %+0.2f, y %+0.2f), "
@@ -424,10 +424,10 @@ void TreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             iEle+1, nEleFromTICL,
             gsfEle.energy(),
             gsfEle.pt(),
-            gsfEle.eta()
+            gsfEle.eta(),
             //gsfEle.ambiguous(),
             
-            //gsfEle.superCluster()->energy(),
+            gsfEle.superCluster()->energy()
             //(int) gsfEle.superCluster()->size(),
             //(long long) centroid_detId.rawId(),
             ////centroid_HGCEEDetId.cell(), centroidCell_pos.x(), centroidCell_pos.y(),
@@ -496,18 +496,18 @@ void TreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         //
         //printf("\n");
         
-        edm::PtrVector <reco::CaloCluster> v_superClus_clus = gsfEle.superCluster()->clusters();
-        
-        printf("SC_clusterIds: ");
-        
-        for(int iCluster = 0; iCluster < (int) v_superClus_clus.size(); iCluster++)
-        {
-            const reco::CaloCluster *cluster = v_superClus_clus[iCluster].get();
-            
-            printf("[%u] ", cluster->seed().rawId());
-        }
-        
-        printf("\n");
+        //edm::PtrVector <reco::CaloCluster> v_superClus_clus = gsfEle.superCluster()->clusters();
+        //
+        //printf("SC_clusterIds: ");
+        //
+        //for(int iCluster = 0; iCluster < (int) v_superClus_clus.size(); iCluster++)
+        //{
+        //    const reco::CaloCluster *cluster = v_superClus_clus[iCluster].get();
+        //    
+        //    printf("[%u] ", cluster->seed().rawId());
+        //}
+        //
+        //printf("\n");
     }
     
     // Fill tree

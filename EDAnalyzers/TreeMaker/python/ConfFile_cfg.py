@@ -526,6 +526,23 @@ process.PixelCPEGenericESProducer.Upgrade = cms.bool(True)
 #process.load("RecoEgamma.EgammaElectronProducers.gsfElectronSequence_cff")
 #process.gsfEcalDrivenElectronSequence.associate(iterTICLTask)
 
+
+from MyTools.EDProducers.producers_cfi import *
+
+process.HGCalElectronHoverE = HoverE.clone(
+    #debug = cms.bool(True),
+)
+
+process.HGCalElectronTrackIso = trackIso.clone(
+    #debug = cms.bool(True),
+)
+
+process.HGCalvar_seq = cms.Sequence(
+    process.HGCalElectronHoverE *
+    process.HGCalElectronTrackIso
+)
+
+
 process.p = cms.Path(
     #process.filter_seq *
     
@@ -537,6 +554,8 @@ process.p = cms.Path(
     #process.gsfEcalDrivenElectronSequence *
     
     #process.TICLele_seq# *
+    
+    process.HGCalvar_seq *
     
     process.treeMaker
 )
