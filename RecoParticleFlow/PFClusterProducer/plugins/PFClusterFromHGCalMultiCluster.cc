@@ -5,6 +5,9 @@
 
 #include "DataFormats/ForwardDetId/interface/HGCalDetId.h"
 
+#include <numeric>
+
+
 void PFClusterFromHGCalMultiCluster::updateEvent(const edm::Event& ev)
 {
     ev.getByToken(clusterToken_, clusterH_);
@@ -20,45 +23,63 @@ void PFClusterFromHGCalMultiCluster::buildClusters(
 {
     const auto& hgcalMultiClusters = *clusterH_;
     auto const& hits = *input;
-    
+
     // for quick indexing back to hit energy
     std::unordered_map<uint32_t, size_t> detIdToIndex(hits.size());
     for (uint32_t i = 0; i < hits.size(); ++i) {
         detIdToIndex[hits[i].detId()] = i;
     }
-    
-    int iMultiClus = -1;
-    
-    for (const auto& mcl : hgcalMultiClusters)
+
+    std::vector<size_t> indices(hgcalMultiClusters.size());
+    std::iota(std::begin(indices), std::end(indices), 0);
+    std::sort(std::begin(indices), std::end(indices), [&](size_t i, size_t j) ->bool {
+          return (hgcalMultiClusters[i].energy() > hgcalMultiClusters[j].energy());
+        });
+
+    //int iMultiClus = -1;
+
+//    assert(hgcalMultiClusters.size() == tracksters_->size());
+    for (const auto iMultiClus : indices)
     {
-        iMultiClus++;
-        
+      const auto & mcl = hgcalMultiClusters[iMultiClus];
+    //for (const auto& mcl : hgcalMultiClusters)
+    //{
+        //iMultiClus++;
+
         // Filter using trackster PID
         if(filterByTracksterPID_)
+//        if(true)
         {
             double probTotal = 0;
-            
+
             for(int iCat = 0; iCat < (int) filter_on_categories_.size(); iCat++)
             {
                 int cat = filter_on_categories_.at(iCat);
-                
+
                 double prob = tracksters_->at(iMultiClus).id_probabilities(cat);
-                
+
                 probTotal += prob;
-                
-                //printf("Trackster %d: cat %d, prob %0.4f \n", iMultiClus+1, cat, probTotal);
+
+                printf("Trackster %lu: cat %d, prob %0.4f \nProbs:", iMultiClus+1, cat, probTotal);
+                for (auto const p : tracksters_->at(iMultiClus).id_probabilities()) {
+                  printf(" %3.2f", p);
+                }
+                printf("\n");
+                printf("EM/HAD Energy: %3.2f\n", tracksters_->at(iMultiClus).raw_em_energy()/tracksters_->at(iMultiClus).raw_energy());
             }
-            
-            //printf("Trackster %d: total prob %0.4f \n", iMultiClus+1, probTotal);
-            
-            if(probTotal < pid_threshold_)
+
+            printf("Trackster %lu: total prob %0.4f eta %4.3f energy %4.3f\n", iMultiClus+1, probTotal,
+                tracksters_->at(iMultiClus).barycenter().eta(),
+                tracksters_->at(iMultiClus).raw_energy());
+
+            if(probTotal < pid_threshold_ && (tracksters_->at(iMultiClus).raw_em_energy()/tracksters_->at(iMultiClus).raw_energy()) < 0.8)
             {
                 continue;
             }
-            
-            //printf("Trackster %d: total prob %0.4f \n", iMultiClus+1, probTotal);
+
+            printf("Trackster %lu: total prob %0.4f \n", iMultiClus+1, probTotal);
         }
-        
+
         DetId seed;
         double energy = 0.0, highest_energy = 0.0;
         output.emplace_back();
@@ -66,10 +87,10 @@ void PFClusterFromHGCalMultiCluster::buildClusters(
         //for (const auto& cl : mcl) {
         //const auto& hitsAndFractions = cl->hitsAndFractions();
         const auto& hitsAndFractions_mcl = mcl.hitsAndFractions();
-        
+
         std::vector <std::pair <DetId, float> > hitsAndFractions;
         hitsAndFractions.insert(hitsAndFractions.end(), hitsAndFractions_mcl.begin(), hitsAndFractions_mcl.end());
-        
+
         // Use the H&F of the clusters inside the multicluster if the latter's H&F are not stored
         if(!hitsAndFractions.size())
         {
@@ -79,7 +100,7 @@ void PFClusterFromHGCalMultiCluster::buildClusters(
                 hitsAndFractions.insert(hitsAndFractions.end(), hAndF_temp.begin(), hAndF_temp.end());
             }
         }
-        
+
         for (const auto& hAndF : hitsAndFractions) {
             auto itr = detIdToIndex.find(hAndF.first);
             if (itr == detIdToIndex.end()) {
@@ -100,7 +121,7 @@ void PFClusterFromHGCalMultiCluster::buildClusters(
             }
         }  // end of hitsAndFractions
         //}    // end of loop over clusters (2D/layer)
-        
+
         //if (energy <= 1) {
         //  output.pop_back();
         //  continue;
@@ -114,7 +135,7 @@ void PFClusterFromHGCalMultiCluster::buildClusters(
             back.setEnergy(0.f);
         }
     }  // end of loop over hgcalMulticlusters (3D)
-    
-    
+
+
     printf("In PFClusterFromHGCalMultiCluster: output size %d \n", (int) output.size());
 }

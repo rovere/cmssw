@@ -227,20 +227,20 @@ process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(options.maxEv
 sourceFile = "sourceFiles/SingleElectronFlatPtGun_fpantale_pT-0-200_eta-1p5-3p0_GEN-SIM-RECO/SingleElectronFlatPtGun_fpantale_pT-0-200_eta-1p5-3p0_GEN-SIM-RECO_mod.txt"
 
 if (len(options.sourceFile)) :
-    
+
     sourceFile = options.sourceFile
 
 
 fNames = []
 
 if (len(options.inputFiles)) :
-    
+
     fNames = options.inputFiles
 
 else :
-    
+
     with open(sourceFile) as f:
-        
+
         fNames = f.readlines()
 
 #fNames = ["file:/afs/cern.ch/work/s/sobhatta/private/HGCal_ele-reco/CMSSW_11_0_0_pre4/src/output_GEN-SIM-RECO_numEvent20.root"]
@@ -250,49 +250,49 @@ else :
 
 
 for iFile, fName in enumerate(fNames) :
-    
+
     if (
         "file:" not in fName and
         "root:" not in fName
     ) :
-        
+
         fNames[iFile] = "file:%s" %(fName)
 
 
 outFileSuffix = ""
 
 if (options.rerunTICL) :
-    
+
     outFileSuffix = "%s_rerunTICL" %(outFileSuffix)
 
 
 if (options.modTICLele) :
-    
+
     if (options.rerunTICL and options.modTICLeleWithRerunTICL) :
-        
+
         outFileSuffix = "%s_modTICLeleWithRerunTICL" %(outFileSuffix)
-        
+
     else :
-        
+
         outFileSuffix = "%s_modTICLele" %(outFileSuffix)
 
 
 if (options.onRaw) :
-    
+
     outFileSuffix = "%s_onRaw" %(outFileSuffix)
 
 
 if (options.outFileNumber >= 0) :
-    
+
     outFileSuffix = "%s_%d" %(outFileSuffix, options.outFileNumber)
 
 
 outFile = "ntupleTree%s.root" %(outFileSuffix)
 
 if (len(options.outputDir)) :
-    
+
     os.system("mkdir -p %s" %(options.outputDir))
-    
+
     outFile = "%s/%s" %(options.outputDir, outFile)
 
 
@@ -301,37 +301,37 @@ sourceFileNames = cms.untracked.vstring(fNames)
 
 process.source = cms.Source("PoolSource",
     fileNames = sourceFileNames,
-    
+
     # Run1:Event1 to Run2:Event2
     #eventsToProcess = cms.untracked.VEventRange("1:78722-1:78722"),
-    
+
     #duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
 )
 
 
 if (len(options.eventRange)) :
-    
+
     process.source.eventsToProcess = cms.untracked.VEventRange(options.eventRange)
 
 
 #process.options = cms.untracked.PSet(
 #    #SkipEvent = cms.untracked.vstring("ProductNotFound"),
-#    
+#
 #    #printDependencies = cms.untracked.bool(True),
 #)
 
 
 if (options.depGraph) :
-    
+
     process.DependencyGraph = cms.Service("DependencyGraph")
     process.source = cms.Source("EmptySource")
     process.maxEvents = cms.untracked.PSet(input=cms.untracked.int32(0))
 
 
 if (options.onRaw) :
-    
+
     process.reconstruction_mod = process.reconstruction.copy()
-    
+
     options.rerunTICL = 1
     options.modTICLele = 1
     options.modTICLeleWithRerunTICL = 1
@@ -342,7 +342,7 @@ label_TICLtrackster = cms.untracked.InputTag("ticlTrackstersMerge", "", "RECO")
 label_TICLmultiCluster = cms.untracked.InputTag("ticlMultiClustersFromTrackstersMerge", "", "RECO")
 
 if (options.rerunTICL) :
-    
+
     label_TICLtrackster = cms.untracked.InputTag("ticlTrackstersMerge", "", "Demo")
     label_TICLmultiCluster = cms.untracked.InputTag("ticlMultiClustersFromTrackstersMerge", "", "Demo")
 
@@ -352,59 +352,59 @@ if (options.rerunTICL) :
 label_gsfEleFromTICL = cms.untracked.InputTag("ecalDrivenGsfElectronsFromMultiCl", "", "RECO")
 
 if (options.modTICLele) :
-    
+
     label_gsfEleFromTICL = cms.untracked.InputTag("ecalDrivenGsfElectronsFromMultiCl", "", "Demo")
 
 
 process.treeMaker = cms.EDAnalyzer(
     "TreeMaker",
-    
+
     ############################## My stuff ##############################
     debug = cms.bool(False),
-    
+
     isGunSample = cms.bool(bool(options.isGunSample)),
-    
+
     storeSimHit = cms.bool(bool(options.storeSimHit)),
     storeRecHit = cms.bool(bool(options.storeRecHit)),
     storeHGCALlayerClus = cms.bool(bool(options.storeHGCALlayerClus)),
     storeSuperClusTICLclus = cms.bool(bool(options.storeSuperClusTICLclus)),
-    
+
     TICLeleGenMatchDR = cms.double(options.TICLeleGenMatchDR),
-    
-    
+
+
     ############################## GEN ##############################
-    
+
     label_generator = cms.untracked.InputTag("generator"),
     label_genParticle = cms.untracked.InputTag("genParticles"),
-    
-    
+
+
     ############################## RECO ##############################
-    
+
     label_pileup = cms.untracked.InputTag("addPileupInfo"),
     label_rho = cms.untracked.InputTag("fixedGridRhoFastjetAll"),
-    
+
     label_TICLtrackster = label_TICLtrackster,
     label_TICLmultiCluster = label_TICLmultiCluster,
-    
+
     label_gsfEleFromTICL = label_gsfEleFromTICL,
 )
 
 
 
 #if (options.modTICLele) :
-#    
+#
 #    ###from MyModules.Test.ecalDrivenGsfElectronsFromTICL_cff_orig import ecalDrivenGsfElectronsFromTICL_customizeProcess
 #    from MyModules.Test.ecalDrivenGsfElectronsFromTICL_cff import ecalDrivenGsfElectronsFromTICL_customizeProcess
-#    
+#
 #    process = ecalDrivenGsfElectronsFromTICL_customizeProcess(process, onReco = (not options.onRaw))
-#    
+#
 #    if (options.rerunTICL and options.modTICLeleWithRerunTICL) :
-#        
+#
 #        #print label_TICLmultiCluster
 #        #print label_TICLmultiCluster.__dict__
-#        
+#
 #        #process.particleFlowClusterHGCalFromTICL.initialClusteringStep.clusterSrc = label_TICLmultiCluster
-#        
+#
 #        process.particleFlowClusterHGCalFromTICL.initialClusteringStep.clusterSrc = cms.InputTag(
 #            label_TICLmultiCluster.__dict__["_InputTag__moduleLabel"],
 #            label_TICLmultiCluster.__dict__["_InputTag__productInstance"],
@@ -461,7 +461,7 @@ os.system("rm %s" %(outFile))
 
 # Output file name modification
 if (outFile.find("/eos/cms") ==  0) :
-    
+
     outFile = outFile.replace("/eos/cms", "root://eoscms.cern.ch//eos/cms")
 
 
@@ -483,7 +483,7 @@ customise_aging_1000(process)
 process.reco_seq = cms.Sequence()
 
 if (options.onRaw) :
-    
+
     process.reco_seq = cms.Sequence(
         process.RawToDigi *
         process.L1Reco *
@@ -494,19 +494,19 @@ if (options.onRaw) :
 process.TICLele_seq = cms.Sequence()
 
 #if (options.modTICLele) :
-#    
+#
 #    process.TICLele_seq = cms.Sequence(process.ecalDrivenGsfElectronsFromTICL_step)
 
 
 # TICL
 #if (options.rerunTICL) :
-#    
+#
 #    #from RecoHGCal.TICL.ticl_iterations import TICL_iterations
 #    #TICL_iterations(process)
-#    
+#
 #    #from RecoHGCal.TICL.ticl_iterations import TICL_iterations_withReco
 #    #TICL_iterations_withReco(process)
-#    
+#
 #    from RecoHGCal.TICL.iterativeTICL_cff import iterTICLTask
 #    process.TICLele_seq.associate(iterTICLTask)
 
@@ -518,7 +518,7 @@ process.PixelCPEGenericESProducer.LoadTemplatesFromDB = False
 process.PixelCPEGenericESProducer.TruncatePixelCharge = False
 process.PixelCPEGenericESProducer.IrradiationBiasCorrection = False
 process.PixelCPEGenericESProducer.DoCosmics = False
-process.PixelCPEGenericESProducer.Upgrade = cms.bool(True) 
+process.PixelCPEGenericESProducer.Upgrade = cms.bool(True)
 ######
 
 
@@ -545,18 +545,18 @@ process.HGCalvar_seq = cms.Sequence(
 
 process.p = cms.Path(
     #process.filter_seq *
-    
+
     process.filter_seq_genEle *
     process.filter_seq_genPart *
-    
+
     process.reco_seq *
-    
+
     #process.gsfEcalDrivenElectronSequence *
-    
+
     #process.TICLele_seq# *
-    
+
     process.HGCalvar_seq *
-    
+
     process.treeMaker
 )
 
@@ -571,14 +571,16 @@ print "*"*50
 print "\n"
 
 
+print "process.p", process.p
+
 # Tracer
 if (options.trace) :
-    
+
     process.Tracer = cms.Service("Tracer")
 
 
 if (options.memoryCheck) :
-    
+
     process.SimpleMemoryCheck = cms.Service(
         "SimpleMemoryCheck",
         moduleMemorySummary = cms.untracked.bool(True),
@@ -596,11 +598,11 @@ if (options.printTime) :
 
 # Debug
 if (options.debugFile) :
-    
+
     process.out = cms.OutputModule("PoolOutputModule",
         fileName = cms.untracked.string("debug.root")
     )
-    
+
     process.output_step = cms.EndPath(process.out)
     process.schedule.extend([process.output_step])
 
