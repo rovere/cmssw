@@ -46,6 +46,8 @@ void PFClusterFromHGCalMultiCluster::buildClusters(
     //{
         //iMultiClus++;
 
+      if (mcl.energy() == 0.)
+        continue;
         // Filter using trackster PID
         if(filterByTracksterPID_)
 //        if(true)
@@ -60,24 +62,27 @@ void PFClusterFromHGCalMultiCluster::buildClusters(
 
                 probTotal += prob;
 
-                printf("Trackster %lu: cat %d, prob %0.4f \nProbs:", iMultiClus+1, cat, probTotal);
-                for (auto const p : tracksters_->at(iMultiClus).id_probabilities()) {
-                  printf(" %3.2f", p);
-                }
-                printf("\n");
-                printf("EM/HAD Energy: %3.2f\n", tracksters_->at(iMultiClus).raw_em_energy()/tracksters_->at(iMultiClus).raw_energy());
+//                printf("Trackster %lu: cat %d, prob %0.4f \nProbs:", iMultiClus+1, cat, probTotal);
+//                for (auto const p : tracksters_->at(iMultiClus).id_probabilities()) {
+//                  printf(" %3.2f", p);
+//                }
+//                printf("\n");
+//                printf("EM/HAD Energy: %3.2f\n", tracksters_->at(iMultiClus).raw_em_energy()/tracksters_->at(iMultiClus).raw_energy());
+            }
+
+//            printf("Trackster %lu: total prob %0.4f eta %4.3f energy %4.3f\n", iMultiClus+1, probTotal,
+//                tracksters_->at(iMultiClus).barycenter().eta(),
+//                tracksters_->at(iMultiClus).raw_energy());
+
+            if(probTotal < pid_threshold_ && (tracksters_->at(iMultiClus).raw_em_energy()/tracksters_->at(iMultiClus).raw_energy()) < 0.85)
+            {
+                continue;
             }
 
             printf("Trackster %lu: total prob %0.4f eta %4.3f energy %4.3f\n", iMultiClus+1, probTotal,
                 tracksters_->at(iMultiClus).barycenter().eta(),
                 tracksters_->at(iMultiClus).raw_energy());
-
-            if(probTotal < pid_threshold_ && (tracksters_->at(iMultiClus).raw_em_energy()/tracksters_->at(iMultiClus).raw_energy()) < 0.8)
-            {
-                continue;
-            }
-
-            printf("Trackster %lu: total prob %0.4f \n", iMultiClus+1, probTotal);
+            printf("EM/HAD Energy: %3.2f\n", tracksters_->at(iMultiClus).raw_em_energy()/tracksters_->at(iMultiClus).raw_energy());
         }
 
         DetId seed;
