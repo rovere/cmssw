@@ -30,6 +30,10 @@ void PFClusterFromHGCalMultiCluster::buildClusters(const edm::Handle<reco::PFRec
   for (const auto& mcl : hgcalMultiClusters) {
     iMultiClus++;
 
+    if (mcl.hitsAndFractions().empty()) {
+      continue;
+    }
+
     // Filter using trackster PID
     if (filterByTracksterPID_) {
       float probTotal = 0.0f;
