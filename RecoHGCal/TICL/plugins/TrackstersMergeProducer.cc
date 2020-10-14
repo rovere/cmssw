@@ -33,7 +33,7 @@ public:
   static void globalEndJob(TrackstersCache *);
 
 private:
-  enum TracksterIterIndex { EM = 0, TRK, HAD, SEED };
+  enum TracksterIterIndex { TRKEM = 0, TRK, EMPTYTRK, SEED };
 
   void fillTile(TICLTracksterTiles &, const std::vector<Trackster> &, TracksterIterIndex);
 
@@ -115,12 +115,25 @@ void TrackstersMergeProducer::fillTile(TICLTracksterTiles &tracksterTile,
                                        TracksterIterIndex tracksterIteration) {
   int tracksterId = 0;
   for (auto const &t : tracksters) {
-    tracksterTile.fill(tracksterIteration, t.barycenter().eta(), t.barycenter().phi(), tracksterId);
-    LogDebug("TrackstersMergeProducer") << "Adding tracksterId: " << tracksterId << " into bin [eta,phi]: [ "
-                                        << tracksterTile[tracksterIteration].etaBin(t.barycenter().eta()) << ", "
-                                        << tracksterTile[tracksterIteration].phiBin(t.barycenter().phi())
-                                        << "] for iteration: " << tracksterIteration << std::endl;
-
+    if (t.vertices().empty()) {
+      tracksterTile.fill(TracksterIterIndex::EMPTYTRK, t.barycenter().eta(), t.barycenter().phi(), tracksterId);
+      LogDebug("TrackstersMergeProducer") << "Adding tracksterId: " << tracksterId
+        << " into bin [eta,phi]: [ "
+        << tracksterTile[TracksterIterIndex::EMPTYTRK].etaBin(t.barycenter().eta()) << ", "
+        << tracksterTile[TracksterIterIndex::EMPTYTRK].phiBin(t.barycenter().phi())
+        << "] for iteration: " << TracksterIterIndex::EMPTYTRK
+        << " from seed/track: " << t.seedIndex()
+        << std::endl;
+    } else {
+      tracksterTile.fill(tracksterIteration, t.barycenter().eta(), t.barycenter().phi(), tracksterId);
+      LogDebug("TrackstersMergeProducer") << "Adding tracksterId: " << tracksterId
+        << " into bin [eta,phi]: [ "
+        << tracksterTile[tracksterIteration].etaBin(t.barycenter().eta()) << ", "
+        << tracksterTile[tracksterIteration].phiBin(t.barycenter().phi())
+        << "] for iteration: " << tracksterIteration
+        << " from seed/track: " << t.seedIndex()
+        << std::endl;
+    }
     tracksterId++;
   }
 }
@@ -129,6 +142,7 @@ void TrackstersMergeProducer::dumpTrackster(const Trackster &t) const {
   auto e_over_h = (t.raw_em_pt() / ((t.raw_pt() - t.raw_em_pt()) != 0. ? (t.raw_pt() - t.raw_em_pt()) : 1.));
   LogDebug("TrackstersMergeProducer")
       << "\nTrackster raw_pt: " << t.raw_pt() << " raw_em_pt: " << t.raw_em_pt() << " eoh: " << e_over_h
+      << " eot: " << (t.raw_em_energy() / t.raw_energy())
       << " barycenter: " << t.barycenter() << " eta,phi (baricenter): " << t.barycenter().eta() << ", "
       << t.barycenter().phi() << " eta,phi (eigen): " << t.eigenvectors(0).eta() << ", " << t.eigenvectors(0).phi()
       << " pt(eigen): " << std::sqrt(t.eigenvectors(0).Unit().perp2()) * t.raw_energy() << " seedID: " << t.seedID()
@@ -140,8 +154,8 @@ void TrackstersMergeProducer::dumpTrackster(const Trackster &t) const {
   for (auto const &p : t.id_probabilities()) {
     LogDebug("TrackstersMergeProducer") << std::fixed << p << " ";
   }
-  LogDebug("TrackstersMergeProducer") << " sigmas: ";
-  for (auto const &s : t.sigmas()) {
+  LogDebug("TrackstersMergeProducer") << " sigmasPCA: ";
+  for (auto const &s : t.sigmasPCA()) {
     LogDebug("TrackstersMergeProducer") << s << " ";
   }
   LogDebug("TrackstersMergeProducer") << std::endl;
@@ -193,9 +207,8 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
   const auto &seedingTrk = *seedingTrk_h;
   usedSeeds.resize(seedingTrk.size(), false);
 
-  fillTile(tracksterTile, trackstersEM, TracksterIterIndex::EM);
+  fillTile(tracksterTile, trackstersTRKEM, TracksterIterIndex::TRKEM);
   fillTile(tracksterTile, trackstersTRK, TracksterIterIndex::TRK);
-  fillTile(tracksterTile, trackstersHAD, TracksterIterIndex::HAD);
 
   auto seedId = 0;
   for (auto const &s : seedingTrk) {
@@ -204,6 +217,9 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
     if (debug_) {
       LogDebug("TrackstersMergeProducer")
           << "Seed index: " << seedId << " internal index: " << s.index << " origin: " << s.origin
+          << " (eta,phi) " << s.origin.eta() << ", " << s.origin.phi()
+          << " [" << tracksterTile[TracksterIterIndex::SEED].etaBin(s.origin.eta())
+          << ", " << tracksterTile[TracksterIterIndex::SEED].phiBin(s.origin.phi()) << "] "
           << " mom: " << s.directionAtOrigin << " pt: " << std::sqrt(s.directionAtOrigin.perp2())
           << " zSide: " << s.zSide << " collectionID: " << s.collectionID << " track pt " << tracks[s.index].pt()
           << std::endl;
@@ -211,8 +227,9 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
   }
 
   if (debug_) {
-    printTrackstersDebug(trackstersTRK, "tracksterTRK");
+    printTrackstersDebug(trackstersTRKEM, "tracksterTRK");
     printTrackstersDebug(trackstersEM, "tracksterEM");
+    printTrackstersDebug(trackstersTRK, "tracksterTRK");
     printTrackstersDebug(trackstersHAD, "tracksterHAD");
   }
 
