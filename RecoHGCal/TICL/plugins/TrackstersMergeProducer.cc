@@ -227,7 +227,7 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
   }
 
   if (debug_) {
-    printTrackstersDebug(trackstersTRKEM, "tracksterTRK");
+    printTrackstersDebug(trackstersTRKEM, "tracksterTRKEM");
     printTrackstersDebug(trackstersEM, "tracksterEM");
     printTrackstersDebug(trackstersTRK, "tracksterTRK");
     printTrackstersDebug(trackstersHAD, "tracksterHAD");
