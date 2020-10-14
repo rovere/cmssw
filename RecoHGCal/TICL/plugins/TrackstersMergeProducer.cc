@@ -568,8 +568,8 @@ void TrackstersMergeProducer::printTrackstersDebug(const std::vector<Trackster> 
     for (auto const &p : t.id_probabilities()) {
       LogDebug("TrackstersMergeProducer") << std::fixed << p << " ";
     }
-    LogDebug("TrackstersMergeProducer") << " sigmas: ";
-    for (auto const &s : t.sigmas()) {
+    LogDebug("TrackstersMergeProducer") << " sigmasPCA: ";
+    for (auto const &s : t.sigmasPCA()) {
       LogDebug("TrackstersMergeProducer") << s << " ";
     }
     LogDebug("TrackstersMergeProducer") << std::endl;
