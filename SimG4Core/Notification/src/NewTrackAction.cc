@@ -45,10 +45,12 @@ void NewTrackAction::addUserInfoToSecondary(G4Track *aTrack, const TrackInformat
   // ralf.ulrich@kit.edu: it is more efficient to use the constructor to copy all data and modify later only when needed
 
   TrackInformation *trkInfo = new TrackInformation();
-  //  LogDebug("SimG4CoreApplication") << "NewTrackAction called for "
-  //				   << aTrack->GetTrackID()
-  //				   << " mother " << motherInfo.isPrimary()
-  //				   << " flag " << flag;
+  std::cout << "NewTrackAction called for "
+            << aTrack->GetTrackID()
+            << " mother " << motherInfo.isPrimary()
+            << " flag " << flag
+            << " mother.IDonCaloSur " << motherInfo.getIDonCaloSurface()
+            << " mother.IDCaloVolume " << motherInfo.getIDCaloVolume() << std::endl;
 
   // Take care of cascade decays
   if (flag == 1) {
