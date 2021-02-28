@@ -239,8 +239,8 @@ namespace {
 #if DEBUG
   std::string graphviz_vertex(const VertexProperty &v) {
     std::ostringstream oss;
-    oss << "{id: " << (v.simTrack ? v.simTrack->trackId() : 0) << ",\\ntype: " << (v.simTrack ? v.simTrack->type() : 0)
-        << ",\\nchits: " << v.cumulative_simHits << "}";
+    oss << "{id: " << (v.simTrack ? v.simTrack->trackId() : 0) << ",\\ntype/Xd: " << (v.simTrack ? v.simTrack->type() : 0)
+        << "/" << int(v.simTrack ? v.simTrack->crossedBoundary() : 0) << ",\\nchits: " << v.cumulative_simHits << "}";
     return oss.str();
   }
 
