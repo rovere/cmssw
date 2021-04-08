@@ -4,6 +4,9 @@
 #include <set>
 #include <vector>
 
+#include "tbb/task_arena.h"
+#include "tbb/tbb.h"
+
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "FWCore/Utilities/interface/Exception.h"
 #include "PatternRecognitionbyCLUE3D.h"
@@ -52,7 +55,65 @@ void PatternRecognitionbyCLUE3D<TILES>::makeTracksters(
   rhtools_.setGeometry(*geom);
 
   clusters_.clear();
-  clusters_.resize(104); // FIXME(rovere): Get it from template type
+  clusters_.resize(104); // FIXME(rovere): Get it from template type or via rechittools
+  std::vector<std::pair<int, int> > layerIdx2layerandSoa;
+
+  layerIdx2layerandSoa.resize(input.layerClusters.size());
+  unsigned int layerIdx = 0;
+  for (auto const & lc : input.layerClusters) {
+    const auto firstHitDetId = lc.hitsAndFractions()[0].first;
+    int layer = rhtools_.getLayerWithOffset(firstHitDetId) -1 +
+                rhtools_.lastLayer(false) * ((rhtools_.zside(firstHitDetId) + 1) >> 1);
+    assert(layer >= 0);
+
+    layerIdx2layerandSoa.emplace_back(layer, clusters_[layer].x.size());
+    float sum_x = 0.;
+    float sum_y = 0.;
+    float sum_sqr_x = 0.;
+    float sum_sqr_y = 0.;
+    float ref_x = lc.x();
+    float ref_y = lc.y();
+    int clsize = lc.hitsAndFractions().size();
+    for (auto const & hitsAndFractions : lc.hitsAndFractions()) {
+      auto const & point = rhtools_.getPosition(hitsAndFractions.first);
+      sum_x += point.x() - ref_x;
+      sum_sqr_x += (point.x() - ref_x)*(point.x() - ref_x);
+      sum_y += point.y() - ref_y;
+      sum_sqr_y += (point.y() - ref_y)*(point.y() - ref_y);
+    }
+    // The variance of X for X uniform in circle of radius R is R^2/4,
+    // therefore we multiply the sqrt(var) by 2 to have a rough estimate of the
+    // radius. On the other hand, while averaging the x and y radius, we would
+    // end up dividing by 2. Hence we omit the value here and in the average
+    // below, too.
+    float radius_x = sqrt((sum_sqr_x -
+            (sum_x*sum_x)/clsize)/clsize);
+    float radius_y = sqrt((sum_sqr_y -
+            (sum_y*sum_y)/clsize)/clsize);
+    clusters_[layer].x.emplace_back(lc.x());
+    clusters_[layer].y.emplace_back(lc.y());
+    clusters_[layer].radius.emplace_back(radius_x+radius_y);
+    clusters_[layer].eta.emplace_back(lc.eta());
+    clusters_[layer].phi.emplace_back(lc.phi());
+    clusters_[layer].energy.emplace_back(lc.energy());
+    clusters_[layer].clusterIndex.emplace_back(-1);
+    clusters_[layer].layerClusterOriginalIdx.emplace_back(layerIdx++);
+    clusters_[layer].nearestHigher.emplace_back(-1);
+    clusters_[layer].rho.emplace_back(0.f);
+    clusters_[layer].delta.emplace_back(std::numeric_limits<float>::max());
+  }
+
+  std::vector<int> numberOfClustersPerLayer(104, 0);
+// tbb::this_task_arena::isolate([&] {
+//    tbb::parallel_for(size_t(0), size_t(104), [&](size_t i) { //FIXME(rovere): layer limits
+  for (unsigned int i = 0; i < 104; i++) {
+    calculateLocalDensity(input.tiles, i, layerIdx2layerandSoa);
+    calculateDistanceToHigher(input.tiles, i, layerIdx2layerandSoa);
+    numberOfClustersPerLayer[i] = findAndAssignTracksters(input.tiles, i, layerIdx2layerandSoa);
+  }
+//    );
+//  });
+
 
 //  // run energy regression and ID
 //  energyRegressionAndID(input.layerClusters, tmpTracksters);
@@ -208,13 +269,175 @@ void PatternRecognitionbyCLUE3D<TILES>::energyRegressionAndID(const std::vector<
 }
 
 template <typename TILES>
-void PatternRecognitionbyCLUE3D<TILES>::calculateLocalDensity() {}
+void PatternRecognitionbyCLUE3D<TILES>::calculateLocalDensity(
+    const TILES& tiles, const unsigned int layerId,
+    const std::vector<std::pair<int, int>> & layerIdx2layerandSoa) {
+  int type = tiles[0].typeT();
+  int nEtaBin = (type == 1) ? ticl::TileConstantsHFNose::nEtaBins : ticl::TileConstants::nEtaBins;
+  int nPhiBin = (type == 1) ? ticl::TileConstantsHFNose::nPhiBins : ticl::TileConstants::nPhiBins;
+  auto& clustersOnLayer = clusters_[layerId];
+  unsigned int numberOfClusters = clustersOnLayer.x.size();
+
+  auto isReachable = [](float x1, float x2, float y1, float y2, float delta_sqr) -> bool {
+    return (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) < delta_sqr;
+  };
+
+  for (unsigned int i = 0; i < numberOfClusters; i++) {
+    unsigned int minLayer = std::max((int)layerId - 1, 0);
+    unsigned int maxLayer = std::min((int)layerId + 1, 103);
+    for (unsigned int currentLayer = minLayer; currentLayer <= maxLayer; currentLayer++) {
+      const auto & tileOnLayer = tiles[currentLayer];
+      bool onSameLayer = (currentLayer == layerId);
+      int etaWindow = onSameLayer ? 2 : 1;
+      int phiWindow = onSameLayer ? 2 : 1;
+      int etaBinMin = std::max(tileOnLayer.etaBin(clustersOnLayer.eta[i])-etaWindow, 0);
+      int etaBinMax = std::min(tileOnLayer.etaBin(clustersOnLayer.eta[i])+etaWindow, nEtaBin);
+      int phiBinMin = tileOnLayer.phiBin(clustersOnLayer.eta[i])-phiWindow;
+      int phiBinMax = tileOnLayer.phiBin(clustersOnLayer.eta[i])+phiWindow;
+      for (int ieta = etaBinMin; ieta < etaBinMax; ++ieta) {
+        auto offset = ieta * nPhiBin;
+        for (int iphi_it = phiBinMin; iphi_it < phiBinMax; ++iphi_it) {
+          int iphi = ((iphi_it % nPhiBin + nPhiBin) % nPhiBin);
+          for (auto otherClusterIdx : tileOnLayer[offset + iphi]) {
+            auto const & layerandSoa = layerIdx2layerandSoa[otherClusterIdx] ;
+            float delta = clustersOnLayer.radius[i] +
+              clusters_[layerandSoa.first].radius[layerandSoa.second] + 2.6; // 26 mm, roughly 2 cells, more wrt sum of radii
+            if (onSameLayer) {
+              if (isReachable(clustersOnLayer.x[i], clusters_[layerandSoa.first].x[layerandSoa.second],
+                    clustersOnLayer.y[i], clusters_[layerandSoa.first].y[layerandSoa.second],
+                    delta*delta)) {
+                clustersOnLayer.rho[i] +=
+                  (clustersOnLayer.layerClusterOriginalIdx[i] ==
+                   otherClusterIdx ? 1.f : 0.5f) *
+                  clusters_[layerandSoa.first].energy[layerandSoa.second];
+              }
+            } else {
+              if (isReachable(clustersOnLayer.eta[i], clusters_[layerandSoa.first].eta[layerandSoa.second],
+                    clustersOnLayer.phi[i], clusters_[layerandSoa.first].phi[layerandSoa.second],
+                    0.0025)) {
+                clustersOnLayer.rho[i] +=
+                  (clustersOnLayer.layerClusterOriginalIdx[i] ==
+                   otherClusterIdx ? 1.f : 0.5f) *
+                  clusters_[layerandSoa.first].energy[layerandSoa.second];
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
 
 template <typename TILES>
-void PatternRecognitionbyCLUE3D<TILES>::calculateDistanceToHigher() {}
+void PatternRecognitionbyCLUE3D<TILES>::calculateDistanceToHigher(
+    const TILES& tiles, const unsigned int layerId,
+    const std::vector<std::pair<int, int>> & layerIdx2layerandSoa) {
+  int type = tiles[0].typeT();
+  int nEtaBin = (type == 1) ? ticl::TileConstantsHFNose::nEtaBins : ticl::TileConstants::nEtaBins;
+  int nPhiBin = (type == 1) ? ticl::TileConstantsHFNose::nPhiBins : ticl::TileConstants::nPhiBins;
+  auto& clustersOnLayer = clusters_[layerId];
+  unsigned int numberOfClusters = clustersOnLayer.x.size();
+
+  auto distance = [](float x1, float x2, float y1, float y2) -> float {
+    return sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
+  };
+
+
+  for (unsigned int i = 0; i < numberOfClusters; i++) {
+    unsigned int minLayer = std::max((int)layerId - 1, 0);
+    unsigned int maxLayer = std::min((int)layerId + 1, 103);
+    float maxDelta = std::numeric_limits<float>::max();
+    float i_delta = maxDelta;
+    int i_nearestHigher = -1;
+    for (unsigned int currentLayer = minLayer; currentLayer <= maxLayer; currentLayer++) {
+      const auto & tileOnLayer = tiles[currentLayer];
+      int etaWindow = 2;//onSameLayer ? 2 : 1;
+      int phiWindow = 2;//onSameLayer ? 2 : 1;
+      int etaBinMin = std::max(tileOnLayer.etaBin(clustersOnLayer.eta[i])-etaWindow, 0);
+      int etaBinMax = std::min(tileOnLayer.etaBin(clustersOnLayer.eta[i])+etaWindow, nEtaBin);
+      int phiBinMin = tileOnLayer.phiBin(clustersOnLayer.eta[i])-phiWindow;
+      int phiBinMax = tileOnLayer.phiBin(clustersOnLayer.eta[i])+phiWindow;
+      for (int ieta = etaBinMin; ieta < etaBinMax; ++ieta) {
+        auto offset = ieta * nPhiBin;
+        for (int iphi_it = phiBinMin; iphi_it < phiBinMax; ++iphi_it) {
+          int iphi = ((iphi_it % nPhiBin + nPhiBin) % nPhiBin);
+          for (auto otherClusterIdx : tileOnLayer[offset + iphi]) {
+            auto const & layerandSoa = layerIdx2layerandSoa[otherClusterIdx] ;
+            float dist = distance(clustersOnLayer.eta[i], clusters_[layerandSoa.first].eta[layerandSoa.second],
+                clustersOnLayer.phi[i], clusters_[layerandSoa.first].phi[layerandSoa.second]);
+            bool foundHigher = (clusters_[layerandSoa.first].rho[layerandSoa.second] > clustersOnLayer.rho[i]) ||
+              (clusters_[layerandSoa.first].rho[layerandSoa.second] == clustersOnLayer.rho[i] &&
+               clusters_[layerandSoa.first].layerClusterOriginalIdx[layerandSoa.second] > clustersOnLayer.layerClusterOriginalIdx[i]);
+            if (foundHigher && dist <= i_delta) {
+              // update i_delta
+              i_delta = dist;
+              // update i_nearestHigher
+              i_nearestHigher = otherClusterIdx;
+            }
+          }
+        }
+      }
+    }
+
+    bool foundNearestHigherInEtaPhiCylinder = (i_delta <= 0.0025);
+    if (foundNearestHigherInEtaPhiCylinder) {
+      clustersOnLayer.delta[i] = i_delta;
+      clustersOnLayer.nearestHigher[i] = i_nearestHigher;
+    } else {
+      // otherwise delta is guaranteed to be larger outlierDeltaFactor_*delta_c
+      // we can safely maximize delta to be maxDelta
+      clustersOnLayer.delta[i] = maxDelta;
+      clustersOnLayer.nearestHigher[i] = -1;
+    }
+  }
+}
 
 template <typename TILES>
-void PatternRecognitionbyCLUE3D<TILES>::findAndAssignTracksters() {}
+int PatternRecognitionbyCLUE3D<TILES>::findAndAssignTracksters(
+    const TILES& tiles, const unsigned int layerId,
+    const std::vector<std::pair<int, int>> & layerIdx2layerandSoa) {
+  auto& clustersOnLayer = clusters_[layerId];
+  unsigned int numberOfClusters = clustersOnLayer.x.size();
+  unsigned int nClustersOnLayer = 0;
+
+  std::vector<int> localStack;
+  // find cluster seeds and outlier
+  for (unsigned int i = 0; i < numberOfClusters; i++) {
+    float rho_c = 0.1;
+    float delta = 0.1;
+    float outlierDeltaFactor = 1.1;
+
+    // initialize clusterIndex
+    clustersOnLayer.clusterIndex[i] = -1;
+    bool isSeed = (clustersOnLayer.delta[i] > delta) && (clustersOnLayer.rho[i] >= rho_c);
+    bool isOutlier = (clustersOnLayer.delta[i] > outlierDeltaFactor * delta) && (clustersOnLayer.rho[i] < rho_c);
+    if (isSeed) {
+      clustersOnLayer.clusterIndex[i] = nClustersOnLayer;
+      clustersOnLayer.isSeed[i] = true;
+      nClustersOnLayer++;
+      localStack.push_back(i);
+
+    } else if (!isOutlier) {
+      clustersOnLayer.followers[clustersOnLayer.nearestHigher[i]].push_back(i);
+    }
+  }
+
+  // need to pass clusterIndex to their followers
+  while (!localStack.empty()) {
+    int endStack = localStack.back();
+    auto& thisSeed = clustersOnLayer.followers[endStack];
+    localStack.pop_back();
+
+    // loop over followers
+    for (int j : thisSeed) {
+      // pass id to a follower
+      clustersOnLayer.clusterIndex[j] = clustersOnLayer.clusterIndex[endStack];
+      // push this follower to localStack
+      localStack.push_back(j);
+    }
+  }
+  return nClustersOnLayer;
+}
 
 template class ticl::PatternRecognitionbyCLUE3D<TICLLayerTiles>;
 template class ticl::PatternRecognitionbyCLUE3D<TICLLayerTilesHFNose>;

@@ -22,9 +22,9 @@ namespace ticl {
 
   private:
     struct ClustersOnLayer {
-      std::vector<DetId> detid;
       std::vector<float> x;
       std::vector<float> y;
+      std::vector<float> radius;
       std::vector<float> eta;
       std::vector<float> phi;
 
@@ -34,12 +34,14 @@ namespace ticl {
       std::vector<float> delta;
       std::vector<int> nearestHigher;
       std::vector<int> clusterIndex;
+      std::vector<unsigned int> layerClusterOriginalIdx;
       std::vector<std::vector<int>> followers;
       std::vector<bool> isSeed;
 
       void clear() {
         x.clear();
         y.clear();
+        radius.clear();
         eta.clear();
         phi.clear();
         energy.clear();
@@ -47,6 +49,7 @@ namespace ticl {
         delta.clear();
         nearestHigher.clear();
         clusterIndex.clear();
+        layerClusterOriginalIdx.clear();
         followers.clear();
         isSeed.clear();
       }
@@ -54,6 +57,7 @@ namespace ticl {
       void shrink_to_fit() {
         x.shrink_to_fit();
         y.shrink_to_fit();
+        radius.shrink_to_fit();
         eta.shrink_to_fit();
         phi.shrink_to_fit();
         energy.shrink_to_fit();
@@ -61,6 +65,7 @@ namespace ticl {
         delta.shrink_to_fit();
         nearestHigher.shrink_to_fit();
         clusterIndex.shrink_to_fit();
+        layerClusterOriginalIdx.clear();
         followers.shrink_to_fit();
         isSeed.shrink_to_fit();
       }
@@ -73,9 +78,12 @@ namespace ticl {
         c.shrink_to_fit();
       }
     }
-    void calculateLocalDensity();
-    void calculateDistanceToHigher();
-    void findAndAssignTracksters();
+    void calculateLocalDensity(const TILES&, const unsigned int layerId, const
+        std::vector<std::pair<int, int>> &);
+    void calculateDistanceToHigher(const TILES&, const unsigned int layerId, const
+        std::vector<std::pair<int, int>> &);
+    int findAndAssignTracksters(const TILES&, const unsigned int layerId, const
+        std::vector<std::pair<int, int>> &);
     const std::vector<int> filter_on_categories_;
     const std::string eidInputName_;
     const std::string eidOutputNameEnergy_;
