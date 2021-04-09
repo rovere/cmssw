@@ -460,8 +460,8 @@ void PatternRecognitionbyCLUE3D<TILES>::calculateDistanceToHigher(
       int phiWindow = 2;//onSameLayer ? 2 : 1;
       int etaBinMin = std::max(tileOnLayer.etaBin(clustersOnLayer.eta[i])-etaWindow, 0);
       int etaBinMax = std::min(tileOnLayer.etaBin(clustersOnLayer.eta[i])+etaWindow, nEtaBin);
-      int phiBinMin = tileOnLayer.phiBin(clustersOnLayer.eta[i])-phiWindow;
-      int phiBinMax = tileOnLayer.phiBin(clustersOnLayer.eta[i])+phiWindow;
+      int phiBinMin = tileOnLayer.phiBin(clustersOnLayer.phi[i])-phiWindow;
+      int phiBinMax = tileOnLayer.phiBin(clustersOnLayer.phi[i])+phiWindow;
       for (int ieta = etaBinMin; ieta < etaBinMax; ++ieta) {
         auto offset = ieta * nPhiBin;
         for (int iphi_it = phiBinMin; iphi_it < phiBinMax; ++iphi_it) {
@@ -485,7 +485,8 @@ void PatternRecognitionbyCLUE3D<TILES>::calculateDistanceToHigher(
       }
     }
 
-    bool foundNearestHigherInEtaPhiCylinder = (i_delta <= 0.0025);
+    bool foundNearestHigherInEtaPhiCylinder = (i_delta <= 0.05);
+    std::cout << "i_delta: " << i_delta << " passed: " << (i_delta <=0.05) << '\n';
     if (foundNearestHigherInEtaPhiCylinder) {
       clustersOnLayer.delta[i] = i_delta;
       clustersOnLayer.nearestHigher[i] = i_nearestHigher;
@@ -511,7 +512,7 @@ int PatternRecognitionbyCLUE3D<TILES>::findAndAssignTracksters(
     auto& clustersOnLayer = clusters_[layer];
     unsigned int numberOfClusters = clustersOnLayer.x.size();
     for (unsigned int i = 0; i < numberOfClusters; i++) {
-      float rho_c = 0.1;
+      float rho_c = 8.25f;
       float delta = 0.1;
       float outlierDeltaFactor = 1.1;
 
