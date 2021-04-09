@@ -27,15 +27,16 @@ namespace ticl {
       std::vector<float> radius;
       std::vector<float> eta;
       std::vector<float> phi;
+      std::vector<int> cells;
 
       std::vector<float> energy;
       std::vector<float> rho;
 
       std::vector<float> delta;
-      std::vector<int> nearestHigher;
+      std::vector<std::pair<int,int>> nearestHigher;
       std::vector<int> clusterIndex;
       std::vector<unsigned int> layerClusterOriginalIdx;
-      std::vector<std::vector<int>> followers;
+      std::vector<std::vector<std::pair<int,int>>> followers;
       std::vector<bool> isSeed;
 
       void clear() {
@@ -44,6 +45,7 @@ namespace ticl {
         radius.clear();
         eta.clear();
         phi.clear();
+        cells.clear();
         energy.clear();
         rho.clear();
         delta.clear();
@@ -60,6 +62,7 @@ namespace ticl {
         radius.shrink_to_fit();
         eta.shrink_to_fit();
         phi.shrink_to_fit();
+        cells.shrink_to_fit();
         energy.shrink_to_fit();
         rho.shrink_to_fit();
         delta.shrink_to_fit();
@@ -71,7 +74,6 @@ namespace ticl {
       }
     };
 
-    std::vector<ClustersOnLayer> clusters_;
     void reset() {
       for (auto& c : clusters_) {
         c.clear();
@@ -82,8 +84,12 @@ namespace ticl {
         std::vector<std::pair<int, int>> &);
     void calculateDistanceToHigher(const TILES&, const unsigned int layerId, const
         std::vector<std::pair<int, int>> &);
-    int findAndAssignTracksters(const TILES&, const unsigned int layerId, const
-        std::vector<std::pair<int, int>> &);
+    int findAndAssignTracksters(const TILES&, const std::vector<std::pair<int, int>> &);
+    void dumpClusters(const std::vector<std::pair<int, int>> & layerIdx2layerandSoa) const;
+    void dumpTiles(const TILES&) const;
+
+    std::vector<ClustersOnLayer> clusters_;
+
     const std::vector<int> filter_on_categories_;
     const std::string eidInputName_;
     const std::string eidOutputNameEnergy_;
