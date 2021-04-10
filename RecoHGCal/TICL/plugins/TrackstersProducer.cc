@@ -88,11 +88,13 @@ TrackstersProducer::TrackstersProducer(const edm::ParameterSet& ps, const Tracks
           consumes<std::vector<TICLSeedingRegion>>(ps.getParameter<edm::InputTag>("seeding_regions"))),
       itername_(ps.getParameter<std::string>("itername")) {
   if (doNose_) {
-    myAlgoHFNose_ = PatternRecognitionHFNoseFactory::get()->create(ps.getParameter<std::string>("patternRecognitionAlgo"), ps, cache);
+    myAlgoHFNose_ = PatternRecognitionHFNoseFactory::get()->create(
+        ps.getParameter<std::string>("patternRecognitionAlgo"), ps, cache);
     layer_clusters_tiles_hfnose_token_ =
         consumes<TICLLayerTilesHFNose>(ps.getParameter<edm::InputTag>("layer_clusters_hfnose_tiles"));
   } else {
-    myAlgo_ = PatternRecognitionFactory::get()->create(ps.getParameter<std::string>("patternRecognitionAlgo"), ps, cache);
+    myAlgo_ =
+        PatternRecognitionFactory::get()->create(ps.getParameter<std::string>("patternRecognitionAlgo"), ps, cache);
     layer_clusters_tiles_token_ = consumes<TICLLayerTiles>(ps.getParameter<edm::InputTag>("layer_clusters_tiles"));
   }
   produces<std::vector<Trackster>>();
