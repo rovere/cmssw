@@ -202,18 +202,42 @@ void PatternRecognitionbyCLUE3D<TILES>::makeTracksters(
 //  });
 
 
+  // Build Trackster
+  result.resize(nTracksters);
+
+  assert(clusters_.size() == 104);
+  for (unsigned int layer=0; layer < clusters_.size(); ++layer) {
+    const auto & thisLayer = clusters_[layer];
+    std::cout << "Examining Layer: " << layer << '\n';
+    for (unsigned int lc=0; lc < thisLayer.x.size();  ++lc) {
+      std::cout << "Trackster " << thisLayer.clusterIndex[lc] << '\n';
+      if (thisLayer.clusterIndex[lc] >= 0) {
+        std::cout << " adding lcIdx: " << thisLayer.layerClusterOriginalIdx[lc] << '\n';
+        result[thisLayer.clusterIndex[lc]].vertices().push_back(thisLayer.layerClusterOriginalIdx[lc]);
+        result[thisLayer.clusterIndex[lc]].vertex_multiplicity().push_back(1);
+      }
+    }
+  }
+
 //  // run energy regression and ID
 //  energyRegressionAndID(input.layerClusters, tmpTracksters);
-//  ticl::assignPCAtoTracksters(result,
-//                              input.layerClusters,
-//                              input.layerClustersTime,
-//                              rhtools_.getPositionLayer(rhtools_.lastLayerEE(type), type).z());
-//
-//  // run energy regression and ID
-//  energyRegressionAndID(input.layerClusters, result);
+  ticl::assignPCAtoTracksters(result,
+                              input.layerClusters,
+                              input.layerClustersTime,
+                              rhtools_.getPositionLayer(rhtools_.lastLayerEE(0), 0).z());
+
+  // run energy regression and ID
+  energyRegressionAndID(input.layerClusters, result);
+  for (auto const & t : result) {
+    std::cout << "Barycenter: " << t.barycenter() << '\n';
+    std::cout << "LCs: " << t.vertices().size() << '\n';
+    std::cout << "Energy: " << t.raw_energy() << '\n';
+    std::cout << "Regressed: " << t.regressed_energy() << '\n';
+  }
 
   // Reset internal clusters_ structure of array for next event
   reset();
+  std::cout << std::endl;
 }
 
 template <typename TILES>
