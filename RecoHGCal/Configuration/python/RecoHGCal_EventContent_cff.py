@@ -4,7 +4,7 @@ import FWCore.ParameterSet.Config as cms
 #AOD content
 TICL_AOD = cms.PSet(
     outputCommands = cms.untracked.vstring(
-      'keep *_ticlMultiClustersFromTrackstersCLUE3D_*_*',
+      'keep *_ticlMultiClustersFromTrackstersCLUE3DHigh_*_*',
       'keep *_ticlMultiClustersFromTrackstersEM_*_*',
       'keep *_ticlMultiClustersFromTrackstersHAD_*_*',
       'keep *_ticlMultiClustersFromTrackstersTrk_*_*',
@@ -17,7 +17,7 @@ TICL_AOD = cms.PSet(
 #RECO content
 TICL_RECO = cms.PSet(
     outputCommands = cms.untracked.vstring(
-      'keep *_ticlTrackstersCLUE3D_*_*',
+      'keep *_ticlTrackstersCLUE3DHigh_*_*',
       'keep *_ticlTrackstersTrkEM_*_*',
       'keep *_ticlTrackstersEM_*_*',
       'keep *_ticlTrackstersHAD_*_*',
