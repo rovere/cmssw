@@ -16,8 +16,8 @@ const double ScoreCutLCtoCP_ = 0.1;
 const double ScoreCutCPtoLC_ = 0.1;
 const double ScoreCutLCtoSC_ = 0.1;
 const double ScoreCutSCtoLC_ = 0.1;
-const double ScoreCutTStoCPFakeMerge_[] = {0.6, 1.e-09}; //FLT_MIN
-const double ScoreCutCPtoTSEffDup_[] = {0.2, 1.e-11}; //FLT_MIN
+const double ScoreCutTStoSTSFakeMerge_[] = {0.6, 1.e-09}; //FLT_MIN
+const double ScoreCutSTStoTSPurDup_[] = {0.2, 1.e-11}; //FLT_MIN
 
 HGVHistoProducerAlgo::HGVHistoProducerAlgo(const edm::ParameterSet& pset)
     :  //parameters for eta
@@ -2446,9 +2446,17 @@ return v.first == hitid; });
     return hits_and_fractions_norm;
   };
 
+  auto ScoreCutSTStoTSPurDup = ScoreCutSTStoTSPurDup_[0];
+  auto ScoreCutTStoSTSFakeMerge = ScoreCutTStoSTSFakeMerge_[0];
   // Loop through Tracksters
   for (unsigned int tstId = 0; tstId < nTracksters; ++tstId) {
     const auto& trackster = tracksters[tstId];
+    if (tstId == 0)
+      if ((i == 1) && (trackster.ticlIteration() == ticl::Trackster::SIM)) { // SimTS or SimTS_fromCP
+        ScoreCutSTStoTSPurDup = ScoreCutSTStoTSPurDup_[i];
+        ScoreCutTStoSTSFakeMerge = ScoreCutTStoSTSFakeMerge_[i];
+      }
+
     if (trackster.vertices().empty())
       continue;
 
@@ -2726,11 +2734,11 @@ return v.first == hitid; });
 
     tracksters_fakemerge[tstId] = std::count_if(std::begin(stsInTrackster[tstId]),
                                                 std::end(stsInTrackster[tstId]),
-                                                [&, i](const auto& obj) {
-      if ((i == 1) && (trackster.vertices().size() != simTSs[obj.first].vertices().size()))
-        return false;
-      else
-        return obj.second < ScoreCutTStoCPFakeMerge_[i];
+                                                [&, i, ScoreCutTStoSTSFakeMerge](const auto& obj) {
+      if ((i == 1) && (trackster.ticlIteration() == ticl::Trackster::SIM)) // SimTS or SimTS_fromCP
+        if (trackster.vertices().size() != simTSs[obj.first].vertices().size())
+          return false;
+      return obj.second < ScoreCutTStoSTSFakeMerge;
     });
 
     const auto score = std::min_element(std::begin(stsInTrackster[tstId]),
@@ -2779,7 +2787,7 @@ else return false;
     }
   }
 
-  auto is_assoc = [i](const auto& v) -> bool { return v < ScoreCutCPtoTSEffDup_[i]; };
+  auto is_assoc = [ScoreCutSTStoTSPurDup](const auto& v) -> bool { return v < ScoreCutSTStoTSPurDup; };
 
   // Fill the plots to compute the different metrics linked to
   // gen-level, namely efficiency, purity and duplicate. In this loop should restrict
