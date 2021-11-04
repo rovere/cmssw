@@ -143,6 +143,7 @@ struct HGVHistoProducerAlgoHistograms {
   std::vector<dqm::reco::MonitorElement*> h_score_trackster2caloparticle[2];
   std::vector<dqm::reco::MonitorElement*> h_scoreMerge_trackster2caloparticle[2];
   std::vector<dqm::reco::MonitorElement*> h_score_caloparticle2trackster[2];
+  std::vector<dqm::reco::MonitorElement*> h_scorePur_caloparticle2trackster[2];
   std::vector<dqm::reco::MonitorElement*> h_scoreDupl_caloparticle2trackster[2];
   std::vector<dqm::reco::MonitorElement*> h_energy_vs_score_trackster2caloparticle[2];
   std::vector<dqm::reco::MonitorElement*> h_energy_vs_score_caloparticle2trackster[2];

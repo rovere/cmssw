@@ -1106,8 +1106,10 @@ void HGVHistoProducerAlgo::bookTracksterSTSHistos(DQMStore::IBooker& ibook, Hist
       ibook.book1D("ScoreMerge_trackster2" + ref[i], "Score of merged Trackster per " + refT[i], nintScore_, minScore_, maxScore_));
   histograms.h_score_caloparticle2trackster[i].push_back(ibook.book1D(
       "Score_" + ref[i] + "2trackster", "Score of " + refT[i] + " per Trackster", nintScore_, minScore_, maxScore_));
+  histograms.h_scorePur_caloparticle2trackster[i].push_back(ibook.book1D(
+      "ScorePur_" + ref[i] + "2trackster", "Score of " + refT[i] + " per best Trackster", nintScore_, minScore_, maxScore_));
   histograms.h_scoreDupl_caloparticle2trackster[i].push_back(ibook.book1D(
-      "ScoreDupl_" + ref[i] + "2trackster", "Score of " + refT[i] + " per duplicate Trackster", nintScore_, minScore_, maxScore_));
+      "ScoreDupl_" + ref[i] + "2trackster", "Score of " + refT[i] + " per first duplicate Trackster", nintScore_, minScore_, maxScore_));
   histograms.h_energy_vs_score_trackster2caloparticle[i].push_back(
       ibook.book2D("Energy_vs_Score_trackster2" + ref[i],
                    "Energy vs Score of Trackster per " + refT[i],
@@ -2720,8 +2722,7 @@ return v.first == hitid; });
 
     //In case of a Trackster with some energy but none related CaloParticles print some info.
     if (stsInTrackster[tstId].empty())
-      LogDebug("HGCalValidator") << "Trackster Id: \t" << tstId << "\tSimTrackster id:\t-1 "
-                                 << "\t score \t-1\n";
+      LogDebug("HGCalValidator") << "Trackster Id: " << tstId << "\tSimTrackster id: -1" << "\tscore: -1\n";
 
     tracksters_fakemerge[tstId] = std::count_if(std::begin(stsInTrackster[tstId]),
                                                 std::end(stsInTrackster[tstId]),
@@ -2961,10 +2962,17 @@ else return false;
 
     const auto assocDup = std::count_if(std::begin(score3d_iSTS), std::end(score3d_iSTS), is_assoc);
 
+    const auto best = std::min_element(std::begin(score3d_iSTS), std::end(score3d_iSTS));
+    histograms.h_scorePur_caloparticle2trackster[i][count]->Fill(*best);
+    const auto best2 = std::min_element(std::begin(score3d_iSTS), std::end(score3d_iSTS),
+                                        [&best](const auto& obj1, const auto& obj2) { if (obj1 != *best) return obj1 < obj2;
+else return false;
+});
+    histograms.h_scoreDupl_caloparticle2trackster[i][count]->Fill(*best2);
+
     if (assocDup > 0) {
       histograms.h_num_caloparticle_eta[i][count]->Fill(sts_eta);
       histograms.h_num_caloparticle_phi[i][count]->Fill(sts_phi);
-      const auto best = std::min_element(std::begin(score3d_iSTS), std::end(score3d_iSTS));
       const auto bestTstId = std::distance(std::begin(score3d_iSTS), best);
       const auto tstRawEnergyFrac = tracksters[bestTstId].raw_energy() / SimEnergy;
       const auto tstSharedEnergyFrac = tstSharedEnergy[iSTS][bestTstId] / SimEnergy;
@@ -2978,12 +2986,6 @@ else return false;
                                  << sts_phi << " " << tracksters[bestTstId].raw_energy()
                                  << " " << sts.raw_energy() << " " << tstRawEnergyFrac << " "
                                  << tstSharedEnergyFrac << "\n";
-
-      const auto best2 = std::min_element(std::begin(score3d_iSTS), std::end(score3d_iSTS),
-                                          [&best](const auto& obj1, const auto& obj2) { if (obj1 != *best) return obj1 < obj2;
-else return false;
-});
-      histograms.h_scoreDupl_caloparticle2trackster[i][count]->Fill(*best2);
 
       if (assocDup >= 2) {
         auto match = std::find_if(std::begin(score3d_iSTS), std::end(score3d_iSTS), is_assoc);
