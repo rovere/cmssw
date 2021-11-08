@@ -2865,9 +2865,8 @@ else return false;
         for (auto& tsPair : simOnLayer[layerId].layerClusterIdToEnergyAndScore) {
           const auto tracksterId = tsPair.first;
           if (std::find(std::begin(stsId_tstId_related), std::end(stsId_tstId_related), tracksterId) ==
-              std::end(stsId_tstId_related)) {
+              std::end(stsId_tstId_related))
             stsId_tstId_related.push_back(tracksterId);
-          }
 
           float tstFraction = 0.f;
           if (!hitWithNoTS) {
@@ -2933,7 +2932,6 @@ else return false;
 
     const auto sts_eta = sts.barycenter().eta();
     const auto sts_phi = sts.barycenter().phi();
-
     histograms.h_denom_caloparticle_eta[i][count]->Fill(sts_eta);
     histograms.h_denom_caloparticle_phi[i][count]->Fill(sts_phi);
 
@@ -2968,6 +2966,8 @@ else return false;
       }
     } // end of loop through Tracksters related to SimTrackster
 
+    if (score3d_iSTS.size() < 1)
+      continue ;
     const auto assocDup = std::count_if(std::begin(score3d_iSTS), std::end(score3d_iSTS), is_assoc);
 
     const auto best = std::min_element(std::begin(score3d_iSTS), std::end(score3d_iSTS));
