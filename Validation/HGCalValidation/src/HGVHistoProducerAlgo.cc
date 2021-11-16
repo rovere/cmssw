@@ -1101,7 +1101,7 @@ void HGVHistoProducerAlgo::bookTracksterSTSHistos(DQMStore::IBooker& ibook, Hist
   const string val[] = {"_Link", "_PR"};
 
   histograms.h_score_trackster2caloparticle[i].push_back(
-      ibook.book1D("Score_trackster2" + ref[i], "Score of Trackster per " + refT[i], nintScore_, minScore_, maxScore_));
+      ibook.book1D("Score_trackster2" + ref[i], "Score of Trackster per best " + refT[i], nintScore_, minScore_, maxScore_));
   histograms.h_scoreMerge_trackster2caloparticle[i].push_back(
       ibook.book1D("ScoreMerge_trackster2" + ref[i], "Score of merged Trackster per " + refT[i], nintScore_, minScore_, maxScore_));
   histograms.h_score_caloparticle2trackster[i].push_back(ibook.book1D(
@@ -1112,7 +1112,7 @@ void HGVHistoProducerAlgo::bookTracksterSTSHistos(DQMStore::IBooker& ibook, Hist
       "ScoreDupl_" + ref[i] + "2trackster", "Score of " + refT[i] + " per first duplicate Trackster", nintScore_, minScore_, maxScore_));
   histograms.h_energy_vs_score_trackster2caloparticle[i].push_back(
       ibook.book2D("Energy_vs_Score_trackster2" + ref[i],
-                   "Energy vs Score of Trackster per " + refT[i],
+                   "Energy vs Score of Trackster per best " + refT[i],
                    nintScore_,
                    minScore_,
                    maxScore_,
@@ -1161,7 +1161,7 @@ void HGVHistoProducerAlgo::bookTracksterSTSHistos(DQMStore::IBooker& ibook, Hist
 
   histograms.h_sharedenergy_trackster2caloparticle[i].push_back(
       ibook.book1D("SharedEnergy_trackster2" + ref[i],
-                   "Shared Energy of Trackster per " + refT[i] + " in each layer",
+                   "Shared Energy of Trackster per best " + refT[i] + " in each layer",
                    nintSharedEneFrac_,
                    minTSTSharedEneFrac_,
                    maxTSTSharedEneFrac_));

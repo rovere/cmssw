@@ -1562,28 +1562,32 @@ _common = {"stat": True, "drawStyle": "hist", "staty": 0.65 }
 # MULTICLUSTERS
 #--------------------------------------------------------------------------------------------
 _common_score = {#"title": "Score CaloParticle/SimTrackster to Tracksters",
-                 "stat": False,
-                 "ymin": 0.1,
-                 "ymax": 100000,
-                 "xmin": 0,
-                 "xmax": 1.0,
-                 "drawStyle": "hist",
-                 "lineWidth": 1,
-                 "ylog": True
+                 "stat": False
+                 ,"ymin": 0.1
+                 ,"ymax": 100000
+                 ,"xmin": 0
+                 ,"xmax": 1.0
+                 ,"drawStyle": "hist"
+                 ,"lineWidth": 1
+                 ,"ylog": True
+                 ,"xlog": True
                 }
 _common_score.update(_legend_common)
-_score_caloparticle_to_tracksters = PlotGroup("ScoreCaloParticlesToTracksters", [
-        Plot("Score_caloparticle2trackster", **_common_score)
-        ], ncols=1)
-_score_simtrackster_to_tracksters = PlotGroup("ScoreSimTrackstersToTracksters", [
-        Plot("Score_simtrackster2trackster", **_common_score)
-        ], ncols=1)
-_score_trackster_to_caloparticles = PlotGroup("ScoreTrackstersToCaloParticles", [
-        Plot("Score_trackster2caloparticle", **_common_score)
-        ], ncols=1)
-_score_trackster_to_simtracksters = PlotGroup("ScoreTrackstersToSimTracksters", [
-        Plot("Score_trackster2simtrackster", **_common_score)
-        ], ncols=1)
+
+score_to_trackster = ["","Pur","Dupl"]
+_score_caloparticle_to_tracksters = PlotGroup("ScoreCaloParticlesToTracksters", [], ncols=len(score_to_trackster))
+_score_simtrackster_to_tracksters = PlotGroup("ScoreSimTrackstersToTracksters", [], ncols=len(score_to_trackster))
+for score in score_to_trackster:
+    _score_caloparticle_to_tracksters.append(Plot("Score"+score+"_caloparticle2trackster", **_common_score))
+    _score_simtrackster_to_tracksters.append(Plot("Score"+score+"_simtrackster2trackster", **_common_score))
+
+score_trackster_to = ["","Merge"]
+_score_trackster_to_caloparticles = PlotGroup("ScoreTrackstersToCaloParticles", [], ncols=len(score_trackster_to))
+_score_trackster_to_simtracksters = PlotGroup("ScoreTrackstersToSimTracksters", [], ncols=len(score_trackster_to))
+for score in score_trackster_to:
+    _score_trackster_to_caloparticles.append(Plot("Score"+score+"_trackster2caloparticle", **_common_score))
+    _score_trackster_to_simtracksters.append(Plot("Score"+score+"_trackster2simtrackster", **_common_score))
+
 
 _common_shared_Link= {"title": "Shared Energy CaloParticle To Trackster ",
                  "stat": False,
