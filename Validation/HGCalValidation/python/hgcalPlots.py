@@ -1657,11 +1657,9 @@ _cell_association_table = PlotGroup("cellAssociation_table", [
         ], ncols=8 )
 
 # Trackster plots
-_common_eff = {"stat": False, "legend": False, "xbinlabelsize": 14, "xbinlabeloption": "d", "ymin": 0.0, "ymax": 1.1}
-_common_purity = {"stat": False, "legend": False, "xbinlabelsize": 14, "xbinlabeloption": "d", "ymin": 0.0, "ymax": 1.1}
-_common_dup = {"stat": False, "legend": False, "xbinlabelsize": 14, "xbinlabeloption": "d", "ymin": 0.0, "ymax": 1.1}
-_common_fake = {"stat": False, "legend": False, "xbinlabelsize": 14, "xbinlabeloption": "d", "ymin": 0.0, "ymax": 1.1}
-_common_merge = {"stat": False, "legend": False, "xbinlabelsize": 14, "xbinlabeloption": "d", "ymin": 0.0, "ymax": 1.1}
+_common_metric = {"stat": False, "legend": False, "xbinlabelsize": 14, "xbinlabeloption": "d", "ymin": 0.0, "ymax": 1.1}
+_common_metric_logx = _common_metric.copy()
+_common_metric_logx["xlog"] = True
 
 _efficiencies = []
 _purities = []
@@ -1669,18 +1667,19 @@ _duplicates = []
 _fakes = []
 _merges = []
 for val in simDict:
-    _effplots = [Plot("globalEfficiencies", xtitle="", **_common_eff)]
-    _purityplots = [Plot("globalEfficiencies", xtitle="", **_common_purity)]
-    _dupplots = [Plot("globalEfficiencies", xtitle="", **_common_dup)]
-    _fakeplots = [Plot("globalEfficiencies", xtitle="", **_common_fake)]
-    _mergeplots = [Plot("globalEfficiencies", xtitle="", **_common_merge)]
+    _effplots = [Plot("globalEfficiencies", xtitle="", **_common_metric)]
+    _purityplots = [Plot("globalEfficiencies", xtitle="", **_common_metric)]
+    _dupplots = [Plot("globalEfficiencies", xtitle="", **_common_metric)]
+    _fakeplots = [Plot("globalEfficiencies", xtitle="", **_common_metric)]
+    _mergeplots = [Plot("globalEfficiencies", xtitle="", **_common_metric)]
 
     for v in variables:
-        _effplots.extend([Plot("effic_"+v+simDict[val], xtitle="", **_common_eff)])
-        _purityplots.extend([Plot("purity_"+v+simDict[val], xtitle="", **_common_purity)])
-        _dupplots.extend([Plot("duplicate_"+v+simDict[val], xtitle="", **_common_dup)])
-        _fakeplots.extend([Plot("fake_"+v+simDict[val], xtitle="", **_common_fake)])
-        _mergeplots.extend([Plot("merge_"+v+simDict[val], xtitle="", **_common_merge)])
+        kwargs = _common_metric_logx if v in ["energy","pt"] else _common_metric
+        _effplots.extend([Plot("effic_"+v+simDict[val], xtitle = variables[v][0]+variables[v][1], **kwargs)])
+        _purityplots.extend([Plot("purity_"+v+simDict[val], xtitle = variables[v][0]+variables[v][1], **kwargs)])
+        _dupplots.extend([Plot("duplicate_"+v+simDict[val], xtitle = variables[v][0]+variables[v][1], **kwargs)])
+        _fakeplots.extend([Plot("fake_"+v+simDict[val], xtitle = variables[v][0]+variables[v][1], **kwargs)])
+        _mergeplots.extend([Plot("merge_"+v+simDict[val], xtitle = variables[v][0]+variables[v][1], **kwargs)])
 
     _efficiencies.append(PlotGroup("Efficiencies"+simDict[val], _effplots, ncols=3))
     _purities.append(PlotGroup("Purities"+simDict[val], _purityplots, ncols=3))
