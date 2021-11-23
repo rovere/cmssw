@@ -2717,11 +2717,13 @@ return v.first == hitid; });
 
     // Compute the correct normalization
     float invTracksterEnergyWeight = 0.f;
+    float hitFr = 1;
     for (const auto& haf : tst_hitsAndFractions) {
+      if (i==0) hitFr = haf.second; // for Linking the hit fraction is accounted for
       invTracksterEnergyWeight +=
-          pow(haf.second * hitMap.at(haf.first)->energy(), 2);
+          pow(hitFr * hitMap.at(haf.first)->energy(), 2);
     }
-    invTracksterEnergyWeight = 1.f / invTracksterEnergyWeight;
+    if (invTracksterEnergyWeight) invTracksterEnergyWeight = 1.f / invTracksterEnergyWeight;
 
     for (const auto& haf : tst_hitsAndFractions) {
       const auto rh_detid = haf.first;
@@ -2850,6 +2852,7 @@ else return false;
     auto& score3d_iSTS = score3d[iSTS];
 
     float SimEnergy = 0.f;
+    float invHitsEnergyWeight = 0.f;
     for (unsigned int layerId = 0; layerId < layers * 2; ++layerId) {
       const auto SimNumberOfHits = simOnLayer[layerId].hits_and_fractions.size();
       SimEnergy += simOnLayer[layerId].energy;
@@ -2931,6 +2934,7 @@ else return false;
             tsPair.second.second = 0.f;
           }
           tsPair.second.second += pow((tstFraction - cpFraction), 2) * hitEnergyWeight;
+          invHitsEnergyWeight += hitEnergyWeight;
 
           LogDebug("HGCalValidator") << "\nTracksterId:\t" << tracksterId
                                      << "\tSimTracksterId:\t" << iSTS
@@ -2943,7 +2947,7 @@ else return false;
                                      << "\tcurrent Sim-score numerator:\t" << tsPair.second.second
                                      << "\tshared Sim energy:\t" << tsPair.second.first << '\n';
         }
-      } // end of loop through SimHits of current CaloParticle
+      } // end of loop through SimCluster SimHits on current layer
 
       if (simOnLayer[layerId].layerClusterIdToEnergyAndScore.empty())
         LogDebug("HGCalValidator") << "CP Id:\t" << cpId << "\tTS id:\t-1 "
@@ -2959,6 +2963,7 @@ else return false;
         tstSharedEnergy[iSTS][tracksterId] += tsPair.second.first;
       }
     } // end of loop through layers
+    if (invHitsEnergyWeight) invHitsEnergyWeight = 1.f / invHitsEnergyWeight;
 
     // Compute the correct normalization
     // Need to loop on the simOnLayer data structure since this is the
@@ -2969,7 +2974,11 @@ else return false;
       for (const auto& haf : layer.hits_and_fractions)
         invSimEnergyWeight +=
             pow(haf.second * hitMap.at(haf.first)->energy(), 2);
-    invSimEnergyWeight = 1.f / invSimEnergyWeight;
+    if (invSimEnergyWeight) invSimEnergyWeight = 1.f / invSimEnergyWeight;
+
+    float scoreDenom = 0;
+    if (i==0) scoreDenom = invSimEnergyWeight;
+    else if (i==1) scoreDenom = invHitsEnergyWeight;
 
     const auto sts_eta = sts.barycenter().eta();
     const auto sts_phi = sts.barycenter().phi();
@@ -2989,7 +2998,7 @@ else return false;
     int assocDup = 0;
     for (const auto tstId : stsId_tstId_related) {
       // Now time for the denominator
-      score3d_iSTS[tstId] *= invSimEnergyWeight;
+      score3d_iSTS[tstId] *= scoreDenom;
       const auto tstSharedEnergyFrac = tstSharedEnergy[iSTS][tstId] / SimEnergy;
 
       LogDebug("HGCalValidator") << "STS id: " << iSTS << "\t(CP id: " << cpId << ")\tTS id: " << tstId //
