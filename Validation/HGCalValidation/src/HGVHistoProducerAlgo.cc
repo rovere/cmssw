@@ -2487,14 +2487,14 @@ return v.first == hitid; });
   auto ScoreCutTStoSTSFakeMerge = ScoreCutTStoSTSFakeMerge_[0];
   // Loop through Tracksters
   for (unsigned int tstId = 0; tstId < nTracksters; ++tstId) {
-    const auto& trackster = tracksters[tstId];
+    const auto& tst = tracksters[tstId];
     if (tstId == 0)
-      if ((i == 1) && (trackster.ticlIteration() == ticl::Trackster::SIM)) { // SimTS or SimTS_fromCP
+      if ((i == 1) && (tst.ticlIteration() == ticl::Trackster::SIM)) {
         ScoreCutSTStoTSPurDup = ScoreCutSTStoTSPurDup_[i];
         ScoreCutTStoSTSFakeMerge = ScoreCutTStoSTSFakeMerge_[i];
       }
 
-    if (trackster.vertices().empty())
+    if (tst.vertices().empty())
       continue;
 
     std::unordered_map<unsigned, float> CPEnergyInTS;
@@ -2514,7 +2514,7 @@ return v.first == hitid; });
     unsigned int numberOfNoiseHitsInTS = 0;
     unsigned int numberOfHaloHitsInTS = 0;
 
-    const auto tst_hitsAndFractions = apply_LCMultiplicity(trackster, layerClusters);
+    const auto tst_hitsAndFractions = apply_LCMultiplicity(tst, layerClusters);
     const auto numberOfHitsInTS = tst_hitsAndFractions.size();
 
     //hitsToCaloParticleId is a vector of ints, one for each rechit of the
@@ -2540,9 +2540,9 @@ return v.first == hitid; });
       const auto rh_detid = tst_hitsAndFractions[hitId].first;
       const auto rhFraction = tst_hitsAndFractions[hitId].second;
 
-      const auto lcId_r = getLCId(trackster.vertices(), layerClusters, rh_detid);
-      const auto iLC_r = std::find(trackster.vertices().begin(), trackster.vertices().end(), lcId_r);
-      const auto lcFraction_r = 1.f / trackster.vertex_multiplicity(std::distance(std::begin(trackster.vertices()), iLC_r));
+      const auto lcId_r = getLCId(tst.vertices(), layerClusters, rh_detid);
+      const auto iLC_r = std::find(tst.vertices().begin(), tst.vertices().end(), lcId_r);
+      const auto lcFraction_r = 1.f / tst.vertex_multiplicity(std::distance(std::begin(tst.vertices()), iLC_r));
 
       //Make a map that will connect a detid (that belongs to a rechit of the layer cluster under study,
       //no need to save others) with:
@@ -2661,8 +2661,8 @@ return v.first == hitid; });
         totalCPEnergyFromLayerCP = totalCPEnergyFromLayerCP + cPOnLayer[maxCPId_byEnergy][j].energy;
       }
       energyFractionOfCPinTS = maxEnergySharedTSandCP / totalCPEnergyFromLayerCP;
-      if (trackster.raw_energy() > 0.f) {
-        energyFractionOfTSinCP = maxEnergySharedTSandCP / trackster.raw_energy();
+      if (tst.raw_energy() > 0.f) {
+        energyFractionOfTSinCP = maxEnergySharedTSandCP / tst.raw_energy();
       }
     }
 
@@ -2679,7 +2679,7 @@ return v.first == hitid; });
                                << std::setw(25) << "energyFractionOfCPinTS\t"
                                << std::endl;
     LogDebug("HGCalValidator") << std::setw(12) << tstId << "\t"  //LogDebug("HGCalValidator")
-                               << std::setw(10) << trackster.raw_energy() << "\t" << std::setw(5)
+                               << std::setw(10) << tst.raw_energy() << "\t" << std::setw(5)
                                << numberOfHitsInTS << "\t" << std::setw(12) << numberOfNoiseHitsInTS << "\t"
                                << std::setw(22) << maxCPId_byNumberOfHits << "\t" << std::setw(8)
                                << maxCPNumberOfHitsInTS << "\t" << std::setw(16) << maxCPId_byEnergy << "\t"
@@ -2691,8 +2691,8 @@ return v.first == hitid; });
 
   // Loop through Tracksters
   for (unsigned int tstId = 0; tstId < nTracksters; ++tstId) {
-    const auto& trackster = tracksters[tstId];
-    if (trackster.vertices().empty())
+    const auto& tst = tracksters[tstId];
+    if (tst.vertices().empty())
       continue;
 
     // find the unique SimTrackster ids contributing to the Trackster
@@ -2701,7 +2701,7 @@ return v.first == hitid; });
     const auto last = std::unique(stsInTrackster[tstId].begin(), stsInTrackster[tstId].end());
     stsInTrackster[tstId].erase(last, stsInTrackster[tstId].end());
 
-    if (trackster.raw_energy() == 0. && !stsInTrackster[tstId].empty()) {
+    if (tst.raw_energy() == 0. && !stsInTrackster[tstId].empty()) {
       //Loop through all SimTracksters contributing to Trackster tstId
       for (auto& stsPair : stsInTrackster[tstId]) {
         // In case of a Trackster with zero energy but related SimTracksters the score is set to 1
@@ -2713,7 +2713,7 @@ return v.first == hitid; });
       continue;
     }
 
-    const auto tst_hitsAndFractions = apply_LCMultiplicity(trackster, layerClusters);
+    const auto tst_hitsAndFractions = apply_LCMultiplicity(tst, layerClusters);
 
     // Compute the correct normalization
     float invTracksterEnergyWeight = 0.f;
@@ -2731,9 +2731,9 @@ return v.first == hitid; });
       if (i == 0) {
         rhFraction = haf.second;
       } else if (i == 1) {
-        const auto lcId = getLCId(trackster.vertices(), layerClusters, rh_detid);
-        const auto iLC = std::find(trackster.vertices().begin(), trackster.vertices().end(), lcId);
-        rhFraction = 1.f / trackster.vertex_multiplicity(std::distance(std::begin(trackster.vertices()), iLC));
+        const auto lcId = getLCId(tst.vertices(), layerClusters, rh_detid);
+        const auto iLC = std::find(tst.vertices().begin(), tst.vertices().end(), lcId);
+        rhFraction = 1.f / tst.vertex_multiplicity(std::distance(std::begin(tst.vertices()), iLC));
       }
 
       bool hitWithNoSTS = false;
@@ -2777,8 +2777,8 @@ return v.first == hitid; });
     tracksters_fakemerge[tstId] = std::count_if(std::begin(stsInTrackster[tstId]),
                                                 std::end(stsInTrackster[tstId]),
                                                 [&, i, ScoreCutTStoSTSFakeMerge](const auto& obj) {
-      if ((i == 1) && (trackster.ticlIteration() == ticl::Trackster::SIM)) { // SimTS or SimTS_fromCP
-        if (trackster.vertices().size() != simTSs[obj.first].vertices().size())
+      if ((i == 1) && (tst.ticlIteration() == ticl::Trackster::SIM)) {
+        if (tst.vertices().size() != simTSs[obj.first].vertices().size())
           return false; }
       return obj.second < ScoreCutTStoSTSFakeMerge;
     });
@@ -2802,14 +2802,14 @@ else return false;
         const auto& cp_linked = cPOnLayer[cpId][j].layerClusterIdToEnergyAndScore[tstId];
         sharedeneCPallLayers += cp_linked.first;
       }
-      LogDebug("HGCalValidator") << "\nTrackster id: " << tstId << " (" << trackster.vertices().size() << " vertices)" << "\tSimTrackster Id: " << iSTS << " (" << simTSs[iSTS].vertices().size() << ")" << " (CP id: " << cpId << " vertices)\tscore: " << stsPair.second << "\tsharedeneCPallLayers: " << sharedeneCPallLayers << std::endl;
+      LogDebug("HGCalValidator") << "\nTrackster id: " << tstId << " (" << tst.vertices().size() << " vertices)" << "\tSimTrackster Id: " << iSTS << " (" << simTSs[iSTS].vertices().size() << ")" << " (CP id: " << cpId << " vertices)\tscore: " << stsPair.second << "\tsharedeneCPallLayers: " << sharedeneCPallLayers << std::endl;
 
       if (iSTS == score->first) {
         histograms.h_score_trackster2caloparticle[i][count]->Fill(score->second);
         histograms.h_sharedenergy_trackster2caloparticle[i][count]->Fill(sharedeneCPallLayers /
-                                                                         trackster.raw_energy());
+                                                                         tst.raw_energy());
         histograms.h_energy_vs_score_trackster2caloparticle[i][count]->Fill(
-            score->second, sharedeneCPallLayers / trackster.raw_energy());
+            score->second, sharedeneCPallLayers / tst.raw_energy());
       }
       else if (stsPair.first == score2->first) {
         histograms.h_scoreMerge_trackster2caloparticle[i][count]->Fill(stsPair.second);
@@ -2907,23 +2907,23 @@ else return false;
         const HGCRecHit* hit = hitMap.find(hitDetId)->second;
         const auto hitEnergyWeight = pow(hit->energy(), 2);
         for (auto& tsPair : simOnLayer[layerId].layerClusterIdToEnergyAndScore) {
-          const auto tracksterId = tsPair.first;
-          if (std::find(std::begin(stsId_tstId_related), std::end(stsId_tstId_related), tracksterId) ==
+          const auto tstId = tsPair.first;
+          if (std::find(std::begin(stsId_tstId_related), std::end(stsId_tstId_related), tstId) ==
               std::end(stsId_tstId_related))
-            stsId_tstId_related.push_back(tracksterId);
+            stsId_tstId_related.push_back(tstId);
 
           float tstFraction = 0.f;
           if (!hitWithNoTS) {
             const auto findTSIt = std::find(detIdToTracksterId_Map[hitDetId].begin(),
                                              detIdToTracksterId_Map[hitDetId].end(),
-                                             HGVHistoProducerAlgo::detIdInfoInTrackster{tracksterId, 0, 0.f}); // only the first element is used for the matching (overloaded operator==)
+                                             HGVHistoProducerAlgo::detIdInfoInTrackster{tstId, 0, 0.f}); // only the first element is used for the matching (overloaded operator==)
             if (findTSIt != detIdToTracksterId_Map[hitDetId].end()) {
               if (i == 0) {
                 tstFraction = findTSIt->fraction;
               } else if (i == 1) {
-                const auto iLC = std::find(tracksters[tracksterId].vertices().begin(), tracksters[tracksterId].vertices().end(), findTSIt->clusterId);
-                if (iLC != tracksters[tracksterId].vertices().end()) {
-                  tstFraction = 1.f / tracksters[tracksterId].vertex_multiplicity(std::distance(std::begin(tracksters[tracksterId].vertices()), iLC));
+                const auto iLC = std::find(tracksters[tstId].vertices().begin(), tracksters[tstId].vertices().end(), findTSIt->clusterId);
+                if (iLC != tracksters[tstId].vertices().end()) {
+                  tstFraction = 1.f / tracksters[tstId].vertex_multiplicity(std::distance(std::begin(tracksters[tstId].vertices()), iLC));
                 }
               }
             }
@@ -2936,7 +2936,7 @@ else return false;
           tsPair.second.second += pow((tstFraction - cpFraction), 2) * hitEnergyWeight;
           invHitsEnergyWeight += hitEnergyWeight;
 
-          LogDebug("HGCalValidator") << "\nTracksterId:\t" << tracksterId
+          LogDebug("HGCalValidator") << "\nTracksterId:\t" << tstId
                                      << "\tSimTracksterId:\t" << iSTS
                                      << "\tcpId:\t" << cpId
                                      << "\tLayer: " << layerId << '\t' << "tstfraction, cpfraction:\t" << tstFraction
@@ -2954,13 +2954,13 @@ else return false;
                                    << "\tlayer\t" << layerId << " Sub score in \t -1\n";
 
       for (const auto& tsPair : simOnLayer[layerId].layerClusterIdToEnergyAndScore) {
-        const auto tracksterId = tsPair.first;
+        const auto tstId = tsPair.first;
         // 3D score here without the denominator at this point
-        if (score3d_iSTS[tracksterId] == FLT_MAX) {
-          score3d_iSTS[tracksterId] = 0.f;
+        if (score3d_iSTS[tstId] == FLT_MAX) {
+          score3d_iSTS[tstId] = 0.f;
         }
-        score3d_iSTS[tracksterId] += tsPair.second.second;
-        tstSharedEnergy[iSTS][tracksterId] += tsPair.second.first;
+        score3d_iSTS[tstId] += tsPair.second.second;
+        tstSharedEnergy[iSTS][tstId] += tsPair.second.first;
       }
     } // end of loop through layers
     if (invHitsEnergyWeight) invHitsEnergyWeight = 1.f / invHitsEnergyWeight;
@@ -3023,7 +3023,7 @@ else return false;
       }
 
       if (score3d_iSTS[tstId] < ScoreCutSTStoTSPurDup) {
-        if ((i == 1) && (tracksters[tstId].ticlIteration() == ticl::Trackster::SIM)) // SimTS or SimTS_fromCP
+        if ((i == 1) && (tracksters[tstId].ticlIteration() == ticl::Trackster::SIM))
           if (tracksters[tstId].vertices().size() != sts.vertices().size())
             continue;
         assocDup++;
@@ -3068,13 +3068,13 @@ else return false;
   // reco-level, namely fake-rate an merge-rate. Should *not*
   // restrict only to the selected caloParaticles.
   for (unsigned int tstId = 0; tstId < nTracksters; ++tstId) {
-    const auto& trackster = tracksters[tstId];
-    if (trackster.vertices().empty())
+    const auto& tst = tracksters[tstId];
+    if (tst.vertices().empty())
       continue;
-    const auto iTS_eta = trackster.barycenter().eta();
-    const auto iTS_phi = trackster.barycenter().phi();
-    const auto iTS_en = trackster.raw_energy();
-    const auto iTS_pt = trackster.raw_pt();
+    const auto iTS_eta = tst.barycenter().eta();
+    const auto iTS_phi = tst.barycenter().phi();
+    const auto iTS_en = tst.raw_energy();
+    const auto iTS_pt = tst.raw_pt();
     histograms.h_denom_trackster_eta[i][count]->Fill(iTS_eta);
     histograms.h_denom_trackster_phi[i][count]->Fill(iTS_phi);
     histograms.h_denom_trackster_en[i][count]->Fill(iTS_en);
@@ -3160,14 +3160,15 @@ void HGVHistoProducerAlgo::fill_trackster_histos(const Histograms& histograms,
   // }
 
   const auto nTracksters = tracksters.size();
-  //loop through Tracksters of the event
+  // loop through Tracksters
   for (unsigned int tstId = 0; tstId < nTracksters; ++tstId) {
-    if (tracksters[tstId].vertices().size() == 0)
+    const auto& tst = tracksters[tstId];
+    if (tst.vertices().size() == 0)
       continue;
 
-    if (tracksters[tstId].barycenter().z() < 0.)
+    if (tst.barycenter().z() < 0.)
       totNTstZm++;
-    else if (tracksters[tstId].barycenter().z() > 0.)
+    else if (tst.barycenter().z() > 0.)
       totNTstZp++;
 
     //Total number of layer clusters in Trackster
@@ -3185,7 +3186,7 @@ void HGVHistoProducerAlgo::fill_trackster_histos(const Histograms& histograms,
     bool tracksterInZminus = false;
 
     //Loop through layer clusters
-    for (const auto lcId : tracksters[tstId].vertices()) {
+    for (const auto lcId : tst.vertices()) {
       //take the hits and their fraction of the specific layer cluster.
       const auto& hits_and_fractions = layerClusters[lcId].hitsAndFractions();
 
@@ -3273,23 +3274,23 @@ void HGVHistoProducerAlgo::fill_trackster_histos(const Histograms& histograms,
       }
       //For the cluster multiplicity vs cluster energy
       histograms.h_multiplicityOfLCinTST_vs_layerclusterenergy[count]->Fill(
-          mlp, layerClusters[tracksters[tstId].vertices(lc)].energy());
+          mlp, layerClusters[tst.vertices(lc)].energy());
     }
 
     if (!trackster_layers.empty()) {
-      histograms.h_trackster_x[count]->Fill(tracksters[tstId].barycenter().x());
-      histograms.h_trackster_y[count]->Fill(tracksters[tstId].barycenter().y());
-      histograms.h_trackster_z[count]->Fill(tracksters[tstId].barycenter().z());
-      histograms.h_trackster_eta[count]->Fill(tracksters[tstId].barycenter().eta());
-      histograms.h_trackster_phi[count]->Fill(tracksters[tstId].barycenter().phi());
+      histograms.h_trackster_x[count]->Fill(tst.barycenter().x());
+      histograms.h_trackster_y[count]->Fill(tst.barycenter().y());
+      histograms.h_trackster_z[count]->Fill(tst.barycenter().z());
+      histograms.h_trackster_eta[count]->Fill(tst.barycenter().eta());
+      histograms.h_trackster_phi[count]->Fill(tst.barycenter().phi());
 
       histograms.h_trackster_firstlayer[count]->Fill((float)*trackster_layers.begin());
       histograms.h_trackster_lastlayer[count]->Fill((float)*trackster_layers.rbegin());
       histograms.h_trackster_layersnum[count]->Fill((float)trackster_layers.size());
 
-      histograms.h_trackster_pt[count]->Fill(tracksters[tstId].raw_pt());
+      histograms.h_trackster_pt[count]->Fill(tst.raw_pt());
 
-      histograms.h_trackster_energy[count]->Fill(tracksters[tstId].raw_energy());
+      histograms.h_trackster_energy[count]->Fill(tst.raw_energy());
     }
 
   }  //end of loop through Tracksters
