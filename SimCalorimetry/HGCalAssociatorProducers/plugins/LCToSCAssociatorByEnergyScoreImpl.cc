@@ -358,7 +358,8 @@ hgcal::association LCToSCAssociatorByEnergyScoreImpl::makeConnections(
     // It is the inverse of the denominator of the LCToSC score formula. Observe that this is the sum of the squares.
     float invLayerClusterEnergyWeight = 0.f;
     for (auto const& haf : clusters[lcId].hitsAndFractions()) {
-      invLayerClusterEnergyWeight += pow(hitMap_->at(haf.first)->energy(), 2);
+      invLayerClusterEnergyWeight +=
+          (haf.second * hitMap_->at(haf.first)->energy()) * (haf.second * hitMap_->at(haf.first)->energy());
     }
     invLayerClusterEnergyWeight = 1.f / invLayerClusterEnergyWeight;
     for (unsigned int i = 0; i < numberOfHitsInLC; ++i) {
@@ -437,7 +438,7 @@ hgcal::association LCToSCAssociatorByEnergyScoreImpl::makeConnections(
       // Compute the correct normalization. Observe that this is the sum of the squares.
       float invSCEnergyWeight = 0.f;
       for (auto const& haf : lcsInSimCluster[scId][layerId].hits_and_fractions) {
-        invSCEnergyWeight += std::pow(hitMap_->at(haf.first)->energy(), 2);
+        invSCEnergyWeight += std::pow(haf.second * hitMap_->at(haf.first)->energy(), 2);
       }
       invSCEnergyWeight = 1.f / invSCEnergyWeight;
       for (unsigned int i = 0; i < SCNumberOfHits; ++i) {
