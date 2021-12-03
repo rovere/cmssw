@@ -2769,7 +2769,7 @@ return v.first == hitid; });
           stsPair.second = 0.f;
         }
         stsPair.second +=
-            pow((rhFraction - cpFraction), 2) * hitEnergyWeight * invTracksterEnergyWeight;
+            pow(min(rhFraction - cpFraction, rhFraction), 2) * hitEnergyWeight * invTracksterEnergyWeight;
       }
     } // end of loop through trackster rechits
 
@@ -2936,7 +2936,7 @@ else return false;
           if (tsPair.second.second == FLT_MAX) {
             tsPair.second.second = 0.f;
           }
-          tsPair.second.second += pow((tstFraction - cpFraction), 2) * hitEnergyWeight;
+          tsPair.second.second += pow(min(tstFraction - cpFraction, cpFraction), 2) * hitEnergyWeight;
           invHitsEnergyWeight += pow(cpFraction, 2) * hitEnergyWeight;
 
           LogDebug("HGCalValidator") << "\nTracksterId:\t" << tstId
