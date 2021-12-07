@@ -1101,7 +1101,9 @@ void HGVHistoProducerAlgo::bookTracksterSTSHistos(DQMStore::IBooker& ibook, Hist
   const string val[] = {"_Link", "_PR"};
 
   histograms.h_score_trackster2caloparticle[i].push_back(
-      ibook.book1D("Score_trackster2" + ref[i], "Score of Trackster per best " + refT[i], nintScore_, minScore_, maxScore_));
+      ibook.book1D("Score_trackster2" + ref[i], "Score of Trackster per " + refT[i], nintScore_, minScore_, maxScore_));
+  histograms.h_score_trackster2bestCaloparticle[i].push_back(
+      ibook.book1D("ScoreFake_trackster2" + ref[i], "Score of Trackster per best " + refT[i], nintScore_, minScore_, maxScore_));
   histograms.h_scoreMerge_trackster2caloparticle[i].push_back(
       ibook.book1D("ScoreMerge_trackster2" + ref[i], "Score of merged Trackster per " + refT[i], nintScore_, minScore_, maxScore_));
   histograms.h_score_caloparticle2trackster[i].push_back(ibook.book1D(
@@ -1161,11 +1163,17 @@ void HGVHistoProducerAlgo::bookTracksterSTSHistos(DQMStore::IBooker& ibook, Hist
 
   histograms.h_sharedenergy_trackster2caloparticle[i].push_back(
       ibook.book1D("SharedEnergy_trackster2" + ref[i],
+                   "Shared Energy of Trackster per " + refT[i],
+                   nintSharedEneFrac_,
+                   minTSTSharedEneFrac_,
+                   maxTSTSharedEneFrac_));
+  histograms.h_sharedenergy_trackster2bestCaloparticle[i].push_back(
+      ibook.book1D("SharedEnergy_trackster2best" + ref[i],
                    "Shared Energy of Trackster per best " + refT[i],
                    nintSharedEneFrac_,
                    minTSTSharedEneFrac_,
                    maxTSTSharedEneFrac_));
-  histograms.h_sharedenergy_trackster2caloparticle_vs_eta[i].push_back(
+  histograms.h_sharedenergy_trackster2bestCaloparticle_vs_eta[i].push_back(
       ibook.bookProfile("SharedEnergy_trackster2" + ref[i] + "_assoc_vs_eta",
                         "Shared Energy of Trackster vs #eta per best " + refT[i],
                         nintEta_,
@@ -1173,7 +1181,7 @@ void HGVHistoProducerAlgo::bookTracksterSTSHistos(DQMStore::IBooker& ibook, Hist
                         maxEta_,
                         minTSTSharedEneFrac_,
                         maxTSTSharedEneFrac_));
-  histograms.h_sharedenergy_trackster2caloparticle_vs_phi[i].push_back(
+  histograms.h_sharedenergy_trackster2bestCaloparticle_vs_phi[i].push_back(
       ibook.bookProfile("SharedEnergy_trackster2" + ref[i] + "_assoc_vs_phi",
                         "Shared Energy of Trackster vs #phi per best " + refT[i],
                         nintPhi_,
@@ -2795,12 +2803,14 @@ else return false;
       const auto sharedEneFrac = sharedeneCPallLayers / tracksterEnergy;
       LogDebug("HGCalValidator") << "\nTrackster id: " << tstId << " (" << tst.vertices().size() << " vertice$
 
+      histograms.h_score_trackster2caloparticle[i][count]->Fill(stsPair.second);
+      histograms.h_sharedenergy_trackster2caloparticle[i][count]->Fill(sharedEneFrac);
       if (iSTS == score->first) {
-        histograms.h_score_trackster2caloparticle[i][count]->Fill(score->second);
-        histograms.h_sharedenergy_trackster2caloparticle[i][count]->Fill(sharedEneFrac);
-        histograms.h_sharedenergy_trackster2caloparticle_vs_eta[i][count]->Fill(tst.barycenter().eta(),
+        histograms.h_score_trackster2bestCaloparticle[i][count]->Fill(score->second);
+        histograms.h_sharedenergy_trackster2bestCaloparticle[i][count]->Fill(sharedEneFrac);
+        histograms.h_sharedenergy_trackster2bestCaloparticle_vs_eta[i][count]->Fill(tst.barycenter().eta(),
                                                                                 sharedEneFrac);
-        histograms.h_sharedenergy_trackster2caloparticle_vs_phi[i][count]->Fill(tst.barycenter().phi(),
+        histograms.h_sharedenergy_trackster2bestCaloparticle_vs_phi[i][count]->Fill(tst.barycenter().phi(),
                                                                                 sharedEneFrac);
         histograms.h_energy_vs_score_trackster2caloparticle[i][count]->Fill(score->second,
                                                                             sharedEneFrac);
@@ -3003,7 +3013,6 @@ else return false;
                                  << "\tshared energy fraction: " << tstSharedEnergyFrac << "\n";
 
       histograms.h_score_caloparticle2trackster[i][count]->Fill(score3d_iSTS[tstId]);
-
       histograms.h_sharedenergy_caloparticle2trackster[i][count]->Fill(tstSharedEnergyFrac);
       histograms.h_energy_vs_score_caloparticle2trackster[i][count]->Fill(score3d_iSTS[tstId],
                                                                        tstSharedEnergyFrac);
