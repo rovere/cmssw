@@ -142,12 +142,16 @@ struct HGVHistoProducerAlgoHistograms {
   // Linking and Pattern Recognition
   std::vector<dqm::reco::MonitorElement*> h_score_trackster2caloparticle[2];
   std::vector<dqm::reco::MonitorElement*> h_score_trackster2bestCaloparticle[2];
-  std::vector<dqm::reco::MonitorElement*> h_scoreMerge_trackster2caloparticle[2];
+  std::vector<dqm::reco::MonitorElement*> h_score_trackster2bestCaloparticle2[2];
   std::vector<dqm::reco::MonitorElement*> h_score_caloparticle2trackster[2];
   std::vector<dqm::reco::MonitorElement*> h_scorePur_caloparticle2trackster[2];
   std::vector<dqm::reco::MonitorElement*> h_scoreDupl_caloparticle2trackster[2];
   std::vector<dqm::reco::MonitorElement*> h_energy_vs_score_trackster2caloparticle[2];
+  std::vector<dqm::reco::MonitorElement*> h_energy_vs_score_trackster2bestCaloparticle[2];
+  std::vector<dqm::reco::MonitorElement*> h_energy_vs_score_trackster2bestCaloparticle2[2];
   std::vector<dqm::reco::MonitorElement*> h_energy_vs_score_caloparticle2trackster[2];
+  std::vector<dqm::reco::MonitorElement*> h_energy_vs_score_caloparticle2bestTrackster[2];
+  std::vector<dqm::reco::MonitorElement*> h_energy_vs_score_caloparticle2bestTrackster2[2];
   std::vector<dqm::reco::MonitorElement*> h_num_trackster_eta[2];
   std::vector<dqm::reco::MonitorElement*> h_num_trackster_phi[2];
   std::vector<dqm::reco::MonitorElement*> h_num_trackster_en[2];
@@ -158,8 +162,10 @@ struct HGVHistoProducerAlgoHistograms {
   std::vector<dqm::reco::MonitorElement*> h_numMerge_trackster_pt[2];
   std::vector<dqm::reco::MonitorElement*> h_sharedenergy_trackster2caloparticle[2];
   std::vector<dqm::reco::MonitorElement*> h_sharedenergy_trackster2bestCaloparticle[2];
+  std::vector<dqm::reco::MonitorElement*> h_sharedenergy_trackster2bestCaloparticle2[2];
   std::vector<dqm::reco::MonitorElement*> h_sharedenergy_caloparticle2trackster[2];
   std::vector<dqm::reco::MonitorElement*> h_sharedenergy_caloparticle2trackster_assoc[2];
+  std::vector<dqm::reco::MonitorElement*> h_sharedenergy_caloparticle2trackster_assoc2[2];
   std::vector<dqm::reco::MonitorElement*> h_sharedenergy_trackster2bestCaloparticle_vs_eta[2];
   std::vector<dqm::reco::MonitorElement*> h_sharedenergy_trackster2bestCaloparticle_vs_phi[2];
   std::vector<dqm::reco::MonitorElement*> h_sharedenergy_caloparticle2trackster_assoc_vs_eta[2];
