@@ -2835,13 +2835,11 @@ return v.first == hitid; });
     const auto score = std::min_element(std::begin(stsInTrackster[tstId]),
                                         std::end(stsInTrackster[tstId]),
                                         [](const auto& obj1, const auto& obj2) { return obj1.second < obj2.second; });
-    const auto score2 = std::min_element(std::begin(stsInTrackster[tstId]),
-                                         std::end(stsInTrackster[tstId]),
-                                         [&score](const auto& obj1, const auto& obj2) { if (obj1.first != score->first) return obj1.second < obj2.second;
-else return false;
-});
-    for (const auto& stsPair : stsInTrackster[tstId]) {
+    float score2 = -1;
+    float sharedEneFrac2 = 0;
+    for (const auto stsPair : stsInTrackster[tstId]) {
       const auto iSTS = stsPair.first;
+      const auto iScore = stsPair.second;
       const auto cpId = getCPId(simTSs[iSTS], iSTS, cPHandle_id, cpToSc_SimTrackstersMap, simTSs_fromCP);
       //if (std::find(cPIndices.begin(), cPIndices.end(), cpId) == cPIndices.end())
       //  continue;
@@ -2855,30 +2853,33 @@ else return false;
         sharedeneCPallLayers += simOnLayer[j].layerClusterIdToEnergyAndScore.count(tstId) ? simOnLayer[j].layerClusterIdToEnergyAndScore.at(tstId).first : 0;
       if (tracksterEnergy == 0) continue;
       const auto sharedEneFrac = sharedeneCPallLayers / tracksterEnergy;
-      LogDebug("HGCalValidator") << "\nTrackster id: " << tstId << " (" << tst.vertices().size() << " vertices)" << "\tSimTrackster Id: " << iSTS << " (" << simTSs[iSTS].vertices().size() << " vertices)" << " (CP id: " << cpId << ")\tscore: " << stsPair.second << "\tsharedeneCPallLayers: " << sharedeneCPallLayers << std::endl;
+      LogDebug("HGCalValidator") << "\nTrackster id: " << tstId << " (" << tst.vertices().size() << " vertices)" << "\tSimTrackster Id: " << iSTS << " (" << simTSs[iSTS].vertices().size() << " vertices)" << " (CP id: " << cpId << ")\tscore: " << iScore << "\tsharedeneCPallLayers: " << sharedeneCPallLayers << std::endl;
 
-      histograms.h_score_trackster2caloparticle[i][count]->Fill(stsPair.second);
+      histograms.h_score_trackster2caloparticle[i][count]->Fill(iScore);
       histograms.h_sharedenergy_trackster2caloparticle[i][count]->Fill(sharedEneFrac);
-      histograms.h_energy_vs_score_trackster2caloparticle[i][count]->Fill(stsPair.second,
+      histograms.h_energy_vs_score_trackster2caloparticle[i][count]->Fill(iScore,
                                                                           sharedEneFrac);
       if (iSTS == score->first) {
-        histograms.h_score_trackster2bestCaloparticle[i][count]->Fill(score->second);
+        histograms.h_score_trackster2bestCaloparticle[i][count]->Fill(iScore);
         histograms.h_sharedenergy_trackster2bestCaloparticle[i][count]->Fill(sharedEneFrac);
         histograms.h_sharedenergy_trackster2bestCaloparticle_vs_eta[i][count]->Fill(tst.barycenter().eta(),
                                                                                     sharedEneFrac);
         histograms.h_sharedenergy_trackster2bestCaloparticle_vs_phi[i][count]->Fill(tst.barycenter().phi(),
                                                                                     sharedEneFrac);
-        histograms.h_energy_vs_score_trackster2bestCaloparticle[i][count]->Fill(score->second,
+        histograms.h_energy_vs_score_trackster2bestCaloparticle[i][count]->Fill(iScore,
                                                                                 sharedEneFrac);
       }
-      else if (score2 != stsInTrackster[tstId].end())
-        if (iSTS == score2->first) {
-          histograms.h_score_trackster2bestCaloparticle2[i][count]->Fill(score2->second);
-          histograms.h_sharedenergy_trackster2bestCaloparticle2[i][count]->Fill(sharedEneFrac);
-          histograms.h_energy_vs_score_trackster2bestCaloparticle2[i][count]->Fill(stsPair.second,
-                                                                                   sharedEneFrac);
-        }
+      else if (score2 < 0  ||  iScore < score2) {
+        score2 = iScore;
+        sharedEneFrac2 = sharedEneFrac;
+      }
     } // end of loop through SimTracksters associated to Trackster
+    if (score2 > -1) {
+      histograms.h_score_trackster2bestCaloparticle2[i][count]->Fill(score2);
+      histograms.h_sharedenergy_trackster2bestCaloparticle2[i][count]->Fill(sharedEneFrac2);
+      histograms.h_energy_vs_score_trackster2bestCaloparticle2[i][count]->Fill(score2,
+                                                                               sharedEneFrac2);
+    }
   } // end of loop through Tracksters
 
 
@@ -3059,7 +3060,6 @@ else return false;
     // one tracksters, leading to efficiencies >1. This boolean is used to
     // avoid "over counting".
     bool cp_considered_efficient = false;
-    int assocDup = 0;
     for (const auto tstId : stsId_tstId_related) {
       // Now time for the denominator
       score3d_iSTS[tstId] /= scoreDenom;
@@ -3089,12 +3089,7 @@ else return false;
         if ((i == 1) && (tracksters[tstId].ticlIteration() == ticl::Trackster::SIM))
           if (tracksters[tstId].vertices().size() != sts.vertices().size())
             continue;
-        assocDup++;
-      }
-      if (assocDup > 0) {
-        tracksters_PurityDuplicate[tstId] = 1;
-        if (assocDup >= 2)
-          tracksters_PurityDuplicate[tstId] = 2;
+        tracksters_PurityDuplicate[tstId]++;
       }
     } // end of loop through Tracksters related to SimTrackster
 
@@ -3115,30 +3110,17 @@ else return false;
                                  << " " << sts.raw_energy() << " "
                                  << bestTstSharedEnergyFrac << "\n";
 
-      if (tracksters_PurityDuplicate[bestTstId] > 0) {
-        histograms.h_num_caloparticle_eta[i][count]->Fill(sts_eta);
-        histograms.h_num_caloparticle_phi[i][count]->Fill(sts_phi);
-        histograms.h_num_caloparticle_en[i][count]->Fill(sts_en);
-        histograms.h_num_caloparticle_pt[i][count]->Fill(sts_pt);
-      }
-
-      const auto best2 = std::min_element(std::begin(score3d_iSTS), std::end(score3d_iSTS),
-                                          [&best](const auto& obj1, const auto& obj2) { if (obj1 != *best) return obj1 < obj2;
-else return false;
-});
-      if (best2 != score3d_iSTS.end()) {
+      if (score3d_iSTS.size() > 1) {
+        auto best2 = (best == score3d_iSTS.begin()) ? std::next(best, 1) : score3d_iSTS.begin() ;
+        for (auto tstId = score3d_iSTS.begin(); tstId != score3d_iSTS.end()  &&  tstId != best; tstId++)
+          if (*tstId < *best2)
+            best2 = tstId;
         const auto best2TstId = std::distance(std::begin(score3d_iSTS), best2);
         const auto best2TstSharedEnergyFrac = tstSharedEnergy[iSTS][best2TstId] / energyDenom;
         histograms.h_scoreDupl_caloparticle2trackster[i][count]->Fill(*best2);
         histograms.h_sharedenergy_caloparticle2trackster_assoc2[i][count]->Fill(best2TstSharedEnergyFrac);
         histograms.h_energy_vs_score_caloparticle2bestTrackster2[i][count]->Fill(*best2,
                                                                                  best2TstSharedEnergyFrac);
-        if (tracksters_PurityDuplicate[best2TstId] >= 2) {
-          histograms.h_numDup_trackster_eta[i][count]->Fill(sts_eta);
-          histograms.h_numDup_trackster_phi[i][count]->Fill(sts_phi);
-          histograms.h_numDup_trackster_en[i][count]->Fill(sts_en);
-          histograms.h_numDup_trackster_pt[i][count]->Fill(sts_pt);
-        }
       }
     }
   }  // end of loop through SimTracksters
@@ -3159,14 +3141,27 @@ else return false;
     histograms.h_denom_trackster_en[i][count]->Fill(iTS_en);
     histograms.h_denom_trackster_pt[i][count]->Fill(iTS_pt);
 
-    const auto assocFakeMerge = tracksters_FakeMerge[tstId];
-    if (assocFakeMerge > 0) {
+    if (tracksters_PurityDuplicate[tstId] > 0) {
+      histograms.h_num_caloparticle_eta[i][count]->Fill(iTS_eta);
+      histograms.h_num_caloparticle_phi[i][count]->Fill(iTS_phi);
+      histograms.h_num_caloparticle_en[i][count]->Fill(iTS_en);
+      histograms.h_num_caloparticle_pt[i][count]->Fill(iTS_pt);
+
+      if (tracksters_PurityDuplicate[tstId] > 1) {
+        histograms.h_numDup_trackster_eta[i][count]->Fill(iTS_eta);
+        histograms.h_numDup_trackster_phi[i][count]->Fill(iTS_phi);
+        histograms.h_numDup_trackster_en[i][count]->Fill(iTS_en);
+        histograms.h_numDup_trackster_pt[i][count]->Fill(iTS_pt);
+      }
+    }
+
+    if (tracksters_FakeMerge[tstId] > 0) {
       histograms.h_num_trackster_eta[i][count]->Fill(iTS_eta);
       histograms.h_num_trackster_phi[i][count]->Fill(iTS_phi);
       histograms.h_num_trackster_en[i][count]->Fill(iTS_en);
       histograms.h_num_trackster_pt[i][count]->Fill(iTS_pt);
 
-      if (assocFakeMerge >= 2) {
+      if (tracksters_FakeMerge[tstId] > 1) {
         histograms.h_numMerge_trackster_eta[i][count]->Fill(iTS_eta);
         histograms.h_numMerge_trackster_phi[i][count]->Fill(iTS_phi);
         histograms.h_numMerge_trackster_en[i][count]->Fill(iTS_en);
