@@ -2810,13 +2810,12 @@ return v.first == hitid; });
                                             HGVHistoProducerAlgo::detIdInfoInCluster{stsPair.first, 0.f}); // only the first element is used for the matching (overloaded operator==)
           if (findSTSIt != detIdSimTSId_Map[elemId].end())
             cpFraction = findSTSIt->fraction;
-          else if (i==1) continue;
         }
         if (stsPair.second == FLT_MAX) {
           stsPair.second = 0.f;
         }
         stsPair.second +=
-            pow(min(rhFraction - cpFraction, rhFraction), 2) * hitEnergyWeight * invTracksterEnergyWeight;
+            min(pow(rhFraction - cpFraction, 2), pow(rhFraction, 2)) * hitEnergyWeight * invTracksterEnergyWeight;
       }
     } // end of loop through trackster rechits
 
@@ -3012,7 +3011,7 @@ else return false;
           if (tsPair.second.second == FLT_MAX) {
             tsPair.second.second = 0.f;
           }
-          tsPair.second.second += pow(min(tstFraction - cpFraction, cpFraction), 2) * hitEnergyWeight;
+          tsPair.second.second += min(pow(tstFraction - cpFraction, 2), pow(cpFraction, 2)) * hitEnergyWeight;
           hitsEnergyWeight += pow(cpFraction, 2) * hitEnergyWeight;
 
           LogDebug("HGCalValidator") << "\nTracksterId:\t" << tstId
