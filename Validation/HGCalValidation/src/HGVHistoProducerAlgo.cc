@@ -2468,7 +2468,9 @@ return v.first == hitid; });
         const auto lcId = getLCId(simTSs[iSTS].vertices(), layerClusters, hitid);
         //V9:maps the layers in -z: 0->51 and in +z: 52->103
         //V10:maps the layers in -z: 0->49 and in +z: 50->99
-        const auto hitLayerId = recHitTools_->getLayerWithOffset(hitid) + layers * ((recHitTools_->zside(hitid) + 1) >> 1) - 1;
+        const auto hitLayerId =
+            //recHitTools_->getLayerWithOffset(hitid) + layers * ((recHitTools_->zside(hitid) + 1) >> 1) - 1;
+            0;
         const auto itcheck = hitMap.find(hitid);
         //Checks whether the current hit belonging to sim cluster has a reconstructed hit.
         if ((i == 0  &&  itcheck != hitMap.end())  ||  (i == 1  &&  int(lcId) >= 0)) {
@@ -2610,14 +2612,23 @@ return v.first == hitid; });
       //here comparing with the calo particle map above the
       if (detIdToTracksterId_Map.find(rh_detid) == detIdToTracksterId_Map.end()) {
         detIdToTracksterId_Map[rh_detid] = std::vector<HGVHistoProducerAlgo::detIdInfoInTrackster>();
-      }
-      detIdToTracksterId_Map[rh_detid].emplace_back(
+        detIdToTracksterId_Map[rh_detid].emplace_back(
           HGVHistoProducerAlgo::detIdInfoInTrackster{tstId, lcId_r, rhFraction});
+      } else {
+        auto findTSIt = std::find(detIdToTracksterId_Map[rh_detid].begin(),
+                                  detIdToTracksterId_Map[rh_detid].end(),
+                                  HGVHistoProducerAlgo::detIdInfoInTrackster{tstId, 0, 0}); // only the first element is used for the matching (overloaded operator==)
+        if (findTSIt != detIdToTracksterId_Map[rh_detid].end()) {
+          if (i==0) findTSIt->fraction += rhFraction;
+        } else {
+          detIdToTracksterId_Map[rh_detid].emplace_back(
+            HGVHistoProducerAlgo::detIdInfoInTrackster{tstId, lcId_r, rhFraction});
+        }
+      }
 
       // if the fraction is zero or the hit does not belong to any calo
       // particle, set the caloparticleId for the hit to -1 this will
       // contribute to the number of noise hits
-
       // MR Remove the case in which the fraction is 0, since this could be a
       // real hit that has been marked as halo.
       if (rhFraction == 0.) {
@@ -2634,8 +2645,9 @@ return v.first == hitid; });
       } else {
         // Since the hit is belonging to the layer cluster, it must be also in the rechits map
         const auto hitEn = hitMap.find(rh_detid)->second->energy();
-        const int layerId =
-          recHitTools_->getLayerWithOffset(rh_detid) + layers * ((recHitTools_->zside(rh_detid) + 1) >> 1) - 1;
+        const auto layerId =
+            //recHitTools_->getLayerWithOffset(rh_detid) + layers * ((recHitTools_->zside(rh_detid) + 1) >> 1) - 1;
+            0;
 
         auto maxCPEnergyInTS = 0.f;
         auto maxCPId = -1;
@@ -2901,15 +2913,13 @@ return v.first == hitid; });
   for (unsigned int iSTS = 0; iSTS < nSimTracksters; ++iSTS) {
     const auto& sts = simTSs[iSTS];
     const auto& cpId = getCPId(sts, iSTS, cPHandle_id, cpToSc_SimTrackstersMap, simTSs_fromCP);
-    if (i == 0)
-      if (std::find(cPSelectedIndices.begin(), cPSelectedIndices.end(), cpId) == cPSelectedIndices.end())
-        continue;
+    if (i==0 && std::find(cPSelectedIndices.begin(), cPSelectedIndices.end(), cpId) == cPSelectedIndices.end())
+      continue;
 
+    const auto& hafLC = apply_LCMultiplicity(sts, layerClusters);
     float SimEnergy_LC = 0.f;
-    for (const auto& haf : apply_LCMultiplicity(sts, layerClusters)) {
+    for (const auto& haf : hafLC) {
       const auto lcId = getLCId(sts.vertices(), layerClusters, haf.first);
-      if (int(lcId) < 0) // For Pattern Recognition ignore non-clustered hits
-        continue;
       const auto iLC = std::find(sts.vertices().begin(), sts.vertices().end(), lcId);
       SimEnergy_LC += hitMap.at(haf.first)->energy() / sts.vertex_multiplicity(std::distance(std::begin(sts.vertices()), iLC));
     }
@@ -2921,12 +2931,12 @@ return v.first == hitid; });
 
     // Keep the Trackster ids that are related to
     // SimTrackster under study for the final filling of the score
-    std::vector<unsigned int> stsId_tstId_related;
+    std::set<unsigned int> stsId_tstId_related;
     auto& score3d_iSTS = score3d[iSTS];
 
     float SimEnergy = 0.f;
     float SimEnergyWeight = 0.f, hitsEnergyWeight = 0.f;
-    for (unsigned int layerId = 0; layerId < layers * 2; ++layerId) {
+    for (unsigned int layerId = 0; layerId < 1/*layers * 2*/; ++layerId) {
       const auto SimNumberOfHits = simOnLayer[layerId].hits_and_fractions.size();
       if (SimNumberOfHits == 0)
         continue;
@@ -2956,8 +2966,13 @@ return v.first == hitid; });
                                  << "\t" << std::setw(15) << maxEnergyTSperlayerinSim << "\t" << std::setw(20)
                                  << SimEnergyFractionInTSperlayer << "\n";
 
-      for (const auto& haf : simOnLayer[layerId].hits_and_fractions) {
+      for (const auto& haf : ((i==0) ? simOnLayer[layerId].hits_and_fractions : hafLC)) {
         const auto& hitDetId = haf.first;
+        const auto hitLayerId =
+            //recHitTools_->getLayerWithOffset(hitDetId) + layers * ((recHitTools_->zside(hitDetId) + 1) >> 1) - 1;
+            0;
+        if (i == 1  &&  layerId != hitLayerId)
+          continue;
         // Compute the correct normalization
         // Need to loop on the simOnLayer data structure since this is the
         // only one that has the compressed information for multiple usage
@@ -2965,11 +2980,6 @@ return v.first == hitid; });
         SimEnergyWeight += pow(haf.second * hitMap.at(hitDetId)->energy(), 2);
 
         const auto lcId = getLCId(sts.vertices(), layerClusters, hitDetId);
-        if (i == 1) { // For Pattern Recognition ignore non-clustered hits
-          if (int(lcId) < 0)
-            continue;
-        }
-
         float cpFraction = 0.f;
         if (i == 0) {
           cpFraction = haf.second;
@@ -2985,17 +2995,17 @@ return v.first == hitid; });
           hitWithNoTS = true;
         const HGCRecHit* hit = hitMap.find(hitDetId)->second;
         const auto hitEnergyWeight = pow(hit->energy(), 2);
+        hitsEnergyWeight += pow(cpFraction, 2) * hitEnergyWeight;
+
         for (auto& tsPair : simOnLayer[layerId].layerClusterIdToEnergyAndScore) {
           const auto tstId = tsPair.first;
-          if (std::find(std::begin(stsId_tstId_related), std::end(stsId_tstId_related), tstId) ==
-              std::end(stsId_tstId_related))
-            stsId_tstId_related.push_back(tstId);
+          stsId_tstId_related.insert(tstId);
 
           float tstFraction = 0.f;
           if (!hitWithNoTS) {
             const auto findTSIt = std::find(detIdToTracksterId_Map[hitDetId].begin(),
-                                             detIdToTracksterId_Map[hitDetId].end(),
-                                             HGVHistoProducerAlgo::detIdInfoInTrackster{tstId, 0, 0.f}); // only the first element is used for the matching (overloaded operator==)
+                                            detIdToTracksterId_Map[hitDetId].end(),
+                                            HGVHistoProducerAlgo::detIdInfoInTrackster{tstId, 0, 0.f}); // only the first element is used for the matching (overloaded operator==)
             if (findTSIt != detIdToTracksterId_Map[hitDetId].end()) {
               if (i == 0) {
                 tstFraction = findTSIt->fraction;
@@ -3007,13 +3017,12 @@ return v.first == hitid; });
               }
             }
           }
-          // Here do not divide as before by the layer cluster energy weight. Should sum first
+          // Here do not divide as before by the trackster energy weight. Should sum first
           // over all layers and divide with the total CP energy over all layers.
           if (tsPair.second.second == FLT_MAX) {
             tsPair.second.second = 0.f;
           }
           tsPair.second.second += min(pow(tstFraction - cpFraction, 2), pow(cpFraction, 2)) * hitEnergyWeight;
-          hitsEnergyWeight += pow(cpFraction, 2) * hitEnergyWeight;
 
           LogDebug("HGCalValidator") << "\nTracksterId:\t" << tstId
                                      << "\tSimTracksterId:\t" << iSTS
