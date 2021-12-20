@@ -3096,6 +3096,7 @@ return v.first == hitid; });
     // one tracksters, leading to efficiencies >1. This boolean is used to
     // avoid "over counting".
     bool cp_considered_efficient = false;
+    bool cp_considered_pure = false;
     for (const auto tstId : stsId_tstId_related) {
       // Now time for the denominator
       score3d_iSTS[tstId] /= scoreDenom;
@@ -3125,7 +3126,10 @@ return v.first == hitid; });
         if ((i == 1) && (tracksters[tstId].ticlIteration() == ticl::Trackster::SIM))
           if (tracksters[tstId].vertices().size() != sts.vertices().size())
             continue;
-        tracksters_PurityDuplicate[tstId]++;
+
+        if (tracksters_PurityDuplicate[tstId] < 1) tracksters_PurityDuplicate[tstId]++; // for Purity
+        if (cp_considered_pure) tracksters_PurityDuplicate[tstId]++; // for Duplicate
+        cp_considered_pure = true;
       }
     } // end of loop through Tracksters related to SimTrackster
 
