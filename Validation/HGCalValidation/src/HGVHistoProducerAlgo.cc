@@ -1102,9 +1102,11 @@ void HGVHistoProducerAlgo::bookTracksterHistos(DQMStore::IBooker& ibook, Histogr
 }
 
 void HGVHistoProducerAlgo::bookTracksterSTSHistos(DQMStore::IBooker& ibook, Histograms& histograms, const int i) {
-  const string ref[] = {"caloparticle", "simtrackster"};
-  const string refT[] = {"CaloParticle", "SimTrackster"};
+  const string ref[] = {"caloparticle", "simtrackster", "simtrackster_fromCP"};
+  const string refT[] = {"CaloParticle", "SimTrackster", "SimTrackster_fromCP"};
+  // Must be in sync with labels in PostProcessorHGCAL_cfi.py
   const string val[] = {"_Link", "_PR"};
+  //const string val[] = {"_CP", "_PR", "_Link"};
   const string rtos = ";score Reco-to-Sim";
   const string stor = ";score Sim-to-Reco";
   const string shREnFr = ";shared Reco energy fraction";
@@ -2494,7 +2496,7 @@ return v.first == hitid; });
             //0;
         const auto itcheck = hitMap.find(hitid);
         //Checks whether the current hit belonging to sim cluster has a reconstructed hit.
-        if ((i == 0  &&  itcheck != hitMap.end())  ||  (i == 1  &&  int(lcId) >= 0)) {
+        if ((i == 0  &&  itcheck != hitMap.end())  ||  (i > 0  &&  int(lcId) >= 0)) {
           const auto elemId = (i == 0) ? hitid : lcId;
           const auto iLC = std::find(simTSs[iSTS].vertices().begin(), simTSs[iSTS].vertices().end(), lcId);
           const auto lcFraction = 1.f / simTSs[iSTS].vertex_multiplicity(std::distance(std::begin(simTSs[iSTS].vertices()), iLC));
@@ -2569,7 +2571,7 @@ return v.first == hitid; });
   for (unsigned int tstId = 0; tstId < nTracksters; ++tstId) {
     const auto& tst = tracksters[tstId];
     if (tstId == 0)
-      if ((i == 1) && (tst.ticlIteration() == ticl::Trackster::SIM)) {
+      if ((i > 0) && (tst.ticlIteration() == ticl::Trackster::SIM)) {
         ScoreCutSTStoTSPurDup = ScoreCutSTStoTSPurDup_[i];
         ScoreCutTStoSTSFakeMerge = ScoreCutTStoSTSFakeMerge_[i];
       }
@@ -2805,7 +2807,7 @@ return v.first == hitid; });
       float hitFr = 0.f;
       if (i == 0) {
         hitFr = haf.second;
-      } else if (i == 1) {
+      } else {
         const auto lcId = getLCId(tst.vertices(), layerClusters, haf.first);
         const auto iLC = std::find(tst.vertices().begin(), tst.vertices().end(), lcId);
         hitFr = 1.f / tst.vertex_multiplicity(std::distance(std::begin(tst.vertices()), iLC));
@@ -2822,7 +2824,7 @@ return v.first == hitid; });
       if (i == 0) {
         elemId = rh_detid.rawId();
         rhFraction = haf.second;
-      } else if (i == 1) {
+      } else {
         const auto lcId = getLCId(tst.vertices(), layerClusters, rh_detid);
         elemId = lcId;
         const auto iLC = std::find(tst.vertices().begin(), tst.vertices().end(), lcId);
@@ -2859,7 +2861,7 @@ return v.first == hitid; });
     tracksters_FakeMerge[tstId] = std::count_if(std::begin(stsInTrackster[tstId]),
                                                 std::end(stsInTrackster[tstId]),
                                                 [&, i, ScoreCutTStoSTSFakeMerge](const auto& obj) {
-      if ((i == 1) && (tst.ticlIteration() == ticl::Trackster::SIM))
+      if ((i > 0) && (tst.ticlIteration() == ticl::Trackster::SIM))
         if (tst.vertices().size() != simTSs[obj.first].vertices().size())
           return false;
       return obj.second < ScoreCutTStoSTSFakeMerge;
@@ -3004,7 +3006,7 @@ return v.first == hitid; });
         float cpFraction = 0.f;
         if (i == 0) {
           cpFraction = haf.second;
-        } else if (i == 1) {
+        } else {
           const auto iLC = std::find(sts.vertices().begin(), sts.vertices().end(), lcId);
           cpFraction = 1.f / sts.vertex_multiplicity(std::distance(std::begin(sts.vertices()), iLC));
         }
@@ -3030,7 +3032,7 @@ return v.first == hitid; });
             if (findTSIt != detIdToTracksterId_Map[hitDetId].end()) {
               if (i == 0) {
                 tstFraction = findTSIt->fraction;
-              } else if (i == 1) {
+              } else {
                 const auto iLC = std::find(tracksters[tstId].vertices().begin(), tracksters[tstId].vertices().end(), findTSIt->clusterId);
                 if (iLC != tracksters[tstId].vertices().end()) {
                   tstFraction = 1.f / tracksters[tstId].vertex_multiplicity(std::distance(std::begin(tracksters[tstId].vertices()), iLC));
@@ -3118,7 +3120,7 @@ return v.first == hitid; });
       }
 
       if (score3d_iSTS[tstId] < ScoreCutSTStoTSPurDup) {
-        if ((i == 1) && (tracksters[tstId].ticlIteration() == ticl::Trackster::SIM))
+        if ((i > 0) && (tracksters[tstId].ticlIteration() == ticl::Trackster::SIM))
           if (tracksters[tstId].vertices().size() != sts.vertices().size())
             continue;
 
@@ -3385,7 +3387,7 @@ void HGVHistoProducerAlgo::fill_trackster_histos(const Histograms& histograms,
   histograms.h_conttracksternum[count]->Fill(totNContTstZp + totNContTstZm);
   histograms.h_nonconttracksternum[count]->Fill(totNNotContTstZp + totNNotContTstZm);
 
-  // Linking
+  // CaloPaericle
   tracksters_to_SimTracksters(histograms,
                               count,
                               tracksters,
@@ -3418,6 +3420,24 @@ void HGVHistoProducerAlgo::fill_trackster_histos(const Histograms& histograms,
                               cPSelectedIndices,
                               hitMap,
                               layers);
+/*
+  // Linking
+  tracksters_to_SimTracksters(histograms,
+                              count,
+                              tracksters,
+                              layerClusters,
+                              simTSs_fromCP,
+                              2,
+                              simTSs_fromCP,
+                              cpToSc_SimTrackstersMap,
+                              sC,
+                              cPHandle_id,
+                              cP,
+                              cPIndices,
+                              cPSelectedIndices,
+                              hitMap,
+                              layers);
+*/
 }
 
 double HGVHistoProducerAlgo::distance2(const double x1,
