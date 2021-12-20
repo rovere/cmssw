@@ -357,7 +357,7 @@ hgcal::association LCToSCAssociatorByEnergyScoreImpl::makeConnections(
     // Compute the correct normalization.
     // It is the inverse of the denominator of the LCToSC score formula. Observe that this is the sum of the squares.
     float invLayerClusterEnergyWeight = 0.f;
-    for (auto const& haf : clusters[lcId].hitsAndFractions()) {
+    for (auto const& haf : hits_and_fractions) {
       invLayerClusterEnergyWeight +=
           (haf.second * hitMap_->at(haf.first)->energy()) * (haf.second * hitMap_->at(haf.first)->energy());
     }
@@ -382,7 +382,7 @@ hgcal::association LCToSCAssociatorByEnergyScoreImpl::makeConnections(
             scFraction = findHitIt->fraction;
         }
         scPair.second +=
-            (rhFraction - scFraction) * (rhFraction - scFraction) * hitEnergyWeight * invLayerClusterEnergyWeight;
+            std::pow(std::min(rhFraction - scFraction, rhFraction), 2) * hitEnergyWeight * invLayerClusterEnergyWeight;
 #ifdef EDM_ML_DEBUG
         LogDebug("LCToSCAssociatorByEnergyScoreImpl")
             << "rh_detid:\t" << (uint32_t)rh_detid << "\tlayerClusterId:\t" << lcId << "\t"
@@ -466,7 +466,7 @@ hgcal::association LCToSCAssociatorByEnergyScoreImpl::makeConnections(
               lcFraction = findHitIt->fraction;
           }
           lcPair.second.second +=
-              (lcFraction - scFraction) * (lcFraction - scFraction) * hitEnergyWeight * invSCEnergyWeight;
+              std::pow(std::min(lcFraction - scFraction, scFraction), 2) * hitEnergyWeight * invSCEnergyWeight;
 #ifdef EDM_ML_DEBUG
           LogDebug("LCToSCAssociatorByEnergyScoreImpl")
               << "scDetId:\t" << (uint32_t)sc_hitDetId << "\tlayerClusterId:\t" << layerClusterId << "\t"
