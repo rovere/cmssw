@@ -34,16 +34,6 @@ void EGammaPCAHelper::setRecHitTools(const hgcal::RecHitTools* recHitTools) {
   maxlayer_ = recHitTools_->lastLayerBH();
 }
 
-void EGammaPCAHelper::storeRecHits(const reco::HGCalMultiCluster& cluster) {
-  theCluster_ = &cluster;
-  std::vector<std::pair<DetId, float>> result;
-  for (reco::HGCalMultiCluster::component_iterator it = cluster.begin(); it != cluster.end(); it++) {
-    const std::vector<std::pair<DetId, float>>& hf = (*it)->hitsAndFractions();
-    result.insert(result.end(), hf.begin(), hf.end());
-  }
-  storeRecHits(result);
-}
-
 void EGammaPCAHelper::storeRecHits(const reco::CaloCluster& cluster) {
   theCluster_ = &cluster;
   storeRecHits(cluster.hitsAndFractions());

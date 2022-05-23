@@ -76,44 +76,7 @@ float ClusterTools::getClusterHadronFraction(const reco::CaloCluster& clus) cons
   return fraction;
 }
 
-math::XYZPoint ClusterTools::getMultiClusterPosition(const reco::HGCalMultiCluster& clu) const {
-  if (clu.clusters().empty())
-    return math::XYZPoint();
-
-  double acc_x = 0.0;
-  double acc_y = 0.0;
-  double acc_z = 0.0;
-  double totweight = 0.;
-  double mcenergy = getMultiClusterEnergy(clu);
-  for (const auto& ptr : clu.clusters()) {
-    if (mcenergy != 0) {
-      if (ptr->energy() < .01 * mcenergy)
-        continue;  //cutoff < 1% layer contribution
-    }
-    const double weight = ptr->energy();  // weigth each corrdinate only by the total energy of the layer cluster
-    acc_x += ptr->x() * weight;
-    acc_y += ptr->y() * weight;
-    acc_z += ptr->z() * weight;
-    totweight += weight;
-  }
-  if (totweight != 0) {
-    acc_x /= totweight;
-    acc_y /= totweight;
-    acc_z /= totweight;
-  }
-  // return x/y/z in absolute coordinates
-  return math::XYZPoint(acc_x, acc_y, acc_z);
-}
-
 int ClusterTools::getLayer(const DetId detid) const { return rhtools_.getLayerWithOffset(detid); }
-
-double ClusterTools::getMultiClusterEnergy(const reco::HGCalMultiCluster& clu) const {
-  double acc = 0.0;
-  for (const auto& ptr : clu.clusters()) {
-    acc += ptr->energy();
-  }
-  return acc;
-}
 
 bool ClusterTools::getWidths(const reco::CaloCluster& clus,
                              double& sigmaetaeta,

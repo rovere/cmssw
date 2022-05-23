@@ -51,6 +51,4 @@
 #include "DataFormats/ParticleFlowReco/interface/RecoPFClusterRefCandidate.h"
 #include "DataFormats/ParticleFlowReco/interface/RecoPFClusterRefCandidateFwd.h"
 
-#include "DataFormats/ParticleFlowReco/interface/HGCalMultiCluster.h"
-
 #include <map>

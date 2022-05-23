@@ -15,7 +15,6 @@
 #include "DataFormats/HGCRecHit/interface/HGCRecHitCollections.h"
 #include "DataFormats/ForwardDetId/interface/HGCalDetId.h"
 #include "DataFormats/Math/interface/Vector3D.h"
-#include "DataFormats/ParticleFlowReco/interface/HGCalMultiCluster.h"
 
 #include "RecoEgamma/EgammaTools/interface/Spot.h"
 #include "RecoEgamma/EgammaTools/interface/LongDeps.h"
@@ -39,7 +38,6 @@ namespace hgcal {
 
     // for the GsfElectrons
     void storeRecHits(const reco::CaloCluster &theCluster);
-    void storeRecHits(const reco::HGCalMultiCluster &cluster);
 
     const TPrincipal &pcaResult();
     /// to set once per event

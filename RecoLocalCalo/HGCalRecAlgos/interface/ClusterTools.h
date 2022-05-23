@@ -8,7 +8,6 @@
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
 #include "DataFormats/HGCRecHit/interface/HGCRecHitCollections.h"
 #include "DataFormats/CaloRecHit/interface/CaloCluster.h"
-#include "DataFormats/ParticleFlowReco/interface/HGCalMultiCluster.h"
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
 #include "Geometry/Records/interface/CaloGeometryRecord.h"
 
@@ -36,11 +35,7 @@ namespace hgcal {
 
     float getClusterHadronFraction(const reco::CaloCluster &) const;
 
-    math::XYZPoint getMultiClusterPosition(const reco::HGCalMultiCluster &) const;
-
     int getLayer(const DetId) const;
-
-    double getMultiClusterEnergy(const reco::HGCalMultiCluster &) const;
 
     // only for EE
     bool getWidths(const reco::CaloCluster &clus,
@@ -50,14 +45,6 @@ namespace hgcal {
                    double &sigmaphiphilog) const;
 
   private:
-    std::vector<size_t> sort_by_z(const reco::HGCalMultiCluster &v) const {
-      std::vector<size_t> idx(v.size());
-      std::iota(std::begin(idx), std::end(idx), 0);
-      sort(
-          idx.begin(), idx.end(), [&v](size_t i1, size_t i2) { return v.clusters()[i1]->z() < v.clusters()[i2]->z(); });
-      return idx;
-    }
-
     RecHitTools rhtools_;
     const edm::EDGetTokenT<HGCRecHitCollection> eetok, fhtok, bhtok;
     const edm::ESGetToken<CaloGeometry, CaloGeometryRecord> caloGeometryToken_;
