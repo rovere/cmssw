@@ -72,8 +72,9 @@ void PatternRecognitionbyCLUE3D<TILES>::dumpTracksters(const std::vector<std::pa
                                                        const std::vector<Trackster> &tracksters) const {
   if (PatternRecognitionAlgoBaseT<TILES>::algo_verbosity_ > VerbosityLevel::Advanced) {
     edm::LogVerbatim("PatternRecognitionbyCLUE3D")
-        << "[evt, tracksterId, cells, prob_photon, prob_ele, prob_chad, prob_nhad, layer_i, x_i, y_i, eta_i, phi_i, "
-           "energy_i, radius_i, rho_i, z_extension, delta_tr, delta_lyr, isSeed_i";
+        << "[evt, trId, sd_l, sd_lcIdx, cls, p_ph, p_e, p_ch, p_nh, l_i, s_idx, x_i, y_i, z_i, r_i, r_i/z_i, eta_i, "
+           "phi_i, "
+           "eng_i, rad_i, rho_i, z_ext, dlt_tr, dlt_l, lyr_nst, soa_nst, isSeed_i";
   }
 
   int num = 0;
@@ -84,17 +85,24 @@ void PatternRecognitionbyCLUE3D<TILES>::dumpTracksters(const std::vector<std::pa
       auto const &thisLayer = clusters_[lyrIdx];
       if (PatternRecognitionAlgoBaseT<TILES>::algo_verbosity_ > VerbosityLevel::Advanced) {
         edm::LogVerbatim("PatternRecognitionbyCLUE3D_NTP")
-            << std::setw(4) << eventNumber << sep << std::setw(4) << num << sep << std::setw(4) << t.vertices().size()
-            << sep << std::setw(8) << t.id_probability(ticl::Trackster::ParticleType::photon) << sep << std::setw(8)
+            << std::setw(4) << eventNumber << sep << std::setw(4) << num << sep << t.seedID() << sep << t.seedIndex()
+            << sep << std::setw(4) << t.vertices().size() << sep << std::setw(8) << std::setprecision(2)
+            << t.id_probability(ticl::Trackster::ParticleType::photon) << sep << std::setw(8)
             << t.id_probability(ticl::Trackster::ParticleType::electron) << sep << std::setw(8)
             << t.id_probability(ticl::Trackster::ParticleType::charged_hadron) << sep << std::setw(8)
             << t.id_probability(ticl::Trackster::ParticleType::neutral_hadron) << sep << std::setw(4) << lyrIdx << sep
-            << std::setw(10) << thisLayer.x[soaIdx] << sep << std::setw(10) << thisLayer.y[soaIdx] << sep
-            << std::setw(10) << thisLayer.eta[soaIdx] << sep << std::setw(10) << thisLayer.phi[soaIdx] << sep
+            << soaIdx << sep << std::setprecision(5) << std::setw(10) << thisLayer.x[soaIdx] << sep << std::setw(10)
+            << thisLayer.y[soaIdx] << sep << thisLayer.z[soaIdx] << sep << std::setw(10)
+            << sqrt(thisLayer.x[soaIdx] * thisLayer.x[soaIdx] + thisLayer.y[soaIdx] * thisLayer.y[soaIdx]) << sep
+            << std::setw(10)
+            << sqrt(thisLayer.x[soaIdx] * thisLayer.x[soaIdx] + thisLayer.y[soaIdx] * thisLayer.y[soaIdx]) /
+                   thisLayer.z[soaIdx]
+            << sep << std::setw(10) << thisLayer.eta[soaIdx] << sep << std::setw(10) << thisLayer.phi[soaIdx] << sep
             << std::setw(10) << thisLayer.energy[soaIdx] << sep << std::setw(10) << thisLayer.radius[soaIdx] << sep
             << std::setw(10) << thisLayer.rho[soaIdx] << sep << std::setw(10) << thisLayer.z_extension[soaIdx] << sep
             << std::setw(10) << thisLayer.delta[soaIdx].first << sep << std::setw(10) << thisLayer.delta[soaIdx].second
-            << sep << std::setw(4) << thisLayer.isSeed[soaIdx];
+            << sep << std::setw(10) << thisLayer.nearestHigher[soaIdx].first << sep << std::setw(10)
+            << thisLayer.nearestHigher[soaIdx].second << sep << std::setw(4) << thisLayer.isSeed[soaIdx];
       }
     }
     num++;
@@ -109,13 +117,15 @@ void PatternRecognitionbyCLUE3D<TILES>::dumpClusters(const TILES &tiles,
     edm::LogVerbatim("PatternRecognitionbyCLUE3D") << "[evt, lyr, Seed,      x,       y,       z, r/|z|,   eta,   phi, "
                                                       "etab,  phib, cells, enrgy, e/rho,   rho,   z_ext, "
                                                       "   dlt_tr,   dlt_lyr, "
-                                                      " nestHL, nestHSoaIdx, radius, clIdx, lClOrigIdx, SOAidx";
+                                                      " nestHL, nestHSoaIdx, radius, clIdx, lClOrigIdx, SOAidx, cumEn";
   }
 
   for (unsigned int layer = 0; layer < clusters_.size(); layer++) {
     auto const &thisLayer = clusters_[layer];
+    float cumulative_energy_onlayer = 0.f;
     int num = 0;
     for (auto v : thisLayer.x) {
+      cumulative_energy_onlayer += thisLayer.energy[num];
       if (PatternRecognitionAlgoBaseT<TILES>::algo_verbosity_ > VerbosityLevel::Advanced) {
         edm::LogVerbatim("PatternRecognitionbyCLUE3D")
             << std::setw(4) << eventNumber << ", " << std::setw(3) << layer << ", " << std::setw(4)
@@ -130,7 +140,7 @@ void PatternRecognitionbyCLUE3D<TILES>::dumpClusters(const TILES &tiles,
             << thisLayer.nearestHigher[num].first << ", " << std::setw(10) << thisLayer.nearestHigher[num].second
             << ", " << std::defaultfloat << std::setprecision(3) << thisLayer.radius[num] << ", " << std::setw(5)
             << thisLayer.clusterIndex[num] << ", " << std::setw(4) << thisLayer.layerClusterOriginalIdx[num] << ", "
-            << std::setw(4) << num << ", ClusterInfo";
+            << std::setw(4) << num << ", " << std::setw(6) << cumulative_energy_onlayer;
       }
       ++num;
     }
@@ -660,7 +670,10 @@ void PatternRecognitionbyCLUE3D<TILES>::calculateDistanceToHigher(
   for (unsigned int i = 0; i < numberOfClusters; i++) {
     if (PatternRecognitionAlgoBaseT<TILES>::algo_verbosity_ > VerbosityLevel::Advanced) {
       edm::LogVerbatim("PatternRecognitionbyCLUE3D")
-          << "Starting searching nearestHigher on " << layerId << " with rho: " << clustersOnLayer.rho[i]
+          << "Starting searching nearestHigher on " << layerId << " Idx "
+          << layerIdx2layerandSoa[clustersOnLayer.layerClusterOriginalIdx[i]].first << " SoAIdx "
+          << layerIdx2layerandSoa[clustersOnLayer.layerClusterOriginalIdx[i]].second
+          << " with rho: " << clustersOnLayer.rho[i]
           << " at eta, phi: " << tiles[layerId].etaBin(clustersOnLayer.eta[i]) << ", "
           << tiles[layerId].phiBin(clustersOnLayer.phi[i]);
     }
@@ -738,6 +751,13 @@ void PatternRecognitionbyCLUE3D<TILES>::calculateDistanceToHigher(
               nearest_distances = std::make_pair(sqrt(dist_transverse), dist_layers);
               // update i_nearestHigher
               i_nearestHigher = layerandSoa;
+              if (PatternRecognitionAlgoBaseT<TILES>::algo_verbosity_ > VerbosityLevel::Advanced) {
+                edm::LogVerbatim("PatternRecognitionbyCLUE3D")
+                    << "Updating nearestHigher on " << currentLayer
+                    << " with rho: " << clustersOnOtherLayer.rho[layerandSoa.second]
+                    << " on layerIdxInSOA: " << layerandSoa.first << ", " << layerandSoa.second
+                    << " with distance: " << sqrt(dist) << " foundHigher: " << foundHigher;
+              }
             }
           }  // End of loop on clusters
         }    // End of loop on phi bins
