@@ -944,7 +944,7 @@ void PatternRecognitionbyCLUE3D<TILES>::fillPSetDescription(edm::ParameterSetDes
   iDesc.add<int>("criticalZDistanceLyr", 5)
       ->setComment("Minimal distance in layers along the Z axis from nearestHigher to become a seed");
   iDesc.add<double>("outlierMultiplier", 2);
-  iDesc.add<int>("minNumLayerCluster", 2)->setComment("Not Inclusive");
+  iDesc.add<int>("minNumLayerCluster", 3)->setComment("Not Inclusive");
   iDesc.add<std::string>("eid_input_name", "input");
   iDesc.add<std::string>("eid_output_name_energy", "output/regressed_energy");
   iDesc.add<std::string>("eid_output_name_id", "output/id_probabilities");
