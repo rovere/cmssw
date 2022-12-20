@@ -14,6 +14,7 @@ namespace ticl {
     PatternRecognitionbyCLUE3D(const edm::ParameterSet& conf, edm::ConsumesCollector);
     ~PatternRecognitionbyCLUE3D() override = default;
 
+    void deleteAndReassignTracksters(std::vector<Trackster>&, const std::vector<std::pair<int, int>>&);
     void makeTracksters(const typename PatternRecognitionAlgoBaseT<TILES>::Inputs& input,
                         std::vector<Trackster>& result,
                         std::unordered_map<int, std::vector<int>>& seedToTracksterAssociation) override;

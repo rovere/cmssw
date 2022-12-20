@@ -158,6 +158,65 @@ void PatternRecognitionbyCLUE3D<TILES>::dumpClusters(const TILES &tiles,
 }
 
 template <typename TILES>
+void PatternRecognitionbyCLUE3D<TILES>::deleteAndReassignTracksters(
+    std::vector<Trackster> &result, const std::vector<std::pair<int, int>> &layerIdx2layerandSoa) {
+  // Loop over tracksters
+  // Check if the tracksters should be marked as to-be-deleted
+  // If so, check if the seed of that Trackster has a connection
+  // Check if the Tracksters of the connection should be mark as to-be-deleted
+  // If not, merge the Tracksters to-be-deleted with its parent.
+  // Remove the original Tracksters to-be-deleted that now is either merged or remains to-be-deleted
+  auto toBeDeleted = [&](const Trackster &t) {
+    // Count the number of unique layers that this Trackster spans.
+    std::vector<int> layers;
+    layers.reserve(64);
+    for (auto v : t.vertices())
+      layers.push_back(layerIdx2layerandSoa[v].first);
+    std::sort(layers.begin(), layers.end());
+    int uniqueLayers = std::unique(layers.begin(), layers.end()) - layers.begin();
+
+    return (static_cast<int>(t.vertices().size()) < minNumLayerCluster_ || uniqueLayers <= minNumLayerCluster_);
+  };
+
+  int counter = 0;
+  for (auto &t : result) {
+    if (toBeDeleted(t)) {
+      if (PatternRecognitionAlgoBaseT<TILES>::algo_verbosity_ > VerbosityLevel::Advanced) {
+        edm::LogVerbatim("PatternRecognitionbyCLUE3D") << "Trackster " << counter << " marked to be deleted";
+      }
+      auto layer = (unsigned int)t.seedID().id();
+      auto soa_idx = t.seedIndex();
+      if (clusters_[layer].nearestHigher[soa_idx].first != -1) {
+        auto layer_parent = clusters_[layer].nearestHigher[soa_idx].first;
+        auto soa_idx_parent = clusters_[layer].nearestHigher[soa_idx].second;
+        auto trackster_idx = clusters_[layer_parent].clusterIndex[soa_idx_parent];
+        if (PatternRecognitionAlgoBaseT<TILES>::algo_verbosity_ > VerbosityLevel::Advanced) {
+          edm::LogVerbatim("PatternRecognitionbyCLUE3D")
+              << "Trackster " << counter << " has seed on " << layer << " " << soa_idx << " has a parent on "
+              << layer_parent << " " << soa_idx_parent << " that belongs to Trackster " << trackster_idx;
+        }
+        if (trackster_idx >= 0 && !toBeDeleted(result[trackster_idx])) {
+          if (PatternRecognitionAlgoBaseT<TILES>::algo_verbosity_ > VerbosityLevel::Advanced) {
+            edm::LogVerbatim("PatternRecognitionbyCLUE3D")
+                << "Parent Trackster " << trackster_idx << " not marked as to-be-deleted: merging";
+          }
+          auto &trackster_parent = result[trackster_idx];
+          for (auto v : t.vertices()) {
+            trackster_parent.vertices().push_back(v);
+            trackster_parent.vertex_multiplicity().push_back(1);
+          }
+        }
+      }
+    }
+    ++counter;
+  }
+
+  // Remove what has to be removed
+  result.erase(std::remove_if(std::begin(result), std::end(result), toBeDeleted), result.end());
+  result.shrink_to_fit();
+}
+
+template <typename TILES>
 void PatternRecognitionbyCLUE3D<TILES>::makeTracksters(
     const typename PatternRecognitionAlgoBaseT<TILES>::Inputs &input,
     std::vector<Trackster> &result,
@@ -313,6 +372,9 @@ void PatternRecognitionbyCLUE3D<TILES>::makeTracksters(
         }
         result[thisLayer.clusterIndex[lc]].vertices().push_back(thisLayer.layerClusterOriginalIdx[lc]);
         result[thisLayer.clusterIndex[lc]].vertex_multiplicity().push_back(1);
+        if (thisLayer.isSeed[lc]) {
+          result[thisLayer.clusterIndex[lc]].setSeed({0, (edm::ProductIndex)layer}, lc);
+        }
         // loop over followers
         for (auto [follower_lyrIdx, follower_soaIdx] : thisLayer.followers[lc]) {
           std::array<unsigned int, 2> edge = {
@@ -324,12 +386,7 @@ void PatternRecognitionbyCLUE3D<TILES>::makeTracksters(
     }
   }
 
-  result.erase(
-      std::remove_if(std::begin(result),
-                     std::end(result),
-                     [&](auto const &v) { return static_cast<int>(v.vertices().size()) < minNumLayerCluster_; }),
-      result.end());
-  result.shrink_to_fit();
+  deleteAndReassignTracksters(result, layerIdx2layerandSoa);
 
   ticl::assignPCAtoTracksters(result,
                               input.layerClusters,
