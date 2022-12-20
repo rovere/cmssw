@@ -25,6 +25,7 @@ ticlTrackstersCLUE3DHigh = _trackstersProducer.clone(
         criticalDensity = 0.6,
         criticalEtaPhiDistance = 0.025,
         kernelDensityFactor = 0.2,
+        densitySiblingLayers = 2,
         algo_verbosity = 0
     )
 
