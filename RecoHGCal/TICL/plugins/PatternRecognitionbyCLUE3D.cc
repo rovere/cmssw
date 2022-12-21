@@ -205,6 +205,15 @@ void PatternRecognitionbyCLUE3D<TILES>::deleteAndReassignTracksters(
             trackster_parent.vertices().push_back(v);
             trackster_parent.vertex_multiplicity().push_back(1);
           }
+          // Propagate also the edges
+          for (auto e : t.edges()) {
+            trackster_parent.edges().push_back(e);
+          }
+          // Link the seed with the parent
+          std::array<unsigned int, 2> edge = {
+              {(unsigned int)clusters_[layer].layerClusterOriginalIdx[soa_idx],
+               (unsigned int)clusters_[layer_parent].layerClusterOriginalIdx[soa_idx_parent]}};
+          trackster_parent.edges().push_back(edge);
         }
       }
     }
