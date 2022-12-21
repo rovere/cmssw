@@ -74,7 +74,7 @@ void PatternRecognitionbyCLUE3D<TILES>::dumpTracksters(const std::vector<std::pa
     edm::LogVerbatim("PatternRecognitionbyCLUE3D")
         << "[evt, trId, sd_l, sd_lcIdx, cls, p_ph, p_e, p_ch, p_nh, l_i, s_idx, x_i, y_i, z_i, r_i, r_i/z_i, eta_i, "
            "phi_i, "
-           "eng_i, rad_i, rho_i, z_ext, dlt_tr, dlt_l, lyr_nst, soa_nst, isSeed_i";
+           "mips_i, eng_i, rad_i, rho_i, z_ext, dlt_tr, dlt_l, lyr_nst, soa_nst, isSeed_i";
   }
 
   int num = 0;
@@ -98,11 +98,12 @@ void PatternRecognitionbyCLUE3D<TILES>::dumpTracksters(const std::vector<std::pa
             << sqrt(thisLayer.x[soaIdx] * thisLayer.x[soaIdx] + thisLayer.y[soaIdx] * thisLayer.y[soaIdx]) /
                    thisLayer.z[soaIdx]
             << sep << std::setw(10) << thisLayer.eta[soaIdx] << sep << std::setw(10) << thisLayer.phi[soaIdx] << sep
-            << std::setw(10) << thisLayer.energy[soaIdx] << sep << std::setw(10) << thisLayer.radius[soaIdx] << sep
-            << std::setw(10) << thisLayer.rho[soaIdx] << sep << std::setw(10) << thisLayer.z_extension[soaIdx] << sep
-            << std::setw(10) << thisLayer.delta[soaIdx].first << sep << std::setw(10) << thisLayer.delta[soaIdx].second
-            << sep << std::setw(10) << thisLayer.nearestHigher[soaIdx].first << sep << std::setw(10)
-            << thisLayer.nearestHigher[soaIdx].second << sep << std::setw(4) << thisLayer.isSeed[soaIdx];
+            << std::setw(10) << thisLayer.mips[soaIdx] << sep << thisLayer.energy[soaIdx] << sep << std::setw(10)
+            << thisLayer.radius[soaIdx] << sep << std::setw(10) << thisLayer.rho[soaIdx] << sep << std::setw(10)
+            << thisLayer.z_extension[soaIdx] << sep << std::setw(10) << thisLayer.delta[soaIdx].first << sep
+            << std::setw(10) << thisLayer.delta[soaIdx].second << sep << std::setw(10)
+            << thisLayer.nearestHigher[soaIdx].first << sep << std::setw(10) << thisLayer.nearestHigher[soaIdx].second
+            << sep << std::setw(4) << thisLayer.isSeed[soaIdx];
       }
     }
     num++;
@@ -115,7 +116,7 @@ void PatternRecognitionbyCLUE3D<TILES>::dumpClusters(const TILES &tiles,
                                                      const int eventNumber) const {
   if (PatternRecognitionAlgoBaseT<TILES>::algo_verbosity_ > VerbosityLevel::Advanced) {
     edm::LogVerbatim("PatternRecognitionbyCLUE3D") << "[evt, lyr, Seed,      x,       y,       z, r/|z|,   eta,   phi, "
-                                                      "etab,  phib, cells, enrgy, e/rho,   rho,   z_ext, "
+                                                      "etab,  phib, cells, mips, enrgy, e/rho,   rho,   z_ext, "
                                                       "   dlt_tr,   dlt_lyr, "
                                                       " nestHL, nestHSoaIdx, radius, clIdx, lClOrigIdx, SOAidx, cumEn";
   }
@@ -133,7 +134,7 @@ void PatternRecognitionbyCLUE3D<TILES>::dumpClusters(const TILES &tiles,
             << ", " << thisLayer.z[num] << ", " << thisLayer.r_over_absz[num] << ", " << thisLayer.eta[num] << ", "
             << thisLayer.phi[num] << ", " << std::setw(5) << tiles[layer].etaBin(thisLayer.eta[num]) << ", "
             << std::setw(5) << tiles[layer].phiBin(thisLayer.phi[num]) << ", " << std::setw(4) << thisLayer.cells[num]
-            << ", " << std::setprecision(3) << thisLayer.energy[num] << ", "
+            << ", " << std::setprecision(3) << thisLayer.mips[num] << ", " << thisLayer.energy[num] << ", "
             << (thisLayer.energy[num] / thisLayer.rho[num]) << ", " << thisLayer.rho[num] << ", "
             << thisLayer.z_extension[num] << ", " << std::scientific << thisLayer.delta[num].first << ", "
             << std::setw(10) << thisLayer.delta[num].second << ", " << std::setw(5)
@@ -334,6 +335,7 @@ void PatternRecognitionbyCLUE3D<TILES>::makeTracksters(
     clusters_[layer].cells.push_back(lc.hitsAndFractions().size());
     clusters_[layer].isSilicon.push_back(rhtools_.isSilicon(detId));
     clusters_[layer].energy.emplace_back(lc.energy());
+    clusters_[layer].mips.emplace_back(lc.correctedEnergy());
     clusters_[layer].isSeed.push_back(false);
     clusters_[layer].clusterIndex.emplace_back(-1);
     clusters_[layer].layerClusterOriginalIdx.emplace_back(layerIdx++);

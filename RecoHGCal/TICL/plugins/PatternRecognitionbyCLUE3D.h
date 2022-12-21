@@ -38,6 +38,7 @@ namespace ticl {
       std::vector<uint8_t> isSilicon;
 
       std::vector<float> energy;
+      std::vector<float> mips;
       std::vector<float> rho;
       std::vector<float> z_extension;
 
@@ -59,6 +60,7 @@ namespace ticl {
         cells.clear();
         isSilicon.clear();
         energy.clear();
+        mips.clear();
         rho.clear();
         z_extension.clear();
         delta.clear();
@@ -80,6 +82,7 @@ namespace ticl {
         cells.shrink_to_fit();
         isSilicon.shrink_to_fit();
         energy.shrink_to_fit();
+        mips.shrink_to_fit();
         rho.shrink_to_fit();
         z_extension.shrink_to_fit();
         delta.shrink_to_fit();
