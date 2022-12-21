@@ -168,6 +168,7 @@ private:
     std::vector<float> phi;
 
     std::vector<float> weight;
+    std::vector<float> mips;
     std::vector<float> rho;
 
     std::vector<float> delta;
@@ -185,6 +186,7 @@ private:
       eta.clear();
       phi.clear();
       weight.clear();
+      mips.clear();
       rho.clear();
       delta.clear();
       nearestHigher.clear();
@@ -202,6 +204,7 @@ private:
       eta.shrink_to_fit();
       phi.shrink_to_fit();
       weight.shrink_to_fit();
+      mips.shrink_to_fit();
       rho.shrink_to_fit();
       delta.shrink_to_fit();
       nearestHigher.shrink_to_fit();

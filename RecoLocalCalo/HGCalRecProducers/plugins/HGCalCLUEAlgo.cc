@@ -41,14 +41,19 @@ void HGCalCLUEAlgoT<T>::populate(const HGCRecHitCollection& hits) {
     // set sigmaNoise default value 1 to use kappa value directly in case of
     // sensor-independent thresholds
     float sigmaNoise = 1.f;
+    float thicknessCorr = 1.f;
     if (dependSensor_) {
       int thickness_index = rhtools_.getSiThickIndex(detid);
-      if (thickness_index == -1)
+      if (thickness_index == -1) {
         thickness_index = maxNumberOfThickIndices_;
+        thicknessCorr = sciThicknessCorrection_;
+      }
 
       double storedThreshold = thresholds_[layerOnSide][thickness_index];
+      thicknessCorr = thicknessCorrection_[thickness_index];
       if (detid.det() == DetId::HGCalHSi || detid.subdetId() == HGCHEF) {
         storedThreshold = thresholds_[layerOnSide][thickness_index + deltasi_index_regemfac_];
+        thicknessCorr = thicknessCorrection_[thickness_index + deltasi_index_regemfac_];
       }
       sigmaNoise = v_sigmaNoise_[layerOnSide][thickness_index];
 
@@ -71,6 +76,8 @@ void HGCalCLUEAlgoT<T>::populate(const HGCRecHitCollection& hits) {
       cells_[layer].phi.emplace_back(position.phi());
     }  // else, isSilicon == true and eta phi values will not be used
     cells_[layer].weight.emplace_back(hgrh.energy());
+    // Remember weights are in MeV, whle energies are in GeV
+    cells_[layer].mips.emplace_back(1000. * hgrh.energy() * thicknessCorr / dEdXweights_[(layer % 47) + 1]);
     cells_[layer].sigmaNoise.emplace_back(sigmaNoise);
   }
 }
@@ -161,10 +168,12 @@ std::vector<reco::BasicCluster> HGCalCLUEAlgoT<T>::getClusters(bool) {
     for (auto& cl : cellsIdInCluster) {
       auto position = calculatePosition(cl, layerId);
       float energy = 0.f;
+      float mips = 0.f;
       int seedDetId = -1;
 
       for (auto cellIdx : cl) {
         energy += cellsOnLayer.weight[cellIdx];
+        mips += cellsOnLayer.mips[cellIdx];
         thisCluster.emplace_back(cellsOnLayer.detid[cellIdx], 1.f);
         if (cellsOnLayer.isSeed[cellIdx]) {
           seedDetId = cellsOnLayer.detid[cellIdx];
@@ -175,6 +184,7 @@ std::vector<reco::BasicCluster> HGCalCLUEAlgoT<T>::getClusters(bool) {
       clusters_v_[globalClusterIndex] =
           reco::BasicCluster(energy, position, reco::CaloID::DET_HGCAL_ENDCAP, thisCluster, algoId_);
       clusters_v_[globalClusterIndex].setSeed(seedDetId);
+      clusters_v_[globalClusterIndex].setCorrectedEnergy(mips);
       thisCluster.clear();
     }
 
