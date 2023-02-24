@@ -18,3 +18,11 @@
   <use name="HeterogeneousCore/AlpakaInterface"/>
   <flags ALPAKA_BACKENDS="1"/>
 </bin>
+
+<bin name="alpakaTestLayerTiles" file="alpaka/testLayerTiles.dev.cc">
+  <use name="alpaka"/>
+  <use name="catch2"/>
+  <use name="HeterogeneousCore/AlpakaInterface"/>
+  <use name="DataFormats/Math"/>
+  <flags ALPAKA_BACKENDS="1"/>
+</bin>
