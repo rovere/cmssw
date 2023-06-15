@@ -1,6 +1,6 @@
 /* for High Granularity Calorimeter
- * This geometry is essentially driven by topology, 
- * which is thus encapsulated in this class. 
+ * This geometry is essentially driven by topology,
+ * which is thus encapsulated in this class.
  * This makes this geometry not suitable to be loaded
  * by regular CaloGeometryLoader<T>
  */
@@ -195,7 +195,30 @@ bool HGCalGeometry::present(const DetId& detId) const {
   return (nullptr != getGeometryRawPtr(index));
 }
 
+void HGCalGeometry::fillPositionCache() {
+  for (auto const & id : m_validIds) {
+    m_positionCache[id] = getPositionNoCache(id);
+  }
+}
+
 GlobalPoint HGCalGeometry::getPosition(const DetId& detid, bool debug) const {
+  // We cannot assume upfront that the detid passed in is already in cache,
+  // despite the fact that the cache is filled with all the valid detids when
+  // the geometry is first built. In fact, detids related to the HGCAL Trigger
+  // Geometry that do not have a valid counterpart in the "real" HGCAL
+  // Geometry. For those cases, we forward back the call to the original
+  // non-cached version. If HGCAL Trigger is interested in this caching, they
+  // could provide a hook to populate the cache with the full list of valid
+  // HGCAL Trigger DetIds.
+
+  auto const search = m_positionCache.find(detid);
+  if (search != m_positionCache.end())
+    return search->second;
+  return getPositionNoCache(detid, debug);
+}
+
+GlobalPoint HGCalGeometry::getPositionNoCache(const DetId& detid, bool debug) const {
+
   unsigned int cellIndex = indexFor(detid);
   GlobalPoint glob;
   unsigned int maxSize = (m_topology.tileTrapezoid() ? m_cellVec2.size() : m_cellVec.size());

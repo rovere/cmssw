@@ -3,8 +3,8 @@
 
 /*
  * Geometry for High Granularity Calorimeter
- * This geometry is essentially driven by topology, 
- * which is thus encapsulated in this class. 
+ * This geometry is essentially driven by topology,
+ * which is thus encapsulated in this class.
  * This makes this geometry not suitable to be loaded
  * by regular CaloGeometryLoader<T>
  */
@@ -25,6 +25,7 @@
 #include "Geometry/Records/interface/HGCalGeometryRecord.h"
 #include "MagneticField/Engine/interface/MagneticField.h"
 #include <vector>
+#include <unordered_map>
 
 class HGCalGeometry final : public CaloSubdetectorGeometry {
 public:
@@ -71,6 +72,7 @@ public:
                   CaloSubdetectorGeometry::IVec& dinsVector) const override;
 
   GlobalPoint getPosition(const DetId& id, bool debug = false) const;
+  GlobalPoint getPositionNoCache(const DetId& id, bool debug = false) const;
   GlobalPoint getWaferPosition(const DetId& id) const;
 
   /// Returns area of a cell
@@ -111,6 +113,7 @@ public:
 
   const HGCalTopology& topology() const { return m_topology; }
   void sortDetIds();
+  void fillPositionCache();
 
 protected:
   unsigned int indexFor(const DetId& id) const override;
@@ -142,6 +145,7 @@ private:
   DetId::Detector m_det;
   ForwardSubdetector m_subdet;
   const double twoBysqrt3_;
+  std::unordered_map<DetId, GlobalPoint> m_positionCache;
 };
 
 #endif

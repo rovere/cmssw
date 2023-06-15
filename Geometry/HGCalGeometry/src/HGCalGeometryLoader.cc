@@ -191,6 +191,8 @@ HGCalGeometry* HGCalGeometryLoader::build(const HGCalTopology& topology) {
     }
   }
 
+  geom->fillPositionCache();
+
   return geom;
 }
 
