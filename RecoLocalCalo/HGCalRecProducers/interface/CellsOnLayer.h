@@ -58,6 +58,21 @@ struct CellsOnLayers {
   std::vector<std::vector<int>> followers;
   std::vector<uint8_t> isSeed;
 
+  void resize(unsigned int points){
+    detid.resize(points);
+    dim1.resize(points);
+    dim2.resize(points);
+    layer.resize(points);
+    weight.resize(points);
+    rho.resize(points);
+    delta.resize(points);
+    nearestHigher.resize(points);
+    clusterIndex.resize(points);
+    sigmaNoise.resize(points);
+    followers.resize(points);
+    isSeed.resize(points);
+  }
+
   void clear() {
     detid.clear();
     dim1.clear();
