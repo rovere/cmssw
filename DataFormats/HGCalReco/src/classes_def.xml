@@ -55,7 +55,8 @@
   <class name="edm::Wrapper<TICLCandidate>" />
   <class name="edm::Wrapper<std::vector<TICLCandidate> >" />
 
-  <class  name="HGCalCellsSoA<128, false>"/>
+  <class  name="HGCalCellsSoA"/>
+  <!-- <class  name="HGCalCellsSoA<128, false>"/> -->
   <!-- <class  name="HGCalCellsSoA::View"/> -->
 
   <class name="HGCalSoACellsHostCollection"/>
@@ -64,7 +65,7 @@
     sourceClass="HGCalSoACellsHostCollection"
     targetClass="HGCalSoACellsHostCollection"
     version="[1-]"
-    source="HGCalCellsSoA<128, false> layout_;"
+    source="HGCalCellsSoA layout_;"
     target="buffer_,layout_,view_"
     embed="false">
   <![CDATA[

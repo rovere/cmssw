@@ -11,8 +11,8 @@
   // SoA layout with x, y, z, id fields
   GENERATE_SOA_LAYOUT(HGCalSoACells,
                       // columns: one value per element
-                      SOA_COLUMN(float, x),
-                      SOA_COLUMN(float, y),
+                      SOA_COLUMN(float, dim1),
+                      SOA_COLUMN(float, dim2),
                       SOA_COLUMN(int, layer),
                       SOA_COLUMN(float, weight),
                       SOA_COLUMN(float, sigmaNoise))
