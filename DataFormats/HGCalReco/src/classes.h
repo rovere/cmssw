@@ -5,3 +5,5 @@
 #include "DataFormats/HGCalReco/interface/TICLSeedingRegion.h"
 #include "DataFormats/HGCalReco/interface/TICLCandidate.h"
 #include "DataFormats/Common/interface/Wrapper.h"
+#include "DataFormats/HGCalReco/interface/HGCalSoACellsHostCollection.h"
+#include "DataFormats/HGCalReco/interface/HGCalSoACells.h"

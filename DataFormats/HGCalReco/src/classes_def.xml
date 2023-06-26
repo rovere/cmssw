@@ -55,4 +55,23 @@
   <class name="std::vector<TICLCandidate>" />
   <class name="edm::Wrapper<TICLCandidate>" />
   <class name="edm::Wrapper<std::vector<TICLCandidate> >" />
+
+  <class  name="HGCalCellsSoA"/>
+  <!-- <class  name="HGCalCellsSoA<128, false>"/> -->
+  <!-- <class  name="HGCalCellsSoA::View"/> -->
+
+  <class name="HGCalSoACellsHostCollection"/>
+  <!-- Read streamer declaration for dictionary. It ensures allocation of buffer and data copying to it -->
+  <read
+    sourceClass="HGCalSoACellsHostCollection"
+    targetClass="HGCalSoACellsHostCollection"
+    version="[1-]"
+    source="HGCalCellsSoA layout_;"
+    target="buffer_,layout_,view_"
+    embed="false">
+  <![CDATA[
+    HGCalSoACellsHostCollection::ROOTReadStreamer(newObj, onfile.layout_);
+  ]]>
+  </read>
+  <class name="edm::Wrapper<HGCalSoACellsHostCollection>" splitLevel="0"/>
 </lcgdict>

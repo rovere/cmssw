@@ -1,0 +1,4 @@
+#include "DataFormats/Common/interface/DeviceProduct.h"
+#include "DataFormats/Common/interface/Wrapper.h"
+#include "DataFormats/HGCalReco/interface/HGCalSoACells.h"
+#include "DataFormats/HGCalReco/interface/alpaka/HGCalSoACellsDeviceCollection.h"
