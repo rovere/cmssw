@@ -34,17 +34,6 @@ public:
             reco::CaloCluster::undefined),
         vecDeltas_(ps.getParameter<std::vector<double>>("deltac")),
         kappa_(ps.getParameter<double>("kappa")),
-        ecut_(ps.getParameter<double>("ecut")),
-        dependSensor_(ps.getParameter<bool>("dependSensor")),
-        dEdXweights_(ps.getParameter<std::vector<double>>("dEdXweights")),
-        thicknessCorrection_(ps.getParameter<std::vector<double>>("thicknessCorrection")),
-        sciThicknessCorrection_(ps.getParameter<double>("sciThicknessCorrection")),
-        deltasi_index_regemfac_(ps.getParameter<int>("deltasi_index_regemfac")),
-        maxNumberOfThickIndices_(ps.getParameter<unsigned>("maxNumberOfThickIndices")),
-        fcPerMip_(ps.getParameter<std::vector<double>>("fcPerMip")),
-        fcPerEle_(ps.getParameter<double>("fcPerEle")),
-        nonAgedNoises_(ps.getParameter<std::vector<double>>("noises")),
-        noiseMip_(ps.getParameter<edm::ParameterSet>("noiseMip").getParameter<double>("noise_MIP")),
         use2x2_(ps.getParameter<bool>("use2x2")),
         initialized_(false) {}
 
@@ -52,7 +41,10 @@ public:
 
   void getEventSetupPerAlgorithm(const edm::EventSetup& es) override;
 
-  void populate(const HGCRecHitCollection& hits) override;
+  void populate(const HGCRecHitCollection& hits)override{};
+  void setCellsOnLayer(std::shared_ptr<std::vector<CellsOnLayer>>  cells)override{
+    cells_ = cells;
+  }
 
   // this is the method that will start the clusterisation (it is possible to invoke this method
   // more than once - but make sure it is with different hit collections (or else use reset)
@@ -69,13 +61,11 @@ public:
       cl = 0;
     }
 
-    for (auto& cells : cells_) {
+    for (auto& cells : *cells_) {
       cells.clear();
       cells.shrink_to_fit();
     }
   }
-
-  void computeThreshold();
 
   static void fillPSetDescription(edm::ParameterSetDescription& iDesc) {
     iDesc.add<std::vector<double>>("thresholdW0", {2.9, 2.9, 2.9});
@@ -120,23 +110,10 @@ private:
   std::vector<double> vecDeltas_;
   double kappa_;
 
-  // The hit energy cutoff
-  double ecut_;
-
   // various parameters used for calculating the noise levels for a given sensor (and whether to use
   // them)
-  bool dependSensor_;
   std::vector<double> dEdXweights_;
-  std::vector<double> thicknessCorrection_;
   double sciThicknessCorrection_;
-  int deltasi_index_regemfac_;
-  unsigned maxNumberOfThickIndices_;
-  std::vector<double> fcPerMip_;
-  double fcPerEle_;
-  std::vector<double> nonAgedNoises_;
-  double noiseMip_;
-  std::vector<std::vector<double>> thresholds_;
-  std::vector<std::vector<double>> v_sigmaNoise_;
 
   bool use2x2_;
 
@@ -145,59 +122,16 @@ private:
 
   float outlierDeltaFactor_ = 2.f;
 
-  struct CellsOnLayer {
-    std::vector<DetId> detid;
-    std::vector<float> dim1;
-    std::vector<float> dim2;
 
-    std::vector<float> weight;
-    std::vector<float> rho;
-
-    std::vector<float> delta;
-    std::vector<int> nearestHigher;
-    std::vector<int> clusterIndex;
-    std::vector<float> sigmaNoise;
-    std::vector<std::vector<int>> followers;
-    std::vector<bool> isSeed;
-
-    void clear() {
-      detid.clear();
-      dim1.clear();
-      dim2.clear();
-      weight.clear();
-      rho.clear();
-      delta.clear();
-      nearestHigher.clear();
-      clusterIndex.clear();
-      sigmaNoise.clear();
-      followers.clear();
-      isSeed.clear();
-    }
-
-    void shrink_to_fit() {
-      detid.shrink_to_fit();
-      dim1.shrink_to_fit();
-      dim2.shrink_to_fit();
-      weight.shrink_to_fit();
-      rho.shrink_to_fit();
-      delta.shrink_to_fit();
-      nearestHigher.shrink_to_fit();
-      clusterIndex.shrink_to_fit();
-      sigmaNoise.shrink_to_fit();
-      followers.shrink_to_fit();
-      isSeed.shrink_to_fit();
-    }
-  };
-
-  std::vector<CellsOnLayer> cells_;
+  std::shared_ptr<std::vector<CellsOnLayer>> cells_;
 
   std::vector<int> numberOfClustersPerLayer_;
 
   inline float distance(const TILE& lt, int cell1, int cell2, int layerId) const {  // 2-d distance on the layer (x-y)
-    return std::sqrt(lt.distance2(cells_[layerId].dim1[cell1],
-                                  cells_[layerId].dim2[cell1],
-                                  cells_[layerId].dim1[cell2],
-                                  cells_[layerId].dim2[cell2]));
+    return std::sqrt(lt.distance2(cells_->at(layerId).dim1[cell1],
+                                  cells_->at(layerId).dim2[cell1],
+                                  cells_->at(layerId).dim1[cell2],
+                                  cells_->at(layerId).dim2[cell2]));
   }
 
   void prepareDataStructures(const unsigned int layerId);

@@ -9,6 +9,7 @@
 #include "DataFormats/EgammaReco/interface/BasicCluster.h"
 
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
+#include "RecoLocalCalo/HGCalRecProducers/interface/CellsOnLayer.h"
 
 // C/C++ headers
 #include <vector>
@@ -53,6 +54,7 @@ public:
   virtual ~HGCalClusteringAlgoBase() {}
 
   virtual void populate(const HGCRecHitCollection &hits) = 0;
+  virtual void setCellsOnLayer(std::shared_ptr<std::vector<CellsOnLayer>>){}
   virtual void makeClusters() = 0;
   virtual std::vector<reco::BasicCluster> getClusters(bool) = 0;
   virtual void reset() = 0;
