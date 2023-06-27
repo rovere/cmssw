@@ -31,6 +31,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           if (detector_ == "HFNose") {
             isNose_ = true;
           }
+          maxNumberOfThickIndices_ = config.getParameter<unsigned>("maxNumberOfThickIndices");
+          fcPerEle_ = config.getParameter<double>("fcPerEle");
+          fcPerMip_ = config.getParameter<std::vector<double>>("fcPerMip");
+          nonAgedNoises_ = config.getParameter<std::vector<double>>("noises");
+          ecut_ = config.getParameter<double>("ecut");
+          thicknessCorrection_ = config.getParameter<std::vector<double>>("thicknessCorrection");
+          dEdXweights_ = config.getParameter<std::vector<double>>("dEdXweights");
         }
 
       ~HGCalRecHitsSoAProducer() override = default;
@@ -106,6 +113,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         edm::ParameterSetDescription desc;
         desc.add<std::string>("detector", "EE")->setComment("options EE, FH, BH,  HFNose; other value defaults to EE");
         desc.add<edm::InputTag>("recHits", edm::InputTag("HGCalRecHit", "HGCEERecHits"));
+        desc.add<unsigned int>("maxNumberOfThickIndices", 6);
+        desc.add<double>("fcPerEle", 0.00016020506);
+        desc.add<std::vector<double>>("fcPerMip");
+        desc.add<std::vector<double>>("thicknessCorrection");
+        desc.add<std::vector<double>>("noises");
+        desc.add<std::vector<double>>("dEdXweights");
+        desc.add<double>("ecut", 3.);
         descriptions.addWithDefaultLabel(desc);
       }
 
@@ -127,7 +141,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       std::vector<double> fcPerMip_;
       double fcPerEle_;
       std::vector<double> nonAgedNoises_;
-      double noiseMip_;
       double ecut_;
       std::vector<double> dEdXweights_;
       std::vector<double> thicknessCorrection_;
@@ -164,14 +177,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
               << " fcPerEle: " << fcPerEle_ << " fcPerMip: " << fcPerMip_[ithick]
               << " noiseMip: " << fcPerEle_ * nonAgedNoises_[ithick] / fcPerMip_[ithick]
               << " sigmaNoise: " << sigmaNoise << "\n";
-          }
-
-          if (!isNose_) {
-            float scintillators_sigmaNoise = 0.001f * noiseMip_ * dEdXweights_[ilayer] / sciThicknessCorrection_;
-            thresholds_[ilayer - 1][maxNumberOfThickIndices_] = ecut_ * scintillators_sigmaNoise;
-            v_sigmaNoise_[ilayer - 1][maxNumberOfThickIndices_] = scintillators_sigmaNoise;
-            LogDebug("HGCalCLUEAlgo") << "ilayer: " << ilayer << " noiseMip: " << noiseMip_
-              << " scintillators_sigmaNoise: " << scintillators_sigmaNoise << "\n";
           }
         }
       }
