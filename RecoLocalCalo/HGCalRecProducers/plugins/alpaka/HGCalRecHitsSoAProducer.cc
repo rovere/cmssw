@@ -48,7 +48,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         computeThreshold();
 
         // Host SoA will contain one entry for each RecHit
-        HGCalSoACellsHostCollection cells(hits.size(), cms::alpakatools::host()); // TO BE VERIFIED
+        HGCalSoACellsHostCollection cells(hits.size(), iEvent.queue()); // TO BE VERIFIED
         auto cellsView = cells.view();
         // loop over all hits and create the Hexel structure, skip energies below ecut
         // for each layer and wafer calculate the thresholds (sigmaNoise and energy)
