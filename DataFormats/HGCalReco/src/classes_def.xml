@@ -74,4 +74,24 @@
   ]]>
   </read>
   <class name="edm::Wrapper<HGCalSoACellsHostCollection>" splitLevel="0"/>
+
+  <class name="HGCalCellsOutSoA"/>
+
+  <!-- Collection declaration for dictionary -->
+  <class name="HGCalSoAOutHostCollection"/>
+
+  <!-- Read streamer declaration for dictionary. It ensures allocation of buffer and data copying to it -->
+  <read
+    sourceClass="HGCalSoAOutHostCollection"
+    targetClass="HGCalSoAOutHostCollection"
+    version="[1-]"
+    source="HGCalCellsOutSoA layout_;"
+    target="buffer_,layout_,view_"
+    embed="false">
+  <![CDATA[
+    HGCalSoAOutHostCollection::ROOTReadStreamer(newObj, onfile.layout_);
+  ]]>
+  </read>
+
+  <class name="edm::Wrapper<HGCalSoAOutHostCollection>" splitLevel="0"/>
 </lcgdict>
