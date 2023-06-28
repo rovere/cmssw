@@ -60,10 +60,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         // loop over all hits and create the Hexel structure, skip energies below ecut
         // for each layer and wafer calculate the thresholds (sigmaNoise and energy)
         // once
+
+        uint32_t index = 0;
+
         for (unsigned int i = 0; i < hits.size(); ++i) {
           const HGCRecHit& hgrh = hits[i];
           DetId detid = hgrh.detid();
-          auto entryInSoA = cellsView[i];
           unsigned int layerOnSide = (rhtools_.getLayerWithOffset(detid) - 1);
 
           // set sigmaNoise default value 1 to use kappa value directly in case of
@@ -86,6 +88,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           const GlobalPoint position(rhtools_.getPosition(detid));
           int offset = ((rhtools_.zside(detid) + 1) >> 1) * maxlayer_;
           int layer = layerOnSide + offset;
+          auto entryInSoA = cellsView[index];
           if  (detector_ == "BH") {
             entryInSoA.dim1() = position.eta();
             entryInSoA.dim2() = position.phi();
@@ -97,14 +100,24 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           entryInSoA.weight() = hgrh.energy();
           entryInSoA.sigmaNoise() = sigmaNoise;
           entryInSoA.layer() = layer;
+          entryInSoA.recHitIndex() = i;
+          index++;
+          // if (i < 10){
+          //   std::cout << entryInSoA.dim1() << ", " << entryInSoA.dim2() << "," << entryInSoA.weight() << ","
+          //   << entryInSoA.sigmaNoise() << ", " << entryInSoA.layer() << std::endl;
+          // }
         }
+        cellsView.cellsCout() = index;
+        std::cout << "Size: " << cells->metadata().size() << "count cells: " << index << std::endl;
 
         if constexpr (! std::is_same_v<ALPAKA_ACCELERATOR_NAMESPACE::Device, alpaka_common::DevHost>) {
           // Trigger copy async to GPU
+          std::cout << "GPU" << std::endl;
           HGCalSoACellsDeviceCollection deviceProduct{cells->metadata().size(), iEvent.queue()}; // QUEUE TO BE VERIFIED
           alpaka::memcpy(iEvent.queue(), deviceProduct.buffer(), cells.const_buffer());
           iEvent.emplace(deviceToken_, std::move(deviceProduct));
         } else {
+          std::cout << "CPU" << std::endl;
           iEvent.emplace(deviceToken_, std::move(cells));
         }
       }

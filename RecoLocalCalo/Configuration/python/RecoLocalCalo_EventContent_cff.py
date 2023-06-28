@@ -23,12 +23,12 @@ from Configuration.ProcessModifiers.storeZDCDigis_cff import storeZDCDigis
 # don't modify AOD for HGCal yet, need "reduced" rechits collection first (i.e. requires reconstruction)
 phase2_hgcal.toModify( RecoLocalCaloAOD, 
     outputCommands = RecoLocalCaloAOD.outputCommands + ['keep *_HGCalRecHit_*_*',
-							# 'keep recoCaloClusters_hgcalMergeLayerClusters_*_*',
-                                                        # 'keep *_hgcalMergeLayerClusters_timeLayerCluster_*',
-                                                        # 'keep *_hgcalMergeLayerClusters_InitialLayerClustersMask_*',
-                                                         'keep recoCaloClusters_hgcalHeterogenousMergeLayerClusters_*_*',
-                                                         'keep *_hgcalHeterogenousMergeLayerClusters_timeLayerCluster_*',
-                                                         'keep *_hgcalHeterogenousMergeLayerClusters_InitialLayerClustersMask_*'
+							                            'keep recoCaloClusters_hgcalMergeLayerClusters_*_*',
+                                                        'keep *_hgcalMergeLayerClusters_timeLayerCluster_*',
+                                                        'keep *_hgcalMergeLayerClusters_InitialLayerClustersMask_*',
+                                                        #  'keep recoCaloClusters_hgcalHeterogenousMergeLayerClusters_*_*',
+                                                        #  'keep *_hgcalHeterogenousMergeLayerClusters_timeLayerCluster_*',
+                                                        #  'keep *_hgcalHeterogenousMergeLayerClusters_InitialLayerClustersMask_*'
                                                         ])
 phase2_hfnose.toModify( RecoLocalCaloAOD, 
     outputCommands = RecoLocalCaloAOD.outputCommands + ['keep recoCaloClusters_hgcalLayerClustersHFNose_*_*',
