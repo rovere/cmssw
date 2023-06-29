@@ -397,6 +397,16 @@ void HGCalLayerClusterProducer::produce(edm::Event& evt, const edm::EventSetup& 
       times.push_back(std::pair<float, float>(-99., -1.));
     }
   }
+
+  for (auto &i: *clusters) {
+    std::cout << fmt::format("Regular Seed: {}, x: {}, y: {}, z: {}, eta: {}, phi: {}",
+        i.seed().det(),
+        roundTo5(i.x()),
+        roundTo5(i.y()),
+        roundTo5(i.z()),
+        roundTo5(i.eta()),
+        roundTo5(i.phi())) << std::endl;
+  }
   // std::cout << "Normal: after for" << std::endl;
   // for (auto &i: *clusters){
   //     std::cout << i.seed().det() << "," << roundTo5(i.x()) << "," << roundTo5(i.y())<< "," << roundTo5(i.z()) << "," << roundTo5(i.eta()) << "," << roundTo5(i.phi()) << std::endl;
