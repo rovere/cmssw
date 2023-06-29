@@ -7,6 +7,7 @@
 #include "DataFormats/SoATemplate/interface/SoACommon.h"
 #include "DataFormats/SoATemplate/interface/SoALayout.h"
 #include "DataFormats/SoATemplate/interface/SoAView.h"
+#include "DataFormats/DetId/interface/DetId.h"
 
   // SoA layout with dim1, dim2, weight, sigmaNoise, recHitsIndex layer and cellsCount fields
   GENERATE_SOA_LAYOUT(HGCalSoACells,
@@ -17,6 +18,7 @@
                       SOA_COLUMN(float, weight),
                       SOA_COLUMN(float, sigmaNoise),
                       SOA_COLUMN(unsigned int, recHitIndex),
+                      SOA_COLUMN(DetId, detid),
 
                       SOA_SCALAR(uint32_t, cellsCout)
                       )
