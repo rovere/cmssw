@@ -25,7 +25,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       HGCalRecHitsSoAProducer(edm::ParameterSet const& config)
         : caloGeomToken_(consumesCollector().esConsumes<CaloGeometry, CaloGeometryRecord>()),
         detector_(config.getParameter<std::string>("detector")),
-        deviceToken_{produces()} {
+        deviceToken_{produces()},
+        initialized_(false) {
           hits_token_ = consumes<HGCRecHitCollection>(config.getParameter<edm::InputTag>("recHits"));
           isNose_ = false;
           if (detector_ == "HFNose") {
@@ -54,15 +55,34 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         auto const & hits = *(hits_h.product());
         computeThreshold();
 
-        // Host SoA will contain one entry for each RecHit
-        HGCalSoACellsHostCollection cells(hits.size(), iEvent.queue()); // TO BE VERIFIED
+
+        // Count effective hits above threshold
+        uint32_t index = 0;
+        for (unsigned int i = 0; i < hits.size(); ++i) {
+          const HGCRecHit& hgrh = hits[i];
+          DetId detid = hgrh.detid();
+          unsigned int layerOnSide = (rhtools_.getLayerWithOffset(detid) - 1);
+
+          // set sigmaNoise default value 1 to use kappa value directly in case of
+          // sensor-independent thresholds
+          int thickness_index = rhtools_.getSiThickIndex(detid);
+          if (thickness_index == -1){
+            thickness_index = maxNumberOfThickIndices_;
+          }
+          double storedThreshold = thresholds_[layerOnSide][thickness_index];
+          if (hgrh.energy() < storedThreshold)
+            continue;  // this sets the ZS threshold at ecut times the sigma noise
+          index++;
+        }
+
+        // Allocate Host SoA will contain one entry for each RecHit above threshold
+        HGCalSoACellsHostCollection cells(index, iEvent.queue()); // TO BE VERIFIED
         auto cellsView = cells.view();
+
         // loop over all hits and create the Hexel structure, skip energies below ecut
         // for each layer and wafer calculate the thresholds (sigmaNoise and energy)
         // once
-
-        uint32_t index = 0;
-
+        index = 0;
         for (unsigned int i = 0; i < hits.size(); ++i) {
           const HGCRecHit& hgrh = hits[i];
           DetId detid = hgrh.detid();
@@ -77,9 +97,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           }
           double storedThreshold = thresholds_[layerOnSide][thickness_index];
           if (detid.det() == DetId::HGCalHSi || detid.subdetId() == HGCHEF) {
-            storedThreshold = thresholds_[layerOnSide][thickness_index + deltasi_index_regemfac_];
+            storedThreshold = thresholds_.at(layerOnSide).at(thickness_index + deltasi_index_regemfac_);
           }
-          sigmaNoise = v_sigmaNoise_[layerOnSide][thickness_index];
+          sigmaNoise = v_sigmaNoise_.at(layerOnSide).at(thickness_index);
 
           if (hgrh.energy() < storedThreshold)
             continue;  // this sets the ZS threshold at ecut times the sigma noise
@@ -102,13 +122,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           entryInSoA.layer() = layer;
           entryInSoA.recHitIndex() = i;
           index++;
-          // if (i < 10){
-          //   std::cout << entryInSoA.dim1() << ", " << entryInSoA.dim2() << "," << entryInSoA.weight() << ","
-          //   << entryInSoA.sigmaNoise() << ", " << entryInSoA.layer() << std::endl;
-          // }
         }
         cellsView.cellsCout() = index;
-        std::cout << "Size: " << cells->metadata().size() << "count cells: " << index << std::endl;
+        std::cout << "Size: " << cells->metadata().size() << " count cells: " << index
+          << " i.e. " << cells->metadata().size() << std::endl;
 
         if constexpr (! std::is_same_v<ALPAKA_ACCELERATOR_NAMESPACE::Device, alpaka_common::DevHost>) {
           // Trigger copy async to GPU
@@ -186,7 +203,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
               (fcPerMip_[ithick] * thicknessCorrection_[ithick]);
             thresholds_[ilayer - 1][ithick] = sigmaNoise * ecut_;
             v_sigmaNoise_[ilayer - 1][ithick] = sigmaNoise;
-            LogDebug("HGCalCLUEAlgo") << "ilayer: " << ilayer << " nonAgedNoises: " << nonAgedNoises_[ithick]
+            std::cout << "ilayer: " << ilayer << " nonAgedNoises: " << nonAgedNoises_[ithick]
               << " fcPerEle: " << fcPerEle_ << " fcPerMip: " << fcPerMip_[ithick]
               << " noiseMip: " << fcPerEle_ * nonAgedNoises_[ithick] / fcPerMip_[ithick]
               << " sigmaNoise: " << sigmaNoise << "\n";
