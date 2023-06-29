@@ -1,34 +1,12 @@
-#include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "FWCore/Framework/interface/stream/EDProducer.h"
-#include "FWCore/MessageLogger/interface/MessageLogger.h"
+// #include "FWCore/Framework/interface/Event.h"
+// #include "FWCore/Framework/interface/ESHandle.h"
 
-#include "FWCore/Framework/interface/Event.h"
-#include "FWCore/Framework/interface/ESHandle.h"
-#include "FWCore/Framework/interface/MakerMacros.h"
-#include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
-#include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
-#include "FWCore/ParameterSet/interface/PluginDescription.h"
-
-#include "RecoParticleFlow/PFClusterProducer/interface/RecHitTopologicalCleanerBase.h"
-#include "RecoParticleFlow/PFClusterProducer/interface/SeedFinderBase.h"
-#include "RecoParticleFlow/PFClusterProducer/interface/InitialClusteringStepBase.h"
-#include "RecoParticleFlow/PFClusterProducer/interface/PFClusterBuilderBase.h"
-#include "RecoParticleFlow/PFClusterProducer/interface/PFCPositionCalculatorBase.h"
-#include "RecoParticleFlow/PFClusterProducer/interface/PFClusterEnergyCorrectorBase.h"
 #include "RecoLocalCalo/HGCalRecProducers/interface/ComputeClusterTime.h"
 
-#include "RecoLocalCalo/HGCalRecProducers/interface/HGCalLayerClusterAlgoFactory.h"
 #include "RecoLocalCalo/HGCalRecAlgos/interface/HGCalDepthPreClusterer.h"
 
-#include "Geometry/Records/interface/IdealGeometryRecord.h"
 #include "Geometry/HGCalGeometry/interface/HGCalGeometry.h"
 
-#include "DataFormats/ParticleFlowReco/interface/PFCluster.h"
-#include "DataFormats/Common/interface/ValueMap.h"
-
-#include "FWCore/Framework/interface/ConsumesCollector.h"
-
-#include "DataFormats/PortableTestObjects/interface/alpaka/TestDeviceCollection.h"
 #include "FWCore/Framework/interface/ConsumesCollector.h"
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
@@ -38,11 +16,9 @@
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/EDPutToken.h"
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/ESGetToken.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
-#include "HeterogeneousCore/AlpakaTest/interface/AlpakaESTestRecords.h"
-#include "HeterogeneousCore/AlpakaTest/interface/alpaka/AlpakaESTestData.h"
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
-#include "Geometry/HGCalGeometry/interface/HGCalGeometry.h"
-#include "DataFormats/HGCRecHit/interface/HGCRecHitCollections.h"
+
+#include "DataFormats/Common/interface/ValueMap.h"
 
 #include "DataFormats/HGCalReco/interface/HGCalSoACellsHostCollection.h"
 #include "DataFormats/HGCalReco/interface/alpaka/HGCalSoACellsDeviceCollection.h"
@@ -57,9 +33,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     public:
       HGCalLayerClustersAlpakaProducer(edm::ParameterSet const& config)
         : 
-          getTokenDevice_(consumes(config.getParameter<edm::InputTag>("hgcalOutSoA"))),
-          getTokenRecHits_(consumes(config.getParameter<edm::InputTag>("hgcalRecHitsSoA"))),
-          deviceToken_{produces()},
+          getTokenOutSoA_(consumes(config.getParameter<edm::InputTag>("hgcalOutSoA"))),
+          getTokenInSoA_(consumes(config.getParameter<edm::InputTag>("hgcalRecHitsSoA"))),
+          hostToken_{produces()},
+          timeClToken_{produces()},
+          layerClustersMaskToken_{produces()},
           hitsTime_(config.getParameter<unsigned int>("nHitsTime")),
           thresholdW0_(config.getParameter<std::vector<double>>("thresholdW0"))
           {
@@ -80,20 +58,41 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     void produce(device::Event& iEvent, device::EventSetup const& iSetup) override {
 
+      if constexpr (std::is_same_v<ALPAKA_ACCELERATOR_NAMESPACE::Device, alpaka_common::DevHost>) {
+
         edm::ESHandle<CaloGeometry> geom = iSetup.getHandle(caloGeomToken_);
         rhtools_.setGeometry(*geom);
 
-        auto const& cells = iEvent.get(getTokenDevice_);
-        auto const& inSoA = iEvent.get(getTokenRecHits_);
+        auto const& cells = iEvent.get(getTokenOutSoA_);
+        auto const& inSoA = iEvent.get(getTokenInSoA_);
 
         hits_ = iEvent.getHandle(hits_token_);
         
         std::unique_ptr<std::vector<reco::BasicCluster>> clusters(new std::vector<reco::BasicCluster>);
-        // //todo get number of clusters
-        *clusters = createClusters(100, inSoA.view().cellsCout(), cells, inSoA); //todo change 100
-        // auto clusterHandle = iEvent.put(std::move(clusters)); todo add this
+        //todo get number of clusters and change 100 to that number
+        std::vector<std::pair<float, float>> times;
+        *clusters = createClusters(100, inSoA.view().cellsCout(), cells, inSoA, times);
+
+
+        if (detector_ == "HFNose") {
+          std::unique_ptr<std::vector<float>> layerClustersMask(new std::vector<float>);
+          layerClustersMask->resize(clusters->size(), 1.0);
+          iEvent.emplace(layerClustersMaskToken_, std::move(layerClustersMask));// todo add lable "InitialLayerClustersMask");
+        }
+        auto timeCl = std::make_unique<edm::ValueMap<std::pair<float, float>>>();
+        edm::ValueMap<std::pair<float, float>>::Filler filler(*timeCl);
+        //todo not working with cluster it needs cluster handle (because of id)
+        // filler.insert(clusters, times.begin(), times.end());
+        // filler.fill();
+
+        iEvent.emplace(timeClToken_, std::move(timeCl)); // todo add lable timeClname
+
+        iEvent.emplace(hostToken_, std::move(clusters));
+        // auto clusterHandle = iEvent.put(hostToken_, std::move(clusters));
+        // auto clusterHandle = iEvent.put(std::move(clusters)); 
 
       }
+    }
 
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
         edm::ParameterSetDescription desc;
@@ -107,9 +106,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     private:
       // use device::EDGetToken<T> to read from device memory space
-      device::EDGetToken<ALPAKA_ACCELERATOR_NAMESPACE::PortableCollection<HGCalCellsOutSoA>> const getTokenDevice_;
-      device::EDGetToken<ALPAKA_ACCELERATOR_NAMESPACE::PortableCollection<HGCalCellsSoA>> const getTokenRecHits_;
-      device::EDPutToken<ALPAKA_ACCELERATOR_NAMESPACE::PortableCollection<HGCalCellsOutSoA>> const deviceToken_;
+      device::EDGetToken<ALPAKA_ACCELERATOR_NAMESPACE::PortableCollection<HGCalCellsOutSoA>> const getTokenOutSoA_;
+      device::EDGetToken<ALPAKA_ACCELERATOR_NAMESPACE::PortableCollection<HGCalCellsSoA>> const getTokenInSoA_;
+      edm::EDPutTokenT<std::unique_ptr<std::vector<reco::BasicCluster>>> const hostToken_;
+      edm::EDPutTokenT<std::unique_ptr<edm::ValueMap<std::pair<float, float>>>> const timeClToken_;
+      edm::EDPutTokenT<std::unique_ptr<std::vector<float>>> const layerClustersMaskToken_;
       reco::CaloCluster::AlgoId algoId_;
       std::string detector_;
       edm::Handle<HGCRecHitCollection> hits_;
@@ -173,7 +174,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         }
         return math::XYZPoint(0.f, 0.f, 0.f);
       }
-      std::vector<reco::BasicCluster> createClusters(int numberOfClusters, int numberOfCells, const HGCalSoAOutDeviceCollection &cells, const HGCalSoACellsDeviceCollection &inSoA){
+      std::vector<reco::BasicCluster> createClusters(int numberOfClusters, int numberOfCells, const HGCalSoAOutDeviceCollection &cells, const HGCalSoACellsDeviceCollection &inSoA, std::vector<std::pair<float, float>> &times){
         std::unordered_map<uint32_t, const HGCRecHit*> hitmap;
         for (auto const& it : *hits_) {
             hitmap[it.detid().rawId()] = &(it);
@@ -206,8 +207,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                 clusters[globalClusterIdx].setSeed(inSoA.detid());
         }
 
-
-        std::vector<std::pair<float, float>> times;
         times.reserve(clusters.size());
         for (unsigned i = 0; i < clusters.size(); ++i) {
             const reco::CaloCluster& sCl = clusters[i];
@@ -218,9 +217,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                 times.push_back(std::pair<float, float>(-99., -1.));
             }
         }
-
-
-
 
         return clusters;
       }
@@ -246,7 +242,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
               timeClhits.push_back(rechit->time());
               timeErrorClhits.push_back(1. / (rhTimeE * rhTimeE));
             }
-            // hgcalsimclustertime::ComputeClusterTime timeEstimator;  todo this can not compile
+            // hgcalsimclustertime::ComputeClusterTime timeEstimator;  //todo this can not compile
             // timeCl = timeEstimator.fixSizeHighestDensity(timeClhits, timeErrorClhits, hitsTime_);
         }
         return timeCl;
