@@ -101,6 +101,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           entryInSoA.sigmaNoise() = sigmaNoise;
           entryInSoA.layer() = layer;
           entryInSoA.recHitIndex() = i;
+          entryInSoA.detid() = detid;
           index++;
           // if (i < 10){
           //   std::cout << entryInSoA.dim1() << ", " << entryInSoA.dim2() << "," << entryInSoA.weight() << ","
