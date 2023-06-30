@@ -13,7 +13,7 @@
                       SOA_COLUMN(unsigned int, nearestHigher),
                       SOA_COLUMN(int, clusterIndex),
                       SOA_COLUMN(uint8_t, isSeed),
-                      SOA_COLUMN(unsigned int, numberOfClusters)
+                      SOA_SCALAR(unsigned int, numberOfClustersScalar)
                       )
 
   using HGCalCellsOutSoA = HGCalSoAOut<>;

@@ -68,7 +68,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         outputs.nearestHigher(),
         outputs.clusterIndex(),
         outputs.isSeed(),
-        outputs.numberOfClusters());
+        &outputs.numberOfClustersScalar());
     /*
     // use 64 items per group (this value is arbitrary, but it's a reasonable starting point)
     uint32_t items = 64;
