@@ -1,6 +1,8 @@
 <library file="*.cc *.cu" name="RecoLocalCaloHGCalRecProducersPlugins">
   <use name="cuda"/>
   <use name="tbb"/>
+  <use name="alpaka"/>
+  <use name="fmt"/>
   <use name="CommonTools/UtilAlgos"/>
   <use name="CondFormats/DataRecord"/>
   <use name="CondFormats/HGCalObjects"/>
@@ -42,6 +44,7 @@
   <use name="HeterogeneousCore/AlpakaCore"/>
   <use name="HeterogeneousCore/AlpakaInterface"/>
   <use name="RecoLocalCalo/HGCalRecAlgos"/>
+  <use name="clue"/>
   <flags ALPAKA_BACKENDS="1"/>
   <flags EDM_PLUGIN="1"/>
 </library>

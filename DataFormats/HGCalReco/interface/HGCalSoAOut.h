@@ -1,9 +1,6 @@
 #ifndef DataFormats_HGCalReco_interface_HGCalSoAOut_h
 #define DataFormats_HGCalReco_interface_HGCalSoAOut_h
 
-#include <Eigen/Core>
-#include <Eigen/Dense>
-
 #include "DataFormats/SoATemplate/interface/SoACommon.h"
 #include "DataFormats/SoATemplate/interface/SoALayout.h"
 #include "DataFormats/SoATemplate/interface/SoAView.h"
@@ -13,11 +10,11 @@
                       // columns: one value per element
                       SOA_COLUMN(float, delta),
                       SOA_COLUMN(float, rho),
-                      SOA_COLUMN(int, nearestHigher),
+                      SOA_COLUMN(unsigned int, nearestHigher),
                       SOA_COLUMN(int, clusterIndex),
                       SOA_COLUMN(uint8_t, isSeed)
                       )
 
   using HGCalCellsOutSoA = HGCalSoAOut<>;
 
-#endif 
+#endif
