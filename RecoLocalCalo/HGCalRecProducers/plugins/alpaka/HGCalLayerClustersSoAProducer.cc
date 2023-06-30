@@ -41,6 +41,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         auto output_v = output.view();
 
         algo_.run(iEvent.queue(), deviceInput->metadata().size(), input_v, output_v);
+        iEvent.emplace(deviceToken_, std::move(output));
       }
 
 
