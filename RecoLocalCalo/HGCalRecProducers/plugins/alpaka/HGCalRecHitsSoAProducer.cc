@@ -121,10 +121,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           entryInSoA.sigmaNoise() = sigmaNoise;
           entryInSoA.layer() = layer;
           entryInSoA.recHitIndex() = i;
-          entryInSoA.detid() = detid;
+          entryInSoA.detid() = detid.rawId();
           index++;
         }
-        cellsView.cellsCout() = index;
         std::cout << "Size: " << cells->metadata().size() << " count cells: " << index
           << " i.e. " << cells->metadata().size() << std::endl;
 
