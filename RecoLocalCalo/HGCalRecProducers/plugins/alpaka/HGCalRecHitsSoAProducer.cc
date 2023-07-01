@@ -121,6 +121,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           entryInSoA.sigmaNoise() = sigmaNoise;
           entryInSoA.layer() = layer;
           entryInSoA.recHitIndex() = i;
+          entryInSoA.detid() = detid;
           index++;
         }
         cellsView.cellsCout() = index;
