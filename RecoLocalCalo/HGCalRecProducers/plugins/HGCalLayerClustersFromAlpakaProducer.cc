@@ -1,8 +1,9 @@
 #include "RecoLocalCalo/HGCalRecProducers/interface/ComputeClusterTime.h"
+#include "RecoLocalCalo/HGCalRecProducers/interface/DumpClustersDetails.h"
+
 #include "FWCore/Framework/interface/stream/EDProducer.h"
 
 #include "RecoLocalCalo/HGCalRecAlgos/interface/HGCalDepthPreClusterer.h"
-
 #include "Geometry/HGCalGeometry/interface/HGCalGeometry.h"
 
 #include "FWCore/Framework/interface/ConsumesCollector.h"
@@ -76,15 +77,10 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
         iEvent.put( std::move(layerClustersMask), "InitialLayerClustersMask");
       }
 
-      for (auto &i: *clusters){
-        std::cout << fmt::format("Seed: {}, x: {}, y: {}, z: {}, eta: {}, phi: {}",
-            i.seed().det(),
-            roundTo5(i.x()),
-            roundTo5(i.y()),
-            roundTo5(i.z()),
-            roundTo5(i.eta()),
-            roundTo5(i.phi())) << std::endl;
-      }
+      hgcalUtils::DumpClusters dumper;
+
+      dumper.dumpInfos(*clusters, true);
+
       //std::cout << "Before put clusters" << std::endl;
       auto clusterHandle = iEvent.put(std::move(clusters));
       auto timeCl = std::make_unique<edm::ValueMap<std::pair<float, float>>>();
@@ -130,11 +126,6 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
     // for calculate position
     std::vector<double> thresholdW0_;
     double positionDeltaRho2_;
-
-    float roundTo5(float value){
-      return std::round(value * 100000.0) / 100000.0;
-      // return std::round(value / 100000.0) * 100000.0;
-    }
 
     math::XYZPoint calculatePosition(std::unordered_map<uint32_t, const HGCRecHit*>& hitmap,
         const std::vector<std::pair<DetId, float>>& hitsAndFractions) {
