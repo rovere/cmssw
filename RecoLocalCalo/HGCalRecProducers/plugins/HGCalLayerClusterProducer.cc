@@ -22,6 +22,7 @@
 #include "RecoLocalCalo/HGCalRecProducers/interface/ComputeClusterTime.h"
 
 #include "RecoLocalCalo/HGCalRecProducers/interface/HGCalLayerClusterAlgoFactory.h"
+#include "RecoLocalCalo/HGCalRecProducers/interface/DumpClustersDetails.h"
 #include "RecoLocalCalo/HGCalRecAlgos/interface/HGCalDepthPreClusterer.h"
 
 #include "Geometry/Records/interface/IdealGeometryRecord.h"
@@ -95,10 +96,6 @@ private:
   hgcal::RecHitTools rhtools_;
   edm::ESGetToken<CaloGeometry, CaloGeometryRecord> caloGeomToken_;
 
-  float roundTo5(float value){
-    return std::round(value * 100000.0) / 100000.0;
-    // return std::round(value / 100000.0) * 100000.0;
-  }
 
 void computeThreshold() {
   // To support the TDR geometry and also the post-TDR one (v9 onwards), we
@@ -398,19 +395,9 @@ void HGCalLayerClusterProducer::produce(edm::Event& evt, const edm::EventSetup& 
     }
   }
 
-  for (auto &i: *clusters) {
-    std::cout << fmt::format("Regular Seed: {}, x: {}, y: {}, z: {}, eta: {}, phi: {}",
-        i.seed().det(),
-        roundTo5(i.x()),
-        roundTo5(i.y()),
-        roundTo5(i.z()),
-        roundTo5(i.eta()),
-        roundTo5(i.phi())) << std::endl;
-  }
-  // std::cout << "Normal: after for" << std::endl;
-  // for (auto &i: *clusters){
-  //     std::cout << i.seed().det() << "," << roundTo5(i.x()) << "," << roundTo5(i.y())<< "," << roundTo5(i.z()) << "," << roundTo5(i.eta()) << "," << roundTo5(i.phi()) << std::endl;
-  // }
+  //hgcalUtils::DumpClusters dumper;
+
+  //dumper.dumpInfos(*clusters, true);
 
   auto clusterHandle = evt.put(std::move(clusters));
 
