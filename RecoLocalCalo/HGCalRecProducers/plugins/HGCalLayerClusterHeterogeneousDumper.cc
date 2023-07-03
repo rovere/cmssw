@@ -27,9 +27,9 @@ public:
     auto const& deviceData = iEvent.get(deviceToken_);
 
     auto const deviceView = deviceData.view();
+    std::cout << fmt::format("view.numberOfClusters() = {}", deviceView.numberOfClustersScalar()) << std::endl;
     for (int i = 0; i < deviceData->metadata().size(); ++i) {
       std::cout << fmt::format("view[{}].clusterIndex() = {}", i, deviceView.clusterIndex(i)) << std::endl;
-      std::cout << fmt::format("view[{}].numberOfClusters() = {}", i, deviceView.numberOfClusters(i)) << std::endl;
     }
   }
 
