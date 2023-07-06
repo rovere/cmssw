@@ -42,7 +42,7 @@ public:
   void getEventSetupPerAlgorithm(const edm::EventSetup& es) override;
 
   void populate(const HGCRecHitCollection& hits)override{};
-  void setCellsOnLayer(std::shared_ptr<std::vector<CellsOnLayer>>  cells)override{
+  void setCellsOnLayer(std::vector<CellsOnLayer> * cells)override{
     cells_ = cells;
   }
 
@@ -123,7 +123,7 @@ private:
   float outlierDeltaFactor_ = 2.f;
 
 
-  std::shared_ptr<std::vector<CellsOnLayer>> cells_;
+  std::vector<CellsOnLayer> * cells_;
 
   std::vector<int> numberOfClustersPerLayer_;
 

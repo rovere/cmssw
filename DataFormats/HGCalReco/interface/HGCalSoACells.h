@@ -16,7 +16,6 @@
                       SOA_COLUMN(int, layer),
                       SOA_COLUMN(float, weight),
                       SOA_COLUMN(float, sigmaNoise),
-                      SOA_COLUMN(unsigned int, recHitIndex),
                       SOA_COLUMN(uint32_t, detid)
                       )
 

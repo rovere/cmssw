@@ -54,7 +54,7 @@ public:
   virtual ~HGCalClusteringAlgoBase() {}
 
   virtual void populate(const HGCRecHitCollection &hits) = 0;
-  virtual void setCellsOnLayer(std::shared_ptr<std::vector<CellsOnLayer>>){}
+  virtual void setCellsOnLayer(std::vector<CellsOnLayer> * cells){}
   virtual void makeClusters() = 0;
   virtual std::vector<reco::BasicCluster> getClusters(bool) = 0;
   virtual void reset() = 0;
