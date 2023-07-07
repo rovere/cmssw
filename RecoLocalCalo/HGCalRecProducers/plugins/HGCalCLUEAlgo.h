@@ -24,6 +24,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <cmath>
 
 template <typename TILE, typename STRATEGY>
 class HGCalCLUEAlgoT : public HGCalClusteringAlgoBase {
@@ -126,6 +127,13 @@ private:
   std::shared_ptr<std::vector<CellsOnLayer>> cells_;
 
   std::vector<int> numberOfClustersPerLayer_;
+
+  inline float distance2(const TILE& lt, int cell1, int cell2, int layerId) const {  // 2-d distance on the layer (x-y)
+    return (lt.distance2(cells_->at(layerId).dim1[cell1],
+                                  cells_->at(layerId).dim2[cell1],
+                                  cells_->at(layerId).dim1[cell2],
+                                  cells_->at(layerId).dim2[cell2]));
+  }
 
   inline float distance(const TILE& lt, int cell1, int cell2, int layerId) const {  // 2-d distance on the layer (x-y)
     return std::sqrt(lt.distance2(cells_->at(layerId).dim1[cell1],

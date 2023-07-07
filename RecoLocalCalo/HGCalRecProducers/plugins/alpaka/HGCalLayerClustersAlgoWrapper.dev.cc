@@ -54,15 +54,18 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     CLUEAlgoAlpaka<ALPAKA_ACCELERATOR_NAMESPACE::Acc1D, Queue,
     HGCalSiliconTilesConstants, 96> algoStandalone(queue, 1.3f,9.f,2.f,false);
 
+    /*
     if constexpr (std::is_same_v<ALPAKA_ACCELERATOR_NAMESPACE::Device, alpaka_common::DevHost>) {
       std::cout << "Collection from HGCalLayerClustersAlgoWrapper@CPU " << inputs.metadata().size() << std::endl;
     }
+    */
     algoStandalone.makeClustersCMSSW(size,
         inputs.dim1(),
         inputs.dim2(),
         inputs.layer(),
         inputs.weight(),
         inputs.sigmaNoise(),
+        inputs.detid(),
         outputs.rho(),
         outputs.delta(),
         outputs.nearestHigher(),
