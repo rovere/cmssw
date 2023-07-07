@@ -20,46 +20,43 @@ class HGCalLayerTilesT {
 public:
   typedef T type;
   /**
-     * @brief fill the tile 
-     * 
+     * @brief fill the tile
+     *
      * @param[in] dim1 represents x or eta
      * @param[in] dim2 represents y or phils
-     * 
+     *
     */
   void fill(const std::vector<float>& dim1, const std::vector<float>& dim2) {
     auto cellsSize = dim1.size();
     for (unsigned int i = 0; i < cellsSize; ++i) {
       auto idx = getGlobalBin(dim1[i], dim2[i]);
       tiles_[idx].push_back(i);
+      if (i == 1952) {
+        printf("ZZZx %d in globalBin %d\n", i, idx);
+      }
     }
   }
-  /** 
+  /**
     * @brief compute bin for dim1 (x or eta)
-    * 
+    *
     * @param[in] dim for bining
     * @return computed bin
     */
   int getDim1Bin(float dim) const {
-    constexpr float dimRange = T::maxDim1 - T::minDim1;
-    static_assert(dimRange >= 0.);
-    constexpr float r = T::nColumns / dimRange;
-    int dimBin = (dim - T::minDim1) * r;
+    int dimBin = (dim - T::minDim1) * T::invDim1BinSize;
     dimBin = std::clamp(dimBin, 0, T::nColumns - 1);
     return dimBin;
   }
 
-  /** 
+  /**
     * @brief compute bin for dim2 (y or phi)
-    * 
+    *
     * @param[in] dim for bining
     * @return computed bin
     */
   int getDim2Bin(float dim2) const {
     if constexpr (std::is_same_v<WRAPPER, NoPhiWrapper>) {
-      constexpr float dimRange = T::maxDim2 - T::minDim2;
-      static_assert(dimRange >= 0.);
-      constexpr float r = T::nRows / dimRange;
-      int dimBin = (dim2 - T::minDim2) * r;
+      int dimBin = (dim2 - T::minDim2) * T::invDim2BinSize;
       dimBin = std::clamp(dimBin, 0, T::nRows - 1);
       return dimBin;
     } else {
@@ -76,10 +73,13 @@ public:
   inline float distance2(float dim1Cell1, float dim2Cell1, float dim1Cell2, float dim2Cell2) const {  // distance squared
     float d1 = dim1Cell1 - dim1Cell2;
     float d2 = dim2Cell1 - dim2Cell2;
+    d1 *= d1;
+    d2 *= d2;
     if constexpr (std::is_same_v<WRAPPER, PhiWrapper>) {
       d2 = reco::deltaPhi(dim2Cell1, dim2Cell2);
+      d2 *= d2;
     }
-    return (d1 * d1 + d2 * d2);
+    return (d1 + d2);
   }
   int getGlobalBin(float dim1, float dim2) const { return getDim1Bin(dim1) + getDim2Bin(dim2) * T::nColumns; }
 

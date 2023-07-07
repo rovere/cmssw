@@ -124,17 +124,19 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           entryInSoA.detid() = detid.rawId();
           index++;
         }
+#if 0
         std::cout << "Size: " << cells->metadata().size() << " count cells: " << index
           << " i.e. " << cells->metadata().size() << std::endl;
+#endif
 
         if constexpr (! std::is_same_v<ALPAKA_ACCELERATOR_NAMESPACE::Device, alpaka_common::DevHost>) {
           // Trigger copy async to GPU
-          std::cout << "GPU" << std::endl;
+          //std::cout << "GPU" << std::endl;
           HGCalSoACellsDeviceCollection deviceProduct{cells->metadata().size(), iEvent.queue()}; // QUEUE TO BE VERIFIED
           alpaka::memcpy(iEvent.queue(), deviceProduct.buffer(), cells.const_buffer());
           iEvent.emplace(deviceToken_, std::move(deviceProduct));
         } else {
-          std::cout << "CPU" << std::endl;
+          //std::cout << "CPU" << std::endl;
           iEvent.emplace(deviceToken_, std::move(cells));
         }
       }

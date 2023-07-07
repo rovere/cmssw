@@ -39,23 +39,23 @@ class HGCalLayerClusterProducer : public edm::stream::EDProducer<> {
 public:
   /**
    * @brief Constructor with parameter settings - which can be changed in hgcalLayerCluster_cff.py.
-   * Constructor will set all variables by input param ps. 
+   * Constructor will set all variables by input param ps.
    * algoID variables will be set accordingly to the detector type.
-   * 
+   *
    * @param[in] ps parametr set to set variables
   */
   HGCalLayerClusterProducer(const edm::ParameterSet&);
   ~HGCalLayerClusterProducer() override {}
   /**
    * @brief Method fill description which will be used in pyhton file.
-   * 
+   *
    * @param[out] description to be fill
   */
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
   /**
    * @brief Method run the algoritm to get clusters.
-   * 
+   *
    * @param[in, out] evt from get info and put result
    * @param[in] es to get event setup info
   */
@@ -197,7 +197,7 @@ void populate(const HGCRecHitCollection& hits) {
 
   /**
    * @brief Counts position for all points in the cluster
-   * 
+   *
    * @param[in] hitmap hitmap to find correct RecHit
    * @param[in] hitsAndFraction all hits in the cluster
    * @return counted position
@@ -207,7 +207,7 @@ void populate(const HGCRecHitCollection& hits) {
 
   /**
    * @brief Counts time for all points in the cluster
-   * 
+   *
    * @param[in] hitmap hitmap to find correct RecHit only for silicon (not for BH-HSci)
    * @param[in] hitsAndFraction all hits in the cluster
    * @return counted time
@@ -360,7 +360,7 @@ void HGCalLayerClusterProducer::produce(edm::Event& evt, const edm::EventSetup& 
 
   edm::ESHandle<CaloGeometry> geom = es.getHandle(caloGeomToken_);
   rhtools_.setGeometry(*geom);
-  maxlayer_ = rhtools_.lastLayer(isNose_);  
+  maxlayer_ = rhtools_.lastLayer(isNose_);
   cells_.clear();
   cells_.resize(2 * (maxlayer_ + 1));
   algo_->getEventSetup(es, rhtools_);
@@ -372,8 +372,8 @@ void HGCalLayerClusterProducer::produce(edm::Event& evt, const edm::EventSetup& 
 
   evt.getByToken(hits_token_, hits);
   populate(*hits);
-  
-  
+
+
   algo_->setCellsOnLayer(std::make_shared<std::vector<CellsOnLayer>>(cells_));
   for (auto const& it : *hits) {
     hitmap[it.detid().rawId()] = &(it);
@@ -395,9 +395,9 @@ void HGCalLayerClusterProducer::produce(edm::Event& evt, const edm::EventSetup& 
     }
   }
 
-  //hgcalUtils::DumpClusters dumper;
+  hgcalUtils::DumpClusters dumper;
 
-  //dumper.dumpInfos(*clusters, true);
+  dumper.dumpInfos(*clusters, true);
 
   auto clusterHandle = evt.put(std::move(clusters));
 
