@@ -7,6 +7,7 @@
 #include "Geometry/Records/interface/IdealGeometryRecord.h"
 
 #include "RecoEcal/EgammaCoreTools/interface/PositionCalc.h"
+#include "RecoLocalCalo/HGCalRecProducers/interface/DumpClustersDetails.h"
 //
 #include "DataFormats/CaloRecHit/interface/CaloID.h"
 #include "oneapi/tbb/task_arena.h"
@@ -127,6 +128,10 @@ std::vector<reco::BasicCluster> HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool) {
 
     cellsIdInCluster.clear();
   }
+
+  hgcalUtils::DumpLegacySoA dumperLegacySoA;
+  dumperLegacySoA.dumpInfos(*cells_);
+
   return clusters_v_;
 }
 template <typename T, typename STRATEGY>
@@ -149,7 +154,7 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateLocalDensity(const T& lt,
 
         for (unsigned int j = 0; j < binSize; j++) {
           unsigned int otherId = lt[binId][j];
-          if (distance(lt, i, otherId, layerId) < delta) {
+          if (distance2(lt, i, otherId, layerId) < delta*delta) {
             cellsOnLayer.rho[i] += (i == otherId ? 1.f : 0.5f) * cellsOnLayer.weight[otherId];
           }
         }
@@ -245,8 +250,10 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateDistanceToHigher(const T& lt, const u
     // initialize delta and nearest higher for i
     float maxDelta = std::numeric_limits<float>::max();
     float i_delta = maxDelta;
+    float rho_max = 0.f;
     int i_nearestHigher = -1;
     auto range = outlierDeltaFactor_ * delta;
+    bool print = (cellsOnLayer.detid[i] == 2149108264);
     std::array<int, 4> search_box = lt.searchBox(cellsOnLayer.dim1[i] - range,
                                                  cellsOnLayer.dim1[i] + range,
                                                  cellsOnLayer.dim2[i] - range,
@@ -264,14 +271,46 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateDistanceToHigher(const T& lt, const u
         // loop over all hits in this bin
         for (unsigned int j = 0; j < binSize; j++) {
           unsigned int otherId = lt[binId][j];
-          float dist = distance(lt, i, otherId, layerId);
+          float dist = distance2(lt, i, otherId, layerId);
           bool foundHigher =
               (cellsOnLayer.rho[otherId] > cellsOnLayer.rho[i]) ||
               (cellsOnLayer.rho[otherId] == cellsOnLayer.rho[i] && cellsOnLayer.detid[otherId] > cellsOnLayer.detid[i]);
+          /*
           if (foundHigher && dist <= i_delta) {
             // update i_delta
             i_delta = dist;
             // update i_nearestHigher
+            i_nearestHigher = otherId;
+          }
+          */
+          // FIX MR
+          if (print) {
+            printf("XXX Processing %d distance %a\n", cellsOnLayer.detid[otherId].rawId(), dist);
+          }
+          if (foundHigher && dist < i_delta) {
+            if (print) {
+                printf("XXX using new nearest %d, with rho %a and distance %a old dist %a\n", otherId, cellsOnLayer.rho[otherId], dist, i_delta);
+                printf("XXX x1 %a y1 %a x2 %a y2 %a\n",
+                    cells_->at(layerId).dim1[i], cells_->at(layerId).dim2[i],
+                    cells_->at(layerId).dim1[otherId], cells_->at(layerId).dim2[otherId]
+                    );
+            }
+            rho_max = cellsOnLayer.rho[otherId];
+            i_delta = dist;
+            i_nearestHigher = otherId;
+          } else if (foundHigher && dist == i_delta && cellsOnLayer.rho[otherId] > rho_max) {
+            if (print) {
+                printf("XXy using new nearest %d, with rho %a and distance %a old dist %a\n", otherId, cellsOnLayer.rho[otherId], dist, i_delta);
+            }
+            rho_max = cellsOnLayer.rho[otherId];
+            i_delta = dist;
+            i_nearestHigher = otherId;
+          } else if (foundHigher && dist == i_delta && cellsOnLayer.rho[otherId] == rho_max && cellsOnLayer.detid[otherId] > cellsOnLayer.detid[i]) {
+            if (print) {
+                printf("XXz using new nearest %d, with rho %a and distance %a old dist %a\n", otherId, cellsOnLayer.rho[otherId], dist, i_delta);
+            }
+            rho_max = cellsOnLayer.rho[otherId];
+            i_delta = dist;
             i_nearestHigher = otherId;
           }
         }
@@ -279,7 +318,7 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateDistanceToHigher(const T& lt, const u
     }
     bool foundNearestHigherInSearchBox = (i_delta != maxDelta);
     if (foundNearestHigherInSearchBox) {
-      cellsOnLayer.delta[i] = i_delta;
+      cellsOnLayer.delta[i] = std::sqrt(i_delta);
       cellsOnLayer.nearestHigher[i] = i_nearestHigher;
     } else {
       // otherwise delta is guaranteed to be larger outlierDeltaFactor_*delta_c

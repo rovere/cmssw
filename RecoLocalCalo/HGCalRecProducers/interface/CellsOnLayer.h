@@ -11,7 +11,7 @@ struct CellsOnLayer {
   std::vector<int> clusterIndex;
   std::vector<float> sigmaNoise;
   std::vector<std::vector<int>> followers;
-  std::vector<bool> isSeed;
+  std::vector<int> isSeed;
 
   void clear() {
     detid.clear();
