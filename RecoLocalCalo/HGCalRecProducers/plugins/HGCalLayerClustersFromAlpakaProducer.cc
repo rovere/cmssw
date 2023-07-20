@@ -77,14 +77,17 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
         iEvent.put( std::move(layerClustersMask), "InitialLayerClustersMask");
       }
 
-      hgcalUtils::DumpCellsSoA dumperCellsSoA;
-      dumperCellsSoA.dumpInfos(cells);
-
-      hgcalUtils::DumpClusters dumper;
-      dumper.dumpInfos(*clusters, true);
-
-      hgcalUtils::DumpClustersSoA dumperSoA;
-      dumperSoA.dumpInfos(clustersSoA);
+      // hgcalUtils::DumpCellsSoA dumperCellsSoA;
+      // dumperCellsSoA.dumpInfos(cells);
+        // hgcalUtils::DumpClusters dumper;
+        // dumper.dumpInfos(*clusters, true);
+    
+      // if (detector_ == "EE"){
+      //   hgcalUtils::DumpClusters dumper;
+      //   dumper.dumpInfos(*clusters, true);
+      // // hgcalUtils::DumpClustersSoA dumperSoA;
+      // // dumperSoA.dumpInfos(clustersSoA);
+      // }
 
       //std::cout << "Before put clusters" << std::endl;
       auto clusterHandle = iEvent.put(std::move(clusters));
@@ -92,7 +95,6 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
       edm::ValueMap<std::pair<float, float>>::Filler filler(*timeCl);
       filler.insert(clusterHandle, times.begin(), times.end());
       filler.fill();
-      //std::cout << "Before put time" << std::endl;
       iEvent.put(std::move(timeCl), timeClname_);
 
     }
@@ -211,14 +213,13 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
           continue;
         auto globalClusterIdx = clusterSoAV.clusterIndex();
         if (usedIdx.find(globalClusterIdx) != usedIdx.end()){
-          std::cout << fmt::format("Re-Converting Original Cl {} into legacy {}", globalClusterIdx, originalClIdx_CondensedClIx[globalClusterIdx]) << std::endl;
           auto const & currentIdx = originalClIdx_CondensedClIx[globalClusterIdx];
           clusters[currentIdx].setEnergy(clusters[currentIdx].energy() + cellV.weight());
           clusters[currentIdx].addHitAndFraction(cellV.detid(), 1.f);
           assert( cellV.detid() !=0 );
         } else {
           originalClIdx_CondensedClIx[globalClusterIdx] = orderedClIdx;
-          std::cout << fmt::format("Converting Original Cl {} into legacy {}", globalClusterIdx, originalClIdx_CondensedClIx[globalClusterIdx]) << std::endl;
+          // std::cout << fmt::format("Converting Original Cl {} into legacy {}", globalClusterIdx, originalClIdx_CondensedClIx[globalClusterIdx]) << std::endl;
           std::vector<std::pair<DetId, float>> thisCluster;
           thisCluster.emplace_back(cellV.detid(), 1.f);
           math::XYZPoint position = math::XYZPoint(0.f, 0.f, 0.f);

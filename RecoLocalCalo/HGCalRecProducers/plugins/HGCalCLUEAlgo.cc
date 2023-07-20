@@ -129,8 +129,8 @@ std::vector<reco::BasicCluster> HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool) {
     cellsIdInCluster.clear();
   }
 
-  hgcalUtils::DumpLegacySoA dumperLegacySoA;
-  dumperLegacySoA.dumpInfos(*cells_);
+  // hgcalUtils::DumpLegacySoA dumperLegacySoA;
+  // dumperLegacySoA.dumpInfos(*cells_);
 
   return clusters_v_;
 }
@@ -253,7 +253,7 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateDistanceToHigher(const T& lt, const u
     float rho_max = 0.f;
     int i_nearestHigher = -1;
     auto range = outlierDeltaFactor_ * delta;
-    bool print = (cellsOnLayer.detid[i] == 2149108264);
+    bool print = false; //(cellsOnLayer.detid[i] ==2188512724 );//2188512724
     std::array<int, 4> search_box = lt.searchBox(cellsOnLayer.dim1[i] - range,
                                                  cellsOnLayer.dim1[i] + range,
                                                  cellsOnLayer.dim2[i] - range,
@@ -285,30 +285,30 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateDistanceToHigher(const T& lt, const u
           */
           // FIX MR
           if (print) {
-            printf("XXX Processing %d distance %a\n", cellsOnLayer.detid[otherId].rawId(), dist);
+           // printf("NXXX Processing %d distance %f\n", cellsOnLayer.detid[otherId].rawId(), dist);
           }
           if (foundHigher && dist < i_delta) {
-            if (print) {
-                printf("XXX using new nearest %d, with rho %a and distance %a old dist %a\n", otherId, cellsOnLayer.rho[otherId], dist, i_delta);
-                printf("XXX x1 %a y1 %a x2 %a y2 %a\n",
-                    cells_->at(layerId).dim1[i], cells_->at(layerId).dim2[i],
-                    cells_->at(layerId).dim1[otherId], cells_->at(layerId).dim2[otherId]
-                    );
-            }
+            // if (print) {
+            //     printf("NXXX using new nearest %d, with rho %f and distance %f old dist %f\n", otherId, cellsOnLayer.rho[otherId], dist, i_delta);
+            //     // printf("NXXX x1 %f y1 %f x2 %f y2 %f\n",
+            //     //     cells_->at(layerId).dim1[i], cells_->at(layerId).dim2[i],
+            //     //     cells_->at(layerId).dim1[otherId], cells_->at(layerId).dim2[otherId]
+            //     //     );
+            // }
             rho_max = cellsOnLayer.rho[otherId];
             i_delta = dist;
             i_nearestHigher = otherId;
           } else if (foundHigher && dist == i_delta && cellsOnLayer.rho[otherId] > rho_max) {
-            if (print) {
-                printf("XXy using new nearest %d, with rho %a and distance %a old dist %a\n", otherId, cellsOnLayer.rho[otherId], dist, i_delta);
-            }
+            // if (print) {
+            //     printf("NXXy using new nearest %d, with rho %f and distance %f old dist %f\n", otherId, cellsOnLayer.rho[otherId], dist, i_delta);
+            // }
             rho_max = cellsOnLayer.rho[otherId];
             i_delta = dist;
             i_nearestHigher = otherId;
           } else if (foundHigher && dist == i_delta && cellsOnLayer.rho[otherId] == rho_max && cellsOnLayer.detid[otherId] > cellsOnLayer.detid[i]) {
-            if (print) {
-                printf("XXz using new nearest %d, with rho %a and distance %a old dist %a\n", otherId, cellsOnLayer.rho[otherId], dist, i_delta);
-            }
+            // if (print) {
+            //     printf("NXXz using new nearest %d, with rho %f and distance %f old dist %f\n", otherId, cellsOnLayer.rho[otherId], dist, i_delta);
+            // }
             rho_max = cellsOnLayer.rho[otherId];
             i_delta = dist;
             i_nearestHigher = otherId;

@@ -46,14 +46,3 @@ hgcalHeterogenousLayerClustersHSi = hgcalHeterogenousLayerClusters_.clone(
         type = cms.string('SiCLUE')
     )
 )
-
-hgcalHeterogenousMergeLayerClusters = hgcalMergeLayerClusters_.clone(
-    layerClustersEE = cms.InputTag('hgcalHeterogenousLayerClustersEE'),
-    layerClustersHSi = cms.InputTag('hgcalHeterogenousLayerClustersHSi'),
-    layerClustersHSci = cms.InputTag('hgcalLayerClustersHSci'),
-    time_layerclustersEE = cms.InputTag('hgcalHeterogenousLayerClustersEE', 'timeLayerCluster'),
-    time_layerclustersHSi = cms.InputTag('hgcalHeterogenousLayerClustersHSi', 'timeLayerCluster'),
-    time_layerclustersHSci = cms.InputTag('hgcalLayerClustersHSci', 'timeLayerCluster'),
-    timeClname = cms.string('timeLayerCluster'),
-    mightGet = cms.optional.untracked.vstring
-)

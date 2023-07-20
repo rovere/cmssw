@@ -10,19 +10,26 @@ from RecoLocalCalo.HGCalRecProducers.hgcalRecHitMapProducer_cfi import hgcalRecH
 from RecoParticleFlow.PFClusterProducer.particleFlowRecHitHGC_cfi import *
 from RecoParticleFlow.PFClusterProducer.particleFlowClusterHGC_cfi import *
 from RecoLocalCalo.HGCalRecProducers.hgcalMultiClusters_cfi import *
-from RecoLocalCalo.HGCalRecProducers.hgcalLayerClusters_cff import hgcalLayerClustersHFNose, hgcalLayerClustersEE, hgcalLayerClustersHSi, hgcalLayerClustersHSci, hgcalMergeLayerClusters
-from RecoLocalCalo.HGCalRecProducers.hgcalHeterogenousLayerClusters_cff import hgcalHeterogenousLayerClustersEE, hgcalHeterogenousLayerClustersHSi, hgcalHeterogenousMergeLayerClusters
+from RecoLocalCalo.HGCalRecProducers.hgcalLayerClusters_cff import hgcalLayerClustersHFNose, hgcalLayerClustersEE, hgcalLayerClustersHSi, hgcalLayerClustersHSci
+from RecoLocalCalo.HGCalRecProducers.hgcalMergeLayerClusters_cff import hgcalMergeLayerClusters ##,  hgcalHeterogenousMergeLayerClusters
+from RecoLocalCalo.HGCalRecProducers.hgcalHeterogenousLayerClusters_cff import hgcalHeterogenousLayerClustersEE, hgcalHeterogenousLayerClustersHSi
+from RecoLocalCalo.HGCalRecProducers.hgCalRecHitsSoAProducer_cff import *
+from RecoLocalCalo.HGCalRecProducers.hgCalLayerClustersSoAProducer_cff import *
+from RecoLocalCalo.HGCalRecProducers.hgCalLayerClustersFromAlpakaProducer_cff import *
 
 hgcalLocalRecoTask = cms.Task( HGCalUncalibRecHit,
                                        HGCalRecHit,
                                        hgcalRecHitMapProducer,
                                        hgcalLayerClustersEE,
-                                    #    hgcalHeterogenousLayerClustersEE,
-				                        hgcalLayerClustersHSi,
-				    #    hgcalHeterogenousLayerClustersHSi,
+                                    #    hgCalRecHitsSoAProducerEE,
+                                    #    hgCalLayerClustersSoAProducerEE,
+                                    #    hgCalLayerClustersFromAlpakaProducerEE,
+				                       hgcalLayerClustersHSi,
+                                    #    hgCalRecHitsSoAProducerHSi,
+                                    #    hgCalLayerClustersSoAProducerHSi,
+                                    #    hgCalLayerClustersFromAlpakaProducerHSi,
                                        hgcalLayerClustersHSci,
-                                    #    hgcalHeterogenousMergeLayerClusters,
-				       hgcalMergeLayerClusters,
+				                       hgcalMergeLayerClusters,
                                        hgcalMultiClusters,
                                        particleFlowRecHitHGC,
                                        particleFlowClusterHGCal )

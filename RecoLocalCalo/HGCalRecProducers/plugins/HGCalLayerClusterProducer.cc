@@ -374,12 +374,18 @@ void HGCalLayerClusterProducer::produce(edm::Event& evt, const edm::EventSetup& 
   populate(*hits);
 
 
-  algo_->setCellsOnLayer(std::make_shared<std::vector<CellsOnLayer>>(cells_));
+  algo_->setCellsOnLayer(&cells_);
   for (auto const& it : *hits) {
     hitmap[it.detid().rawId()] = &(it);
   }
 
   algo_->makeClusters();
+  
+//   if (detector_ == "EE"){
+//    hgcalUtils::DumpLegacySoA dumper;
+
+//    dumper.dumpInfos(cells_);
+// }
   *clusters = algo_->getClusters(false);
 
   std::vector<std::pair<float, float>> times;
@@ -394,10 +400,11 @@ void HGCalLayerClusterProducer::produce(edm::Event& evt, const edm::EventSetup& 
       times.push_back(std::pair<float, float>(-99., -1.));
     }
   }
+// if (detector_ == "EE"){
+//   hgcalUtils::DumpClusters dumper;
 
-  hgcalUtils::DumpClusters dumper;
-
-  dumper.dumpInfos(*clusters, true);
+//   dumper.dumpInfos(*clusters, true);
+// }
 
   auto clusterHandle = evt.put(std::move(clusters));
 
