@@ -147,6 +147,7 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateLocalDensity(const T& lt,
                                                  cellsOnLayer.dim2[i] - delta,
                                                  cellsOnLayer.dim2[i] + delta);
 
+    bool print = (cellsOnLayer.detid[i] == 2149648421);
     for (int xBin = search_box[0]; xBin < search_box[1] + 1; ++xBin) {
       for (int yBin = search_box[2]; yBin < search_box[3] + 1; ++yBin) {
         int binId = lt.getGlobalBinByBin(xBin, yBin);
@@ -155,10 +156,20 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateLocalDensity(const T& lt,
         for (unsigned int j = 0; j < binSize; j++) {
           unsigned int otherId = lt[binId][j];
           if (distance2(lt, i, otherId, layerId) < delta*delta) {
+            if (print) {
+                printf("ZZZ Adding %a from %d/%u to %a\n", cellsOnLayer.weight[otherId], otherId, cellsOnLayer.detid[otherId].rawId(), cellsOnLayer.rho[i]);
+            }
             cellsOnLayer.rho[i] += (i == otherId ? 1.f : 0.5f) * cellsOnLayer.weight[otherId];
+          } else {
+            if (print) {
+              printf("ZZZ Rejecting %d/%u due to distance %a %a\n", otherId, cellsOnLayer.detid[otherId].rawId(), distance2(lt, i, otherId, layerId), delta*delta);
+            }
           }
         }
       }
+    }
+    if (print) {
+      printf("ZZZ Final value %a", cellsOnLayer.rho[i]);
     }
     LogDebug("HGCalCLUEAlgo") << "Debugging calculateLocalDensity: \n"
                               << "  cell: " << i << " eta: " << cellsOnLayer.dim1[i] << " phi: " << cellsOnLayer.dim2[i]
