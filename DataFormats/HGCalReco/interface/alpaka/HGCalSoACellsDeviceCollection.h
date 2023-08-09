@@ -7,7 +7,7 @@
 
 namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
-    // SoA with x, y, z, id fields in device global memory
+    // SoA with x, y, weight, sigmaNoise, recHitsIndex layer fields in device global memory
     using HGCalSoACellsDeviceCollection = PortableCollection<HGCalCellsSoA>;
 
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE

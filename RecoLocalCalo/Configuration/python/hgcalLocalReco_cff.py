@@ -11,11 +11,13 @@ from RecoParticleFlow.PFClusterProducer.particleFlowRecHitHGC_cfi import *
 from RecoParticleFlow.PFClusterProducer.particleFlowClusterHGC_cfi import *
 from RecoLocalCalo.HGCalRecProducers.hgcalMultiClusters_cfi import *
 from RecoLocalCalo.HGCalRecProducers.hgcalLayerClusters_cff import hgcalLayerClustersHFNose, hgcalLayerClustersEE, hgcalLayerClustersHSi, hgcalLayerClustersHSci
-from RecoLocalCalo.HGCalRecProducers.hgcalMergeLayerClusters_cff import hgcalMergeLayerClusters ##,  hgcalHeterogenousMergeLayerClusters
+from RecoLocalCalo.HGCalRecProducers.hgcalMergeLayerClusters_cff import hgcalMergeLayerClusters
 from RecoLocalCalo.HGCalRecProducers.hgcalHeterogenousLayerClusters_cff import hgcalHeterogenousLayerClustersEE, hgcalHeterogenousLayerClustersHSi
 from RecoLocalCalo.HGCalRecProducers.hgCalRecHitsSoAProducer_cff import *
 from RecoLocalCalo.HGCalRecProducers.hgCalLayerClustersSoAProducer_cff import *
 from RecoLocalCalo.HGCalRecProducers.hgCalLayerClustersFromAlpakaProducer_cff import *
+from Configuration.StandardSequences.Accelerators_cff import *
+from HeterogeneousCore.AlpakaCore.ProcessAcceleratorAlpaka_cfi import *
 
 hgcalLocalRecoTask = cms.Task( HGCalUncalibRecHit,
                                        HGCalRecHit,

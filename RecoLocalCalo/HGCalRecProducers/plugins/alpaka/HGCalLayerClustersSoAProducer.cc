@@ -33,10 +33,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       void produce(device::Event& iEvent, device::EventSetup const& iSetup) override {
 
         auto const & deviceInput = iEvent.get(getTokenDevice_);
-        std::cout << "Size of device collection: " << deviceInput->metadata().size() << std::endl;
         auto const input_v = deviceInput.view();
         // Allocate output SoA
-        //ALPAKA_ACCELERATOR_NAMESPACE::PortableCollection<HGCalCellsOutSoA> output(input_v.cellsCout(), iEvent.queue());
         ALPAKA_ACCELERATOR_NAMESPACE::PortableCollection<HGCalCellsOutSoA> output(deviceInput->metadata().size(), iEvent.queue());
         auto output_v = output.view();
 

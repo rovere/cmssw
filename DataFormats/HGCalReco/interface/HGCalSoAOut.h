@@ -5,7 +5,7 @@
 #include "DataFormats/SoATemplate/interface/SoALayout.h"
 #include "DataFormats/SoATemplate/interface/SoAView.h"
 
-  // SoA layout with delta, rho, weight, nearestHigher, clusterIndex, layer, isSeed, and cellsCount fields
+  // SoA layout with delta(distance), rho(density), nearestHigher, clusterIndex, isSeed, and numberOfClusters fields
   GENERATE_SOA_LAYOUT(HGCalSoAOut,
                       // columns: one value per element
                       SOA_COLUMN(float, delta),

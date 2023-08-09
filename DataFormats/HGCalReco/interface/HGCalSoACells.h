@@ -8,7 +8,7 @@
 #include "DataFormats/SoATemplate/interface/SoALayout.h"
 #include "DataFormats/SoATemplate/interface/SoAView.h"
 
-  // SoA layout with dim1, dim2, weight, sigmaNoise, recHitsIndex layer and cellsCount fields
+  // SoA layout with dim1, dim2, weight, sigmaNoise, recHitsIndex layer and detid
   GENERATE_SOA_LAYOUT(HGCalSoACells,
                       // columns: one value per element
                       SOA_COLUMN(float, dim1),

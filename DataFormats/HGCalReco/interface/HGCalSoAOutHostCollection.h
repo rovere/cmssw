@@ -5,9 +5,7 @@
 #include "DataFormats/HGCalReco/interface/HGCalSoAOut.h"
 
 
-// SoA with delta, rho, weight, nearestHigher, clusterIndex, layer, isSeed, and cellsCount fields in host memory
+// SoA with delta, rho, nearestHigher, clusterIndex, isSeed, and numberOfClusters fields in host memory
 using HGCalSoAOutHostCollection = PortableHostCollection<HGCalCellsOutSoA>;
-
-
 
 #endif  // DataFormats_HGCalReco_interface_HGCalSoAOutHostCollection_h

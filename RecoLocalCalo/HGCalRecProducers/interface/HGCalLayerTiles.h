@@ -79,9 +79,9 @@ public:
     if constexpr (std::is_same_v<WRAPPER, PhiWrapper>) {
       d2 = reco::deltaPhi(dim2Cell1, dim2Cell2);
       d2 *= d2;
-      return std::fmaf(d1, d1, d2);
+      return (d1 * d1) + d2;
     }
-    return std::fmaf(d1, d1, d2 * d2);
+     return (d1 * d1) + (d2 * d2);
   }
   int getGlobalBin(float dim1, float dim2) const { return getDim1Bin(dim1) + getDim2Bin(dim2) * T::nColumns; }
 

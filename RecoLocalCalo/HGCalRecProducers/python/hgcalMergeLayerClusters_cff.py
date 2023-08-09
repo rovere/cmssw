@@ -4,7 +4,6 @@ from RecoLocalCalo.HGCalRecProducers.hgcalMergeLayerClusters_cfi import hgcalMer
 
 hgcalMergeLayerClusters = hgcalMergeLayerClusters_.clone(
 )
-# hgcalHeterogenousMergeLayerClusters = hgcalMergeLayerClusters_.clone(
 # hgcalMergeLayerClusters = hgcalMergeLayerClusters_.clone(
 #     layerClustersEE = cms.InputTag('hgCalLayerClustersFromAlpakaProducerEE'),
 #     layerClustersHSi = cms.InputTag('hgCalLayerClustersFromAlpakaProducerHSi'),

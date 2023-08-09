@@ -19,9 +19,7 @@ using namespace hgcal_clustering;
 
 template <typename T, typename STRATEGY>
 void HGCalCLUEAlgoT<T, STRATEGY>::getEventSetupPerAlgorithm(const edm::EventSetup& es) {
-  //cells_.clear();
   numberOfClustersPerLayer_.clear();
-  //cells_.resize(2 * (maxlayer_ + 1));
   numberOfClustersPerLayer_.resize(2 * (maxlayer_ + 1), 0);
 }
 
@@ -83,7 +81,6 @@ std::vector<reco::BasicCluster> HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool) {
 
   for (unsigned layerId = 1; layerId < offsets.size(); ++layerId) {
     offsets[layerId] = offsets[layerId - 1] + numberOfClustersPerLayer_[layerId - 1];
-
     maxClustersOnLayer = std::max(maxClustersOnLayer, numberOfClustersPerLayer_[layerId]);
   }
 
@@ -128,10 +125,6 @@ std::vector<reco::BasicCluster> HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool) {
 
     cellsIdInCluster.clear();
   }
-
-  // hgcalUtils::DumpLegacySoA dumperLegacySoA;
-  // dumperLegacySoA.dumpInfos(*cells_);
-
   return clusters_v_;
 }
 template <typename T, typename STRATEGY>
@@ -253,7 +246,6 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateDistanceToHigher(const T& lt, const u
     float rho_max = 0.f;
     int i_nearestHigher = -1;
     auto range = outlierDeltaFactor_ * delta;
-    bool print = false; //(cellsOnLayer.detid[i] ==2188512724 );//2188512724
     std::array<int, 4> search_box = lt.searchBox(cellsOnLayer.dim1[i] - range,
                                                  cellsOnLayer.dim1[i] + range,
                                                  cellsOnLayer.dim2[i] - range,
@@ -275,40 +267,16 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateDistanceToHigher(const T& lt, const u
           bool foundHigher =
               (cellsOnLayer.rho[otherId] > cellsOnLayer.rho[i]) ||
               (cellsOnLayer.rho[otherId] == cellsOnLayer.rho[i] && cellsOnLayer.detid[otherId] > cellsOnLayer.detid[i]);
-          /*
-          if (foundHigher && dist <= i_delta) {
-            // update i_delta
-            i_delta = dist;
-            // update i_nearestHigher
-            i_nearestHigher = otherId;
-          }
-          */
-          // FIX MR
-          if (print) {
-           // printf("NXXX Processing %d distance %f\n", cellsOnLayer.detid[otherId].rawId(), dist);
-          }
+          
           if (foundHigher && dist < i_delta) {
-            // if (print) {
-            //     printf("NXXX using new nearest %d, with rho %f and distance %f old dist %f\n", otherId, cellsOnLayer.rho[otherId], dist, i_delta);
-            //     // printf("NXXX x1 %f y1 %f x2 %f y2 %f\n",
-            //     //     cells_->at(layerId).dim1[i], cells_->at(layerId).dim2[i],
-            //     //     cells_->at(layerId).dim1[otherId], cells_->at(layerId).dim2[otherId]
-            //     //     );
-            // }
             rho_max = cellsOnLayer.rho[otherId];
             i_delta = dist;
             i_nearestHigher = otherId;
           } else if (foundHigher && dist == i_delta && cellsOnLayer.rho[otherId] > rho_max) {
-            // if (print) {
-            //     printf("NXXy using new nearest %d, with rho %f and distance %f old dist %f\n", otherId, cellsOnLayer.rho[otherId], dist, i_delta);
-            // }
             rho_max = cellsOnLayer.rho[otherId];
             i_delta = dist;
             i_nearestHigher = otherId;
           } else if (foundHigher && dist == i_delta && cellsOnLayer.rho[otherId] == rho_max && cellsOnLayer.detid[otherId] > cellsOnLayer.detid[i]) {
-            // if (print) {
-            //     printf("NXXz using new nearest %d, with rho %f and distance %f old dist %f\n", otherId, cellsOnLayer.rho[otherId], dist, i_delta);
-            // }
             rho_max = cellsOnLayer.rho[otherId];
             i_delta = dist;
             i_nearestHigher = otherId;

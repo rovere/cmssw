@@ -5,7 +5,7 @@
 #include "DataFormats/HGCalReco/interface/HGCalSoACells.h"
 
 
-  // SoA with x, y, z, id fields in host memory
+  // SoA with x, y, weight, sigmaNoise, recHitsIndex layer fields in host memory
 using HGCalSoACellsHostCollection = PortableHostCollection<HGCalCellsSoA>;
 
 

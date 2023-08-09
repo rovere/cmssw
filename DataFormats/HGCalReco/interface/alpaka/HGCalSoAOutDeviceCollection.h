@@ -7,7 +7,7 @@
 
 namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
-    // SoA with delta, rho, weight, nearestHigher, clusterIndex, layer, isSeed, and cellsCount fields in device global memory
+    // SoA with delta, rho, nearestHigher, clusterIndex, isSeed, and numberOfClusters fields in device global memory
     using HGCalSoAOutDeviceCollection = PortableCollection<HGCalCellsOutSoA>;
 
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE

@@ -96,15 +96,9 @@ private:
   std::vector<double> thicknessCorrection_;
   int deltasi_index_regemfac_;
   CellsOnLayers cells_;
-  // double dc_;
 
   hgcal::RecHitTools rhtools_;
   edm::ESGetToken<CaloGeometry, CaloGeometryRecord> caloGeomToken_;
-
-  float roundTo5(float value){
-    return std::round(value * 100000.0) / 100000.0;
-    // return std::round(value / 100000.0) * 100000.0;
-  }
 
   std::vector<reco::BasicCluster> createClusters(int numberOfClusters){
     
@@ -135,11 +129,6 @@ private:
           numbeOfseeds ++;
         }
     }
-    // for (unsigned i = 0; i < clusters.size(); ++i) {
-    //   const reco::CaloCluster& sCl = clusters[i];
-    //   std::cout << clusters[i].hitsAndFractions().size() << std::endl;
-    //   std::cout << sCl.hitsAndFractions().size() <<  " " << clusters.size() << std::endl; 
-    // }
     return clusters;
   }
 void computeThreshold() {
@@ -224,17 +213,12 @@ void populate(const HGCRecHitCollection& hits) {
     int offset = ((rhtools_.zside(detid) + 1) >> 1) * maxlayer_;
     int layer = layerOnSide + offset;
     cells_.detid[index] = detid;
-    // cells_.detid.emplace_back(detid);
     if  (detector_ == "BH") {
-      // cells_.dim1.emplace_back(position.eta());
       cells_.dim1[index] = position.eta();
-      // cells_.dim2.emplace_back(position.phi());
       cells_.dim2[index] = position.phi();
     }  // else, isSilicon == true and eta phi values will not be used
     else {
-      // cells_.dim1.emplace_back(position.x());
       cells_.dim1[index] = position.x();
-      // cells_.dim2.emplace_back(position.y());
       cells_.dim2[index] = position.y();
     }
     cells_.weight[index] = hgrh.energy();
@@ -303,7 +287,6 @@ HGCalLayerClusterHeterogenousProducer::HGCalLayerClusterHeterogenousProducer(con
   dEdXweights_ = pluginPSet.getParameter<std::vector<double>>("dEdXweights");
   thicknessCorrection_ = pluginPSet.getParameter<std::vector<double>>("thicknessCorrection");
   deltasi_index_regemfac_ = pluginPSet.getParameter<int>("deltasi_index_regemfac");
-  // dc_ = pluginPSet.getParameter<std::vector<double>>("deltac");
         
         
 
@@ -311,10 +294,8 @@ HGCalLayerClusterHeterogenousProducer::HGCalLayerClusterHeterogenousProducer(con
   produces<std::vector<reco::BasicCluster>>();
   //time for layer clusters
   produces<edm::ValueMap<std::pair<float, float>>>(timeClname_);
-//   std::cout << "Hterogenous" << detector_ << " :" << " end constructor" << std::endl;
 }
 
-//todo
 void HGCalLayerClusterHeterogenousProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   // hgcalLayerClusters
   edm::ParameterSetDescription desc;
@@ -337,7 +318,6 @@ math::XYZPoint HGCalLayerClusterHeterogenousProducer::calculatePosition(
   DetId maxEnergyIndex;
   float x = 0.f;
   float y = 0.f;
-  // std::cout << "Hterogenous" << detector_ << " :" << " start calculate position" << std::endl;
   for (auto const& hit : hitsAndFractions) {
     //time is computed wrt  0-25ns + offset and set to -1 if no time
     const HGCRecHit* rechit = hitmap[hit.first];
@@ -410,7 +390,6 @@ std::pair<float, float> HGCalLayerClusterHeterogenousProducer::calculateTime(
   return timeCl;
 }
 void HGCalLayerClusterHeterogenousProducer::produce(edm::Event& evt, const edm::EventSetup& es) {
-//   std::cout << "Hterogenous" << detector_ << " :" << " start produce" << std::endl;
   if(detector_ != "EE" && detector_ != "FH"){ //also HFNose?
     return;
   }
@@ -420,11 +399,9 @@ void HGCalLayerClusterHeterogenousProducer::produce(edm::Event& evt, const edm::
 
   edm::ESHandle<CaloGeometry> geom = es.getHandle(caloGeomToken_);
   rhtools_.setGeometry(*geom);
-//   std::cout << "Hterogenous" << detector_ << " :" << " setup geometry, maxLayetr_: " << rhtools_.lastLayer(isNose_) << "isNose: " << isNose_  << std::endl;
   maxlayer_ = rhtools_.lastLayer(isNose_);
 
   cells_.clear();
-  // std::cout << "BEFORE resize" << std::endl;
 
 
   //make a map detid-rechit
@@ -433,40 +410,25 @@ void HGCalLayerClusterHeterogenousProducer::produce(edm::Event& evt, const edm::
   std::unordered_map<uint32_t, const HGCRecHit*> hitmap;
   evt.getByToken(hits_token_, hits);
   //setup cells_
-  cells_.resize((*hits).size()); //is this necessary?
-  // std::cout << "AFTER resize" << std::endl;
-  // std::cout << "BEFORE populate" << std::endl;
+  cells_.resize((*hits).size());
   populate(*hits); 
 
   cells_.shrink_to_fit();
-  // std::cout << "size aftrer fit" << cells_.delta.size() << std::endl;
-  const int layers = 96; //todo set to maxLayer_
-  // const int layers = 47; //todo set to maxLayer_
-  // float dc, float rhoc, float outlierDeltaFactor, bool verbose
-  // std::cout << "BEFORE creating clue algo" << std::endl;
-  CLUEAlgo<TilesConstants, layers> algoStandelone = CLUEAlgo<TilesConstants, layers>(1.3f,9.f,2.f,false); //todo correct setup
-  //  std::cout << "BEFORE set points" << std::endl;
+  const int layers = 96; 
+  CLUEAlgo<TilesConstants, layers> algoStandelone = CLUEAlgo<TilesConstants, layers>(1.3f,9.f,2.f,false); 
   algoStandelone.setPoints(cells_.dim1, cells_.dim2, cells_.layer, cells_.weight, cells_.sigmaNoise);
 
   hitmap.reserve((*hits).size());
   for (auto const& it : *hits) {
     hitmap[it.detid().rawId()] = &(it);
   }
-  // algoStandelone.setPoints(soa.dim1.size(), &soa.dim1[0], &soa.dim2[0], &soa.layer[0], &soa.weight[0]);
   algoStandelone.makeClusters();
-  // std::cout << "BEFORE get points" << std::endl;
   algoStandelone.getPoints(cells_.delta, cells_.nearestHigher, cells_.clusterIndex, cells_.rho, cells_.isSeed, cells_.layer, cells_.weight);
-  // std::cout << "BEFORE shrink to fit points" << std::endl;
-  // cells_.shrink_to_fit();
-  // std::cout << "size aftrer fit" << cells_.delta.size() << std::endl;
-  // std::cout << "BEFORE create clusters" << std::endl;
   *clusters = createClusters(algoStandelone.getNumberOfClusters());
 
-//  std::cout << "AFTER create clusters" << std::endl;
 
   std::vector<std::pair<float, float>> times;
   times.reserve(clusters->size());
-// std::cout << "BEFORE calculate position" << std::endl;
   for (unsigned i = 0; i < clusters->size(); ++i) {
     const reco::CaloCluster& sCl = (*clusters)[i];
     (*clusters)[i].setPosition(std::move(calculatePosition(hitmap, sCl.hitsAndFractions()))); 
@@ -476,27 +438,18 @@ void HGCalLayerClusterHeterogenousProducer::produce(edm::Event& evt, const edm::
       times.push_back(std::pair<float, float>(-99., -1.));
     }
   }
-// std::cout << "AFTER calculate position" << std::endl;
-
-//   for (auto &i: *clusters){
-//       std::cout << i.seed().det() << "," << roundTo5(i.x()) << "," << roundTo5(i.y())<< "," << roundTo5(i.z()) << "," << roundTo5(i.eta()) << "," << roundTo5(i.phi()) << std::endl;
-//   }
 
   auto clusterHandle = evt.put(std::move(clusters));
-
-// std::cout << "447" << std::endl;
   if (detector_ == "HFNose") {
     std::unique_ptr<std::vector<float>> layerClustersMask(new std::vector<float>);
     layerClustersMask->resize(clusterHandle->size(), 1.0);
     evt.put(std::move(layerClustersMask), "InitialLayerClustersMask");
   }
-  // std::cout << "480" << std::endl;
   auto timeCl = std::make_unique<edm::ValueMap<std::pair<float, float>>>();
   edm::ValueMap<std::pair<float, float>>::Filler filler(*timeCl);
   filler.insert(clusterHandle, times.begin(), times.end());
   filler.fill();
   evt.put(std::move(timeCl), timeClname_);
-  // std::cout << "486" << std::endl;
 
 }
 

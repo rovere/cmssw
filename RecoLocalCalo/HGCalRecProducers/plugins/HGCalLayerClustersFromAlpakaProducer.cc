@@ -27,9 +27,6 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
       :
         getTokenClustersSoA_(consumes(config.getParameter<edm::InputTag>("hgcalOutSoA"))),
         getTokenCellsSoA_(consumes(config.getParameter<edm::InputTag>("hgcalRecHitsSoA"))),
-        // hostToken_{produces()},
-        // timeClToken_{produces()},
-        // layerClustersMaskToken_{produces()},
         hitsTime_(config.getParameter<unsigned int>("nHitsTime")),
         thresholdW0_(config.getParameter<std::vector<double>>("thresholdW0"))
   {
@@ -67,29 +64,20 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
 
       std::vector<std::pair<float, float>> times;
       unsigned int numberOfClusters = clustersSoA.view().numberOfClustersScalar();
-      //std::cout << fmt::format("Creating {} legacy clusters", numberOfClusters) << std::endl;
       *clusters = createClusters(numberOfClusters, clustersSoA, cells, times);
 
-      //std::cout << "Before create mask" << std::endl;
       if (detector_ == "HFNose") {
         std::unique_ptr<std::vector<float>> layerClustersMask(new std::vector<float>);
         layerClustersMask->resize(clusters->size(), 1.0);
         iEvent.put( std::move(layerClustersMask), "InitialLayerClustersMask");
       }
 
-      // hgcalUtils::DumpCellsSoA dumperCellsSoA;
-      // dumperCellsSoA.dumpInfos(cells);
-        // hgcalUtils::DumpClusters dumper;
-        // dumper.dumpInfos(*clusters, true);
     
       // if (detector_ == "EE"){
       //   hgcalUtils::DumpClusters dumper;
       //   dumper.dumpInfos(*clusters, true);
-      // // hgcalUtils::DumpClustersSoA dumperSoA;
-      // // dumperSoA.dumpInfos(clustersSoA);
       // }
 
-      //std::cout << "Before put clusters" << std::endl;
       auto clusterHandle = iEvent.put(std::move(clusters));
       auto timeCl = std::make_unique<edm::ValueMap<std::pair<float, float>>>();
       edm::ValueMap<std::pair<float, float>>::Filler filler(*timeCl);
@@ -116,10 +104,6 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
     // use device::EDGetToken<T> to read from device memory space
     edm::EDGetTokenT<HGCalSoAOutHostCollection> const getTokenClustersSoA_;
     edm::EDGetTokenT<HGCalSoACellsHostCollection> const getTokenCellsSoA_;
-
-    // edm::EDPutTokenT<std::unique_ptr<std::vector<reco::BasicCluster>>> const hostToken_;
-    // edm::EDPutTokenT<std::unique_ptr<edm::ValueMap<std::pair<float, float>>>> const timeClToken_;
-    // edm::EDPutTokenT<std::unique_ptr<std::vector<float>>> const layerClustersMaskToken_;
 
     reco::CaloCluster::AlgoId algoId_;
     std::string detector_;
@@ -219,7 +203,6 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
           assert( cellV.detid() !=0 );
         } else {
           originalClIdx_CondensedClIx[globalClusterIdx] = orderedClIdx;
-          // std::cout << fmt::format("Converting Original Cl {} into legacy {}", globalClusterIdx, originalClIdx_CondensedClIx[globalClusterIdx]) << std::endl;
           std::vector<std::pair<DetId, float>> thisCluster;
           thisCluster.emplace_back(cellV.detid(), 1.f);
           math::XYZPoint position = math::XYZPoint(0.f, 0.f, 0.f);
@@ -234,10 +217,7 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
       times.reserve(clusters.size());
       for (unsigned i = 0; i < clusters.size(); ++i) {
         const reco::CaloCluster& sCl = clusters[i];
-        //std::cout << fmt::format("Cluster {} has {} cells", i, sCl.hitsAndFractions().size()) << std::endl;
         assert(sCl.hitsAndFractions().size() > 0 );
-        //if (sCl.hitsAndFractions().size() == 0)
-          //continue;
         clusters[i].setPosition(std::move(calculatePosition(hitmap, sCl.hitsAndFractions())));
         if (detector_ != "BH") {
           times.push_back(std::move(calculateTime(hitmap, sCl.hitsAndFractions(), sCl.size())));
