@@ -22,7 +22,7 @@ from Configuration.ProcessModifiers.pp_on_AA_cff import pp_on_AA
 # don't modify AOD for HGCal yet, need "reduced" rechits collection first (i.e. requires reconstruction)
 phase2_hgcal.toModify( RecoLocalCaloAOD, 
     outputCommands = RecoLocalCaloAOD.outputCommands + ['keep *_HGCalRecHit_*_*',
-                                                        'keep recoCaloClusters_hgcalMergeLayerClusters_*_*',
+							                            'keep recoCaloClusters_hgcalMergeLayerClusters_*_*',
                                                         'keep *_hgcalMergeLayerClusters_timeLayerCluster_*',
                                                         'keep *_hgcalMergeLayerClusters_InitialLayerClustersMask_*'])
 phase2_hfnose.toModify( RecoLocalCaloAOD, 
