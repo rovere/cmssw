@@ -187,15 +187,33 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
 
       std::vector<reco::BasicCluster> clusters;
       clusters.resize(numberOfClusters);
+      std::vector<float> total_weight;
+      total_weight.resize(numberOfClusters, 0.0f);
+      std::vector<float> total_weight_log;
+      total_weight_log.resize(numberOfClusters, 0.0f);
+      std::vector<float> energy_max;
+      energy_max.resize(numberOfClusters, 0.0f);
+      std::vector<int> energy_max_idx;
+      energy_max_idx.resize(numberOfClusters, -1);
+      /**
       std::set<int> usedIdx;
       std::unordered_map<int, int> originalClIdx_CondensedClIx;
       int orderedClIdx = 0;
+      */
       for (int i = 0; i < cells->metadata().size(); i++) {
         auto clusterSoAV = clustersSoAView[i];
         auto cellV = cellsView[i];
         if (clusterSoAV.clusterIndex() == -1)
           continue;
         auto globalClusterIdx = clusterSoAV.clusterIndex();
+        clusters[globalClusterIdx].setEnergy(clusters[globalClusterIdx].energy() + cellV.weight());
+        clusters[globalClusterIdx].addHitAndFraction(cellV.detid(), 1.f);
+        total_weight[globalClusterIdx] += cellV.weight();
+        if (cellV.weight() > energy_max[globalClusterIdx]) {
+          energy_max[globalClusterIdx] = cellV.weight();
+          energy_max_idx[globalClusterIdx] = i;
+        }
+        /**
         if (usedIdx.find(globalClusterIdx) != usedIdx.end()){
           auto const & currentIdx = originalClIdx_CondensedClIx[globalClusterIdx];
           clusters[currentIdx].setEnergy(clusters[currentIdx].energy() + cellV.weight());
@@ -210,15 +228,50 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
           usedIdx.emplace(globalClusterIdx);
           orderedClIdx++;
         }
-        if (clusterSoAV.isSeed())
-          clusters[originalClIdx_CondensedClIx[globalClusterIdx]].setSeed(cellV.detid());
+        */
+        if (clusterSoAV.isSeed()) {
+          clusters[globalClusterIdx].setSeed(cellV.detid());
+          clusters[globalClusterIdx].setCaloId(reco::CaloID::DET_HGCAL_ENDCAP);
+          clusters[globalClusterIdx].setAlgoId(algoId_);
+        }
+      }
+      // Compute the cluster position
+      std::vector<float> x_pos;
+      x_pos.resize(numberOfClusters, 0.0f);
+      std::vector<float> y_pos;
+      y_pos.resize(numberOfClusters, 0.0f);
+      std::vector<float> z_pos;
+      z_pos.resize(numberOfClusters, 0.0f);
+      for (int i = 0; i < cells->metadata().size(); i++) {
+        auto clusterSoAV = clustersSoAView[i];
+        auto cellV = cellsView[i];
+        if (clusterSoAV.clusterIndex() == -1)
+          continue;
+        auto globalClusterIdx = clusterSoAV.clusterIndex();
+        auto dim1_i = cellV.dim1() - cellsView[energy_max_idx[globalClusterIdx]].dim1();
+        auto dim2_i = cellV.dim2() - cellsView[energy_max_idx[globalClusterIdx]].dim2();
+        if ((dim1_i * dim1_i + dim2_i * dim2_i) > positionDeltaRho2_)
+          continue;
+        //TODO(rovere): check the next assumpion of using fixed 0 index for the thresholds
+        float Wi = std::max(thresholdW0_[0] + std::log(cellV.weight() / total_weight[globalClusterIdx]), 0.);
+        x_pos[globalClusterIdx] += cellV.dim1() * Wi;
+        y_pos[globalClusterIdx] += cellV.dim2() * Wi;
+        //TODO(rovere): add the Z position of the layer into the original SoA
+        z_pos[globalClusterIdx] = rhtools_.getPositionLayer(cellV.layer()).z();
+        total_weight_log[globalClusterIdx] += Wi;
       }
 
       times.reserve(clusters.size());
       for (unsigned i = 0; i < clusters.size(); ++i) {
         const reco::CaloCluster& sCl = clusters[i];
         assert(sCl.hitsAndFractions().size() > 0 );
+        float inv_tot_weight = 1.f / total_weight_log[i];
+        clusters[i].setPosition(math::XYZPoint(x_pos[i] * inv_tot_weight,
+                                               y_pos[i] * inv_tot_weight,
+                                               z_pos[i]));
+        /**
         clusters[i].setPosition(std::move(calculatePosition(hitmap, sCl.hitsAndFractions())));
+        */
         if (detector_ != "BH") {
           times.push_back(std::move(calculateTime(hitmap, sCl.hitsAndFractions(), sCl.size())));
         } else {
