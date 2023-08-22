@@ -74,8 +74,8 @@ process.options = cms.untracked.PSet(
     modulesToIgnoreForDeleteEarly = cms.untracked.vstring(),
     numberOfConcurrentLuminosityBlocks = cms.untracked.uint32(0),
     numberOfConcurrentRuns = cms.untracked.uint32(1),
-    numberOfStreams = cms.untracked.uint32(8),
-    numberOfThreads = cms.untracked.uint32(8),
+    numberOfStreams = cms.untracked.uint32(1),
+    numberOfThreads = cms.untracked.uint32(1),
     printDependencies = cms.untracked.bool(False),
     sizeOfStackForThreadsInKB = cms.optional.untracked.uint32,
     throwIfIllegalParameter = cms.untracked.bool(True),
@@ -125,7 +125,9 @@ process.testHGCalSoAs = cms.EndPath(
 process.testHGCalSoAsNoConversionToLegacy = cms.EndPath(
      process.hgCalRecHitsSoAProducer
     + process.hgCalLayerClustersSoAProducer
-#    + process.hgCalLayerClusterHeterogeneousDumper
+    )
+process.testHGCalSoAsRecHitsOnly = cms.EndPath(
+     process.hgCalRecHitsSoAProducer
     )
 #
 ### LEGACY CPU EE CLUSTERS
@@ -153,8 +155,9 @@ process.MessageLogger.cerr.ThroughputService = cms.untracked.PSet(
     limit = cms.untracked.int32(10000000)
     )
 # Schedule definition
+#process.schedule = cms.Schedule(process.testHGCalSoAsRecHitsOnly)
 #process.schedule = cms.Schedule(process.testHGCalSoAsNoConversionToLegacy)
-#process.schedule = cms.Schedule(process.testHGCalSoAs)
-process.schedule = cms.Schedule(process.legacy)
+process.schedule = cms.Schedule(process.testHGCalSoAs)
+#process.schedule = cms.Schedule(process.legacy)
 #process.schedule = cms.Schedule(process.pureIO)
 
