@@ -256,8 +256,7 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
         float Wi = std::max(thresholdW0_[0] + std::log(cellV.weight() / total_weight[globalClusterIdx]), 0.);
         x_pos[globalClusterIdx] += cellV.dim1() * Wi;
         y_pos[globalClusterIdx] += cellV.dim2() * Wi;
-        //TODO(rovere): add the Z position of the layer into the original SoA
-        z_pos[globalClusterIdx] = rhtools_.getPositionLayer(cellV.layer()).z();
+        z_pos[globalClusterIdx] = cellV.z();
         total_weight_log[globalClusterIdx] += Wi;
       }
 

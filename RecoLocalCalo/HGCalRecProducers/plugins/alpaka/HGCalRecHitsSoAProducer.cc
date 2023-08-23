@@ -117,6 +117,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             entryInSoA.dim1() = position.x();
             entryInSoA.dim2() = position.y();
           }
+          entryInSoA.z() = position.z();
           entryInSoA.weight() = hgrh.energy();
           entryInSoA.sigmaNoise() = sigmaNoise;
           entryInSoA.layer() = layer;

@@ -13,6 +13,7 @@
                       // columns: one value per element
                       SOA_COLUMN(float, dim1),
                       SOA_COLUMN(float, dim2),
+                      SOA_COLUMN(float, z),
                       SOA_COLUMN(int, layer),
                       SOA_COLUMN(float, weight),
                       SOA_COLUMN(float, sigmaNoise),
