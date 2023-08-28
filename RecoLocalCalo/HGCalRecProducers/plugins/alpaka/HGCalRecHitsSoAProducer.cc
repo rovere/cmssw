@@ -121,6 +121,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           entryInSoA.weight() = hgrh.energy();
           entryInSoA.sigmaNoise() = sigmaNoise;
           entryInSoA.layer() = layer;
+          entryInSoA.time() = hgrh.time();
+          entryInSoA.time_error() = hgrh.timeError();
           entryInSoA.detid() = detid.rawId();
           index++;
         }
