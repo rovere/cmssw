@@ -36,8 +36,8 @@ namespace hgcalsimclustertime {
     //apply weights if provided => weighted mean
     //return also error on the mean
     //only effective with a minimum number of hits with time (3 from TDR time)
-    std::pair<float, float> fixSizeHighestDensity(std::vector<float>& time,
-                                                  std::vector<float> weight = std::vector<float>(),
+    std::pair<float, float> fixSizeHighestDensity(const std::vector<float>& time,
+                                                  std::vector<float> &weight,// = std::vector<float>(),
                                                   unsigned int minNhits = 3,
                                                   float deltaT = 0.210, /*time window in ns*/
                                                   float timeWidthBy = 0.5);

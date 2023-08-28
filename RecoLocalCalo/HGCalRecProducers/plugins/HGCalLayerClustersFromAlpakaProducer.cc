@@ -177,13 +177,42 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
         const HGCalSoACellsHostCollection &cells,
         std::vector<std::pair<float, float>> &times) {
 
+      /**
       std::unordered_map<uint32_t, const HGCRecHit*> hitmap;
       for (auto const& it : *hits_) {
         hitmap[it.detid()] = &(it);
       }
+      */
 
       auto clustersSoAView = clustersSoA.view();
       auto cellsView = cells.view();
+
+      //std::vector<int> clustersIdx(clustersSoA->metadata().size());
+      // Vector that has 1 entry per cluster. The value is equal to the number
+      // of rechits/cells composing each cluster.
+      std::vector<int> clustersSize(numberOfClusters, 0);
+      //std::iota(clustersIdx.begin(), clustersIdx.end(), 0);
+      //std::sort(clustersIdx.begin(), clustersIdx.end(),
+              //[&clustersSoAView](int a, int b) { return clustersSoAView[a].clusterIndex() < clustersSoAView[b].clusterIndex(); });
+
+      /**
+      int currentCluster = -1;
+      size_t i = 0;
+      while (i < clustersIdx.size()) {
+        int current = clustersSoAView[i].clusterIndex();
+        int count = 0;
+        size_t j = i + 1;
+        // Count consecutive identical entries
+        while (j < clustersIdx.size() && clustersSoAView[j].clusterIndex() == current) {
+          ++j;
+        }
+        // Update count and move to the next distinct entry
+        if (current >= 0) {
+          clustersSize[current] = (j - i);
+        }
+        i = j;
+      }
+      */
 
       std::vector<reco::BasicCluster> clusters;
       clusters.resize(numberOfClusters);
@@ -206,6 +235,7 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
         if (clusterSoAV.clusterIndex() == -1)
           continue;
         auto globalClusterIdx = clusterSoAV.clusterIndex();
+        clustersSize[globalClusterIdx]++;
         clusters[globalClusterIdx].setEnergy(clusters[globalClusterIdx].energy() + cellV.weight());
         clusters[globalClusterIdx].addHitAndFraction(cellV.detid(), 1.f);
         total_weight[globalClusterIdx] += cellV.weight();
@@ -235,6 +265,11 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
           clusters[globalClusterIdx].setAlgoId(algoId_);
         }
       }
+      std::vector<float> timeCls(std::accumulate(clustersSize.begin(), clustersSize.end(), 0));
+      std::vector<float> timeClsError(std::accumulate(clustersSize.begin(), clustersSize.end(), 0));
+      std::vector<int> incremental_clustersSize(clustersSize.size());
+      std::partial_sum(clustersSize.begin(), clustersSize.end(), incremental_clustersSize.begin());
+      std::vector<int> current_clustersSize(clustersSize.size(), 0);
       // Compute the cluster position
       std::vector<float> x_pos;
       x_pos.resize(numberOfClusters, 0.0f);
@@ -248,6 +283,13 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
         if (clusterSoAV.clusterIndex() == -1)
           continue;
         auto globalClusterIdx = clusterSoAV.clusterIndex();
+        int offset = 0;
+        if (globalClusterIdx > 0)
+          offset = incremental_clustersSize[globalClusterIdx-1];
+        int idx = offset + current_clustersSize[globalClusterIdx];
+        timeCls[idx] = cellV.time();
+        timeClsError[idx] = cellV.time_error();
+        current_clustersSize[globalClusterIdx]++;
         auto dim1_i = cellV.dim1() - cellsView[energy_max_idx[globalClusterIdx]].dim1();
         auto dim2_i = cellV.dim2() - cellsView[energy_max_idx[globalClusterIdx]].dim2();
         if ((dim1_i * dim1_i + dim2_i * dim2_i) > positionDeltaRho2_)
@@ -272,7 +314,11 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
         clusters[i].setPosition(std::move(calculatePosition(hitmap, sCl.hitsAndFractions())));
         */
         if (detector_ != "BH") {
-          times.push_back(std::move(calculateTime(hitmap, sCl.hitsAndFractions(), sCl.size())));
+          //times.push_back(std::move(calculateTime(hitmap, sCl.hitsAndFractions(), sCl.size())));
+          int start = 0;
+          if (i > 0)
+            start = incremental_clustersSize[i-1];
+          times.push_back(std::move(calculateTime(sCl.size(), &timeCls[start], &timeClsError[start] )));
         } else {
           times.push_back(std::pair<float, float>(-99., -1.));
         }
@@ -301,6 +347,32 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
             continue;
           timeClhits.push_back(rechit->time());
           timeErrorClhits.push_back(1. / (rhTimeE * rhTimeE));
+        }
+        hgcalsimclustertime::ComputeClusterTime timeEstimator;
+        timeCl = timeEstimator.fixSizeHighestDensity(timeClhits, timeErrorClhits, hitsTime_);
+      }
+      return timeCl;
+    }
+
+    std::pair<float, float> calculateTime(
+        size_t sizeCluster,
+        const float * cluster_time,
+        const float * cluster_time_error) {
+      std::pair<float, float> timeCl(-99., -1.);
+
+      if (sizeCluster >= hitsTime_) {
+        std::vector<float> timeClhits(sizeCluster);
+        std::vector<float> timeErrorClhits(sizeCluster);
+
+        size_t count = 0;
+        while(count < sizeCluster) {
+          if (*cluster_time_error >= 0.) {
+            timeClhits.push_back(*cluster_time);
+            timeErrorClhits.push_back(1. / (*cluster_time_error)*(*cluster_time_error));
+          }
+          cluster_time++;
+          cluster_time_error++;
+          count++;
         }
         hgcalsimclustertime::ComputeClusterTime timeEstimator;
         timeCl = timeEstimator.fixSizeHighestDensity(timeClhits, timeErrorClhits, hitsTime_);

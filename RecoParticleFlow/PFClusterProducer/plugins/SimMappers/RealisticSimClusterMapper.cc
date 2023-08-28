@@ -177,6 +177,7 @@ void RealisticSimClusterMapper::buildClusters(const edm::Handle<reco::PFRecHitCo
         }
       }
       std::vector<float> timeHits;
+      std::vector<float> timeErrors;
       const auto& hitsIdsAndFractions = realisticClusters[ic].hitsIdsAndFractions();
       for (const auto& idAndF : hitsIdsAndFractions) {
         auto fraction = idAndF.second;
@@ -202,7 +203,7 @@ void RealisticSimClusterMapper::buildClusters(const edm::Handle<reco::PFRecHitCo
       }
       //assign time if minimum number of hits
       hgcalsimclustertime::ComputeClusterTime timeEstimator;
-      timeRealisticSC = (timeEstimator.fixSizeHighestDensity(timeHits)).first;
+      timeRealisticSC = (timeEstimator.fixSizeHighestDensity(timeHits, timeErrors)).first;
     }
     if (!back.hitsAndFractions().empty()) {
       back.setSeed(seed->detId());
