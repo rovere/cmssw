@@ -20,6 +20,9 @@
 #include "DataFormats/HGCalReco/interface/HGCalSoAOutHostCollection.h"
 #include "DataFormats/HGCalReco/interface/HGCalSoAOut.h"
 
+#define USE_MAP 0
+#define DEBUG 0
+#define DEBUG_SOAS 0
 
 class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
   public:
@@ -72,7 +75,7 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
         iEvent.put( std::move(layerClustersMask), "InitialLayerClustersMask");
       }
 
-    
+
       // if (detector_ == "EE"){
       //   hgcalUtils::DumpClusters dumper;
       //   dumper.dumpInfos(*clusters, true);
@@ -177,12 +180,12 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
         const HGCalSoACellsHostCollection &cells,
         std::vector<std::pair<float, float>> &times) {
 
-      /**
+#if USE_MAP
       std::unordered_map<uint32_t, const HGCRecHit*> hitmap;
       for (auto const& it : *hits_) {
         hitmap[it.detid()] = &(it);
       }
-      */
+#endif
 
       auto clustersSoAView = clustersSoA.view();
       auto cellsView = cells.view();
@@ -232,6 +235,15 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
       for (int i = 0; i < cells->metadata().size(); i++) {
         auto clusterSoAV = clustersSoAView[i];
         auto cellV = cellsView[i];
+#if DEBUG_SOAS
+        std::cout << fmt::format("Idx: {}, dim1: {:a}, dim2: {:a}, z: {:a}, layer: {}, time: {:a}, time_err: {:a}, weight: {:a}, sigmaN: {:a}, detid: {}\nIdx: {}, delta: {:a}, rho: {:a}, nearH: {}, isSeed: {}\nrhoNH: {:a}\n",
+            i, cellV.dim1(), cellV.dim2(), cellV.z(),
+            cellV.layer(), cellV.time(), cellV.time_error(),
+            cellV.weight(), cellV.sigmaNoise(), cellV.detid(),
+            i, clusterSoAV.delta(), clusterSoAV.rho(),
+            clusterSoAV.nearestHigher(), clusterSoAV.isSeed(),
+            clusterSoAV.nearestHigher() != std::numeric_limits<unsigned int>::max() ? clustersSoAView[clusterSoAV.nearestHigher()].rho() : 0.f);
+#endif
         if (clusterSoAV.clusterIndex() == -1)
           continue;
         auto globalClusterIdx = clusterSoAV.clusterIndex();
@@ -314,11 +326,18 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
         clusters[i].setPosition(std::move(calculatePosition(hitmap, sCl.hitsAndFractions())));
         */
         if (detector_ != "BH") {
-          //times.push_back(std::move(calculateTime(hitmap, sCl.hitsAndFractions(), sCl.size())));
+#if USE_MAP
+          times.push_back(std::move(calculateTime(hitmap, sCl.hitsAndFractions(), sCl.size())));
+#else
           int start = 0;
           if (i > 0)
             start = incremental_clustersSize[i-1];
           times.push_back(std::move(calculateTime(sCl.size(), &timeCls[start], &timeClsError[start] )));
+#endif
+#if DEBUG
+          std::cout << fmt::format("Cl_x: {:a}, Cl_y: {:a}, Cl_z: {:a}, Cl_eta: {:a}, Cl_phi: {:a}, time: {:a}, time_err: {:a}\n",
+              sCl.x(), sCl.y(), sCl.z(), sCl.eta(), sCl.phi(), times.back().first, times.back().second);
+#endif
         } else {
           times.push_back(std::pair<float, float>(-99., -1.));
         }
@@ -347,6 +366,9 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
             continue;
           timeClhits.push_back(rechit->time());
           timeErrorClhits.push_back(1. / (rhTimeE * rhTimeE));
+#if DEBUG
+          //std::cout << fmt::format("Time Value: {:a}, time error: {:a}\n", timeClhits.back(), timeErrorClhits.back());
+#endif
         }
         hgcalsimclustertime::ComputeClusterTime timeEstimator;
         timeCl = timeEstimator.fixSizeHighestDensity(timeClhits, timeErrorClhits, hitsTime_);
@@ -361,14 +383,17 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
       std::pair<float, float> timeCl(-99., -1.);
 
       if (sizeCluster >= hitsTime_) {
-        std::vector<float> timeClhits(sizeCluster);
-        std::vector<float> timeErrorClhits(sizeCluster);
+        std::vector<float> timeClhits;
+        std::vector<float> timeErrorClhits;
 
         size_t count = 0;
         while(count < sizeCluster) {
           if (*cluster_time_error >= 0.) {
             timeClhits.push_back(*cluster_time);
-            timeErrorClhits.push_back(1. / (*cluster_time_error)*(*cluster_time_error));
+            timeErrorClhits.push_back(1. / ((*cluster_time_error)*(*cluster_time_error)));
+#if DEBUG
+            //std::cout << fmt::format("Time Value: {:a}, time error: {:a}\n", timeClhits.back(), timeErrorClhits.back());
+#endif
           }
           cluster_time++;
           cluster_time_error++;
