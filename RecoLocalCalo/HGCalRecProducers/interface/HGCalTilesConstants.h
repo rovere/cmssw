@@ -11,7 +11,7 @@
 #include <array>
 
 struct HGCalSiliconTilesConstants {
-  static constexpr float tileSize = 10.f;
+  static constexpr float tileSize = 5.f;
   static constexpr float minDim1 = -285.f;
   static constexpr float maxDim1 = 285.f;
   static constexpr float minDim2 = -285.f;
