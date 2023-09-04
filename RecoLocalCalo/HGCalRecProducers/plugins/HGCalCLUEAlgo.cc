@@ -267,7 +267,7 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateDistanceToHigher(const T& lt, const u
           bool foundHigher =
               (cellsOnLayer.rho[otherId] > cellsOnLayer.rho[i]) ||
               (cellsOnLayer.rho[otherId] == cellsOnLayer.rho[i] && cellsOnLayer.detid[otherId] > cellsOnLayer.detid[i]);
-          
+
           if (foundHigher && dist < i_delta) {
             rho_max = cellsOnLayer.rho[otherId];
             i_delta = dist;

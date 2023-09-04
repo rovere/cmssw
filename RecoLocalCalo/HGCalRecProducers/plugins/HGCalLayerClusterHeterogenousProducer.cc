@@ -41,23 +41,23 @@ class HGCalLayerClusterHeterogenousProducer : public edm::stream::EDProducer<> {
 public:
   /**
    * @brief Constructor with parameter settings - which can be changed in hgcalLayerCluster_cff.py.
-   * Constructor will set all variables by input param ps. 
+   * Constructor will set all variables by input param ps.
    * algoID variables will be set accordingly to the detector type.
-   * 
+   *
    * @param[in] ps parametr set to set variables
   */
   HGCalLayerClusterHeterogenousProducer(const edm::ParameterSet&);
   ~HGCalLayerClusterHeterogenousProducer() override {}
   /**
    * @brief Method fill description which will be used in pyhton file.
-   * 
+   *
    * @param[out] description to be fill
   */
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
   /**
    * @brief Method run the algoritm to get clusters.
-   * 
+   *
    * @param[in, out] evt from get info and put result
    * @param[in] es to get event setup info
   */
@@ -101,7 +101,7 @@ private:
   edm::ESGetToken<CaloGeometry, CaloGeometryRecord> caloGeomToken_;
 
   std::vector<reco::BasicCluster> createClusters(int numberOfClusters){
-    
+
     int numbeOfseeds = 0;
     int numberOfCells = cells_.detid.size();
 
@@ -179,7 +179,7 @@ void populate(const HGCRecHitCollection& hits) {
   if (dependSensor_) {
     // for each layer and wafer calculate the thresholds (sigmaNoise and energy)
     // once
-    computeThreshold(); 
+    computeThreshold();
   }
   int index = 0;
   for (unsigned int i = 0; i < hits.size(); ++i) {
@@ -238,7 +238,7 @@ void populate(const HGCRecHitCollection& hits) {
 
   /**
    * @brief Counts position for all points in the cluster
-   * 
+   *
    * @param[in] hitmap hitmap to find correct RecHit
    * @param[in] hitsAndFraction all hits in the cluster
    * @return counted position
@@ -248,7 +248,7 @@ void populate(const HGCRecHitCollection& hits) {
 
   /**
    * @brief Counts time for all points in the cluster
-   * 
+   *
    * @param[in] hitmap hitmap to find correct RecHit only for silicon (not for BH-HSci)
    * @param[in] hitsAndFraction all hits in the cluster
    * @return counted time
@@ -287,8 +287,8 @@ HGCalLayerClusterHeterogenousProducer::HGCalLayerClusterHeterogenousProducer(con
   dEdXweights_ = pluginPSet.getParameter<std::vector<double>>("dEdXweights");
   thicknessCorrection_ = pluginPSet.getParameter<std::vector<double>>("thicknessCorrection");
   deltasi_index_regemfac_ = pluginPSet.getParameter<int>("deltasi_index_regemfac");
-        
-        
+
+
 
   produces<std::vector<float>>("InitialLayerClustersMask");
   produces<std::vector<reco::BasicCluster>>();
@@ -411,11 +411,11 @@ void HGCalLayerClusterHeterogenousProducer::produce(edm::Event& evt, const edm::
   evt.getByToken(hits_token_, hits);
   //setup cells_
   cells_.resize((*hits).size());
-  populate(*hits); 
+  populate(*hits);
 
   cells_.shrink_to_fit();
-  const int layers = 96; 
-  CLUEAlgo<TilesConstants, layers> algoStandelone = CLUEAlgo<TilesConstants, layers>(1.3f,9.f,2.f,false); 
+  const int layers = 96;
+  CLUEAlgo<TilesConstants, layers> algoStandelone = CLUEAlgo<TilesConstants, layers>(1.3f,9.f,2.f,false,true);
   algoStandelone.setPoints(cells_.dim1, cells_.dim2, cells_.layer, cells_.weight, cells_.sigmaNoise);
 
   hitmap.reserve((*hits).size());
@@ -431,7 +431,7 @@ void HGCalLayerClusterHeterogenousProducer::produce(edm::Event& evt, const edm::
   times.reserve(clusters->size());
   for (unsigned i = 0; i < clusters->size(); ++i) {
     const reco::CaloCluster& sCl = (*clusters)[i];
-    (*clusters)[i].setPosition(std::move(calculatePosition(hitmap, sCl.hitsAndFractions()))); 
+    (*clusters)[i].setPosition(std::move(calculatePosition(hitmap, sCl.hitsAndFractions())));
     if (detector_ != "BH") {
       times.push_back(std::move(calculateTime(hitmap, sCl.hitsAndFractions(), sCl.size())));
     } else {

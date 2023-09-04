@@ -133,6 +133,9 @@ process.testHGCalSoAsRecHitsOnly = cms.EndPath(
 ### LEGACY CPU EE CLUSTERS
 process.legacy = cms.EndPath(process.hgcalLayerClustersEE)
 
+### CPU EE with external KALOS/CLUE library, full C++, no ALPAKA
+process.legacyKalos = cms.EndPath(process.hgcalHeterogenousLayerClustersEE)
+
 ## GENERIC CONSUMER TO MEASURE PURE I/O
 process.load('FWCore.Modules.genericConsumer_cfi')
 process.genericConsumer.eventProducts = ["HGCalRecHit"]
@@ -159,5 +162,6 @@ process.MessageLogger.cerr.ThroughputService = cms.untracked.PSet(
 #process.schedule = cms.Schedule(process.testHGCalSoAsNoConversionToLegacy)
 process.schedule = cms.Schedule(process.testHGCalSoAs)
 #process.schedule = cms.Schedule(process.legacy)
+#process.schedule = cms.Schedule(process.legacyKalos)
 #process.schedule = cms.Schedule(process.pureIO)
 
