@@ -278,8 +278,8 @@ fragment.schedule = cms.Schedule(*[
     fragment.HLT_Diphoton30_23_IsoCaloId_L1Seeded,
 
     ### Removed temporarily until final decision on L1T tau Phase-2
-    #fragment.L1T_DoubleNNTau52,
-    #fragment.L1T_SingleNNTau150,
+    fragment.L1T_DoubleNNTau52,
+    fragment.L1T_SingleNNTau150,
 
     fragment.HLTriggerFinalPath,
     fragment.HLTAnalyzerEndpath,
