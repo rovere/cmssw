@@ -48,6 +48,6 @@ hltCsc2DRecHits = cms.EDProducer("CSCRecHitDProducer",
     XTasymmetry_ME41 = cms.double(0.023),
     readBadChambers = cms.bool(True),
     readBadChannels = cms.bool(False),
-    stripDigiTag = cms.InputTag("simMuonCSCDigis","MuonCSCStripDigi"),
-    wireDigiTag = cms.InputTag("simMuonCSCDigis","MuonCSCWireDigi")
+    stripDigiTag = cms.InputTag("muonCSCDigis", "MuonCSCStripDigi"),
+    wireDigiTag = cms.InputTag("muonCSCDigis", "MuonCSCWireDigi")
 )
