@@ -79,7 +79,6 @@ private:
   const edm::EDGetTokenT<std::vector<SimCluster>> simClusters_token_;
   const edm::EDGetTokenT<std::vector<reco::GenParticle>> genParticles_token_;
   const edm::EDGetTokenT<std::vector<int>> genBarcodes_token_;
-  //edm::Ref<reco::CaloParticleCollection> matchedCPs;
 };
 
 //
@@ -152,46 +151,18 @@ void SimTauAnalyzer::buildSimTau(TauDecay &t,
   }
 }
 
-/*edm::Ref<reco::GenParticleCollection> SimTauAnalyzer::generatorRef_(const SimTrack &simtrk, const GlobalContext &g) const {
-    assert(simtrk.genpartIndex() != -1);
-    // Note that simtrk.genpartIndex() is the barcode, not the index within GenParticleCollection, so I have to search the particle
-    std::vector<int>::const_iterator it;
-    if (gg.barcodesAreSorted) {
-        it = std::lower_bound(g.genBarcodes->begin(), g.genBarcodes->end(), simtrk.genpartIndex());
-    } else {
-        it = std::find(g.genBarcodes->begin(), g.genBarcodes->end(), simtrk.genpartIndex());
-    }
-    // Check that I found something
-    // I need to check '*it == simtrk.genpartIndex()' because lower_bound just finds the right spot for an item in a sorted list, not the item
-    if ((it != g.genBarcodes->end()) && (*it == simtrk.genpartIndex())) {
-        return reco::GenParticleRef(g.gens, it - g.genBarcodes->begin());
-    } else {
-        return reco::GenParticleRef();
-    }
-}
-
-int SimTauAnalyzer::findGenPartIdx (const reco::GenParticle &c) {
-
-}*/
-//
-// member functions
-//
-
 // ------------ method called for each event  ------------
 void SimTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   using namespace edm;
 
   Handle<std::vector<CaloParticle>> CaloParticle_h;
   iEvent.getByToken(caloParticle_token_, CaloParticle_h);
-  //    Handle<std::vector<SimCluster>> SimClusters_h;
-  //    iEvent.getByToken(simClusters_token_, SimClusters_h);
   edm::Handle<std::vector<reco::GenParticle>> gen_particles_h;
   iEvent.getByToken(genParticles_token_, gen_particles_h);
   Handle<std::vector<int>> gen_barcodes_h;
   iEvent.getByToken(genBarcodes_token_, gen_barcodes_h);
 
   const auto& caloParticle = *CaloParticle_h;
-  //    const auto& SimClusters = *SimClusters_h;
   const auto& genParticles = *gen_particles_h;
   const auto& genBarcodes = *gen_barcodes_h;
 
@@ -210,74 +181,9 @@ void SimTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       TauDecay t;
       buildSimTau(t, 0, -1, g, -1, caloParticle, genBarcodes);
       t.dumpFullDecay();
-      //        if (std::abs(g.pdgId()) == 15) {
-      //          auto &daughters = g.daughterRefVector();
-      //          for (auto daughter = daughters.begin(); daughter != daughters.end(); ++daughter) {
-      //            auto const & daughter_flags = (*daughter)->statusFlags();
-      //            std::cout << "\t\t" << (*daughter)->pdgId() << " ";
-      //            for (unsigned int bit = 0; bit <= reco::GenStatusFlags::kIsLastCopyBeforeFSR; ++bit) {
-      //              std::cout << daughter_flags.flags_[bit] << " ";
-      //            }
-      //            std::cout << std::endl;
-      //          }
-      //        }
     }
   }
 }
-//    /*for (const auto& genBarcode: genBarcodes) {
-//        std::cout << "GenParticle Barcode: " << genBarcode << std::endl;
-//
-//                auto &daughters = genParticle.daughterRefVector();
-//            for (auto daughter = daughters.begin(); daughter != daughters.end(); ++daughter) {
-//                daughter.genParticleId();
-//
-//    }*/
-//    int generation=0;
-//  for (const auto& gen_particle: gen_particles) {
-//    if (abs(gen_particle.pdgId()) == 15) {
-//
-//      // if 15 is in the list of dauthers, it means that the original
-//      // Tau went through some brem or similar process. We ignore all the
-//      // intermediate products (dauthers_ and just keep on following the tau)
-//      auto const &daughters = gen_particles.daughterRefVector();
-//      auto intermediate_tau = std::find(daughters.begin(), daughters.end(), [](const auto &d) {return d.pdgId()==15);
-//        if (intermediate_tau != daughters.end()) {
-//    for (const auto& gen_particle: genParticles) {
-//        if (abs(gen_particle.pdgId()) == 15) {
-//            recursion_n=0;
-//            std::cout << "Found Tau #" << tau_n << "!" << std::endl;
-//            buildSimTau(generation, gen_particle, CaloParticle);
-//            tau_n++;
-//            }
-//        }
-//
-//    /*    for (const auto& CP: CaloParticle) {
-//            std::cout << "SimTrack size: " << CP.g4Tracks().size() << std::endl;
-//            std::cout << "SimTrack GenPartIndex: " << CP.g4Tracks()[0].genpartIndex() << std::endl;
-//            assert(CP.g4Tracks()[0].genpartIndex() != -1);
-//            // Note that simtrk.genpartIndex() is the barcode, not the index within GenParticleCollection, so I have to search the particle
-//            std::vector<int>::const_iterator it;
-//            it = std::find(genBarcodes.begin(), genBarcodes.end(), CP.g4Tracks()[0].genpartIndex());
-//            if ((it != genBarcodes.end())) {
-//                auto gen_particle = reco::GenParticleRef(gen_particles_h, it - genBarcodes.begin());
-//                auto genPartReturn = *gen_particle;
-//                std::cout << genPartReturn.pdgId() << std::endl;
-//
-//            } else {
-//                std::cout << "no genParticle found" << std::endl;
-//            }
-//        }
-//    }
-//
-//
-//            int simTrackGenIndex = CP.g4Tracks()[0].genpartIndex();
-//            std::cout << "simTrack Gen Index: " << simTrackGenIndex << std::endl;
-//            std::cout << "CP pdgId: " << CP.pdgId() << std::endl;
-//            if (simTrackGenIndex < static_cast<int>(genParticles.size())) {
-//                findGenTau(genParticles[simTrackGenIndex]);
-//                if (CP.g4Tracks()[0].genpartIndex() == 15) {*/
-//
-//}
 
 // ------------ method called once each job just before starting event loop  ------------
 void SimTauAnalyzer::beginJob() {
@@ -296,12 +202,6 @@ void SimTauAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptio
   edm::ParameterSetDescription desc;
   desc.setUnknown();
   descriptions.addDefault(desc);
-
-  //Specify that only 'tracks' is allowed
-  //To use, remove the default given above and uncomment below
-  //ParameterSetDescription desc;
-  //desc.addUntracked<edm::InputTag>("tracks","ctfWithMaterialTracks");
-  //descriptions.addWithDefaultLabel(desc);
 }
 
 //define this as a plug-in
