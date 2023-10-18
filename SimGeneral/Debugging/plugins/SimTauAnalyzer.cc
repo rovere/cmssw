@@ -28,7 +28,7 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
-#define DEBUG 0
+#define DEBUG 1
 
 struct TauDecay {
   std::vector<std::pair<int, int>> resonances;
@@ -73,7 +73,7 @@ private:
   void analyze(const edm::Event&, const edm::EventSetup&) override;
   void endJob() override;
 
-  void buildSimTau(TauDecay &, uint8_t, int, const reco::GenParticle &, const std::vector<CaloParticle> &);
+  void buildSimTau(TauDecay &, uint8_t, int, const reco::GenParticle &, int, const std::vector<CaloParticle> &, const std::vector<int> &);
   // ----------member data ---------------------------
   const edm::EDGetTokenT<std::vector<CaloParticle>> caloParticle_token_;
   const edm::EDGetTokenT<std::vector<SimCluster>> simClusters_token_;
@@ -99,8 +99,10 @@ SimTauAnalyzer::SimTauAnalyzer(const edm::ParameterSet& iConfig)
 void SimTauAnalyzer::buildSimTau(TauDecay &t,
     uint8_t generation,
     int resonance_idx,
-    const reco::GenParticle & gen_particle, // the decaying tau,
-    const std::vector<CaloParticle> &CaloPartVec) {
+    const reco::GenParticle & gen_particle,
+    int gen_particle_key,
+    const std::vector<CaloParticle> &caloPartVec,
+    const std::vector<int> & gen_particle_barcodes) {
 
   auto &daughters = gen_particle.daughterRefVector();
   bool is_leaf = (daughters.size() == 0);
@@ -108,6 +110,18 @@ void SimTauAnalyzer::buildSimTau(TauDecay &t,
     if (DEBUG)
       std::cout << " TO BE SAVED " << resonance_idx << " ";
     t.leaves.push_back({gen_particle.pdgId(), resonance_idx});
+    auto const & gen_particle_barcode = gen_particle_barcodes[gen_particle_key];
+    auto const & found_in_caloparticles = std::find_if(
+        caloPartVec.begin(),
+        caloPartVec.end(),
+        [&](const auto &p) {
+        return p.g4Tracks()[0].genpartIndex() == gen_particle_barcode;}
+        );
+    if (found_in_caloparticles != caloPartVec.end()) {
+      auto calo_particle_idx = (found_in_caloparticles - caloPartVec.begin());
+      if (DEBUG)
+        std::cout << " CP " << calo_particle_idx << " " << caloPartVec[calo_particle_idx];
+    }
     return;
   } else if (generation !=0) {
     t.resonances.push_back({gen_particle.pdgId(), resonance_idx});
@@ -125,13 +139,14 @@ void SimTauAnalyzer::buildSimTau(TauDecay &t,
   }
   for (auto daughter = daughters.begin(); daughter != daughters.end(); ++daughter) {
     auto const & daughter_flags = (*daughter)->statusFlags();
+    int gen_particle_key = (*daughter).key();
     if (DEBUG) {
-      std::cout << separator << " gen " << (int)generation << " " << (*daughter)->pdgId() << " ";
+      std::cout << separator << " gen " << (int)generation << " " << gen_particle_key << " " << (*daughter)->pdgId() << " ";
       for (unsigned int bit = 0; bit <= reco::GenStatusFlags::kIsLastCopyBeforeFSR; ++bit) {
         std::cout << daughter_flags.flags_[bit] << " ";
       }
     }
-    buildSimTau(t, generation, resonance_idx, *(*daughter), CaloPartVec);
+    buildSimTau(t, generation, resonance_idx, *(*daughter), gen_particle_key, caloPartVec, gen_particle_barcodes);
     if (DEBUG)
       std::cout << std::endl;
   }
@@ -172,13 +187,13 @@ void SimTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   //    iEvent.getByToken(simClusters_token_, SimClusters_h);
   edm::Handle<std::vector<reco::GenParticle>> gen_particles_h;
   iEvent.getByToken(genParticles_token_, gen_particles_h);
-  //    Handle<std::vector<int>> gen_barcodes_h;
-  //    iEvent.getByToken(genBarcodes_token_, gen_barcodes_h);
+  Handle<std::vector<int>> gen_barcodes_h;
+  iEvent.getByToken(genBarcodes_token_, gen_barcodes_h);
 
   const auto& caloParticle = *CaloParticle_h;
   //    const auto& SimClusters = *SimClusters_h;
   const auto& genParticles = *gen_particles_h;
-  //    const auto& genBarcodes = *gen_barcodes_h;
+  const auto& genBarcodes = *gen_barcodes_h;
 
   int counter=0;
   for (auto const & g : genParticles) {
@@ -193,7 +208,7 @@ void SimTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
         std::cout << std::endl;
       }
       TauDecay t;
-      buildSimTau(t, 0, -1, g, caloParticle);
+      buildSimTau(t, 0, -1, g, -1, caloParticle, genBarcodes);
       t.dumpFullDecay();
       //        if (std::abs(g.pdgId()) == 15) {
       //          auto &daughters = g.daughterRefVector();
