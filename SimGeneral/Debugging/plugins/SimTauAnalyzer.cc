@@ -22,6 +22,7 @@
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 
 #include "DataFormats/HGCalReco/interface/TICLCandidate.h"
+#include "SimDataFormats/CaloAnalysis/interface/CaloParticleFwd.h"
 #include "SimDataFormats/CaloAnalysis/interface/CaloParticle.h"
 #include "SimDataFormats/CaloAnalysis/interface/SimCluster.h"
 
@@ -31,12 +32,22 @@
 #define DEBUG 1
 
 struct TauDecay {
+  struct DecayNav {
+    int pdgId;
+    int resonance_idx;
+    int calo_particle_idx;
+    int first()  const { return pdgId; }
+    int second() const { return resonance_idx; }
+    int third()  const { return calo_particle_idx; }
+  };
+
   std::vector<std::pair<int, int>> resonances;
-  std::vector<std::pair<int, int>> leaves;
+  std::vector<DecayNav> leaves;
+  CaloParticleRefVector calo_particle_leaves;
 
   void dump(void) {
     for (auto const & l : leaves) {
-      std::cout << "L " << l.first << " " << l.second << std::endl;
+      std::cout << "L " << l.first() << " " << l.second() << " CP " << l.third() << std::endl;
     }
     for (auto const & r : resonances) {
       std::cout << "R " << r.first << " " << r.second << std::endl;
@@ -55,7 +66,7 @@ struct TauDecay {
 
   void dumpFullDecay(void) {
     for (auto const & leaf : leaves) {
-      dumpDecay(leaf);
+      dumpDecay({leaf.first(), leaf.second()});
     }
   }
 };
@@ -73,7 +84,7 @@ private:
   void analyze(const edm::Event&, const edm::EventSetup&) override;
   void endJob() override;
 
-  void buildSimTau(TauDecay &, uint8_t, int, const reco::GenParticle &, int, const std::vector<CaloParticle> &, const std::vector<int> &);
+  void buildSimTau(TauDecay &, uint8_t, int,  const reco::GenParticle &, int, edm::Handle<std::vector<CaloParticle>>, const std::vector<int> &);
   // ----------member data ---------------------------
   const edm::EDGetTokenT<std::vector<CaloParticle>> caloParticle_token_;
   const edm::EDGetTokenT<std::vector<SimCluster>> simClusters_token_;
@@ -81,13 +92,6 @@ private:
   const edm::EDGetTokenT<std::vector<int>> genBarcodes_token_;
 };
 
-//
-// static data member definitions
-//
-
-//
-// constructors and destructor
-//
 SimTauAnalyzer::SimTauAnalyzer(const edm::ParameterSet& iConfig)
     : caloParticle_token_(consumes<std::vector<CaloParticle>>(iConfig.getParameter<edm::InputTag>("CaloParticle"))),
     simClusters_token_(consumes<std::vector<SimCluster>>(iConfig.getParameter<edm::InputTag>("SimClusters"))),
@@ -100,15 +104,15 @@ void SimTauAnalyzer::buildSimTau(TauDecay &t,
     int resonance_idx,
     const reco::GenParticle & gen_particle,
     int gen_particle_key,
-    const std::vector<CaloParticle> &caloPartVec,
+    edm::Handle<std::vector<CaloParticle>> calo_particle_h,
     const std::vector<int> & gen_particle_barcodes) {
 
+  const auto& caloPartVec = *calo_particle_h;
   auto &daughters = gen_particle.daughterRefVector();
   bool is_leaf = (daughters.size() == 0);
   if (is_leaf) {
     if (DEBUG)
       std::cout << " TO BE SAVED " << resonance_idx << " ";
-    t.leaves.push_back({gen_particle.pdgId(), resonance_idx});
     auto const & gen_particle_barcode = gen_particle_barcodes[gen_particle_key];
     auto const & found_in_caloparticles = std::find_if(
         caloPartVec.begin(),
@@ -118,8 +122,12 @@ void SimTauAnalyzer::buildSimTau(TauDecay &t,
         );
     if (found_in_caloparticles != caloPartVec.end()) {
       auto calo_particle_idx = (found_in_caloparticles - caloPartVec.begin());
+      t.calo_particle_leaves.push_back(CaloParticleRef(calo_particle_h, calo_particle_idx));
+      t.leaves.push_back({gen_particle.pdgId(), resonance_idx, (int)t.calo_particle_leaves.size()-1});
       if (DEBUG)
         std::cout << " CP " << calo_particle_idx << " " << caloPartVec[calo_particle_idx];
+    } else {
+      t.leaves.push_back({gen_particle.pdgId(), resonance_idx,-1});
     }
     return;
   } else if (generation !=0) {
@@ -145,7 +153,7 @@ void SimTauAnalyzer::buildSimTau(TauDecay &t,
         std::cout << daughter_flags.flags_[bit] << " ";
       }
     }
-    buildSimTau(t, generation, resonance_idx, *(*daughter), gen_particle_key, caloPartVec, gen_particle_barcodes);
+    buildSimTau(t, generation, resonance_idx, *(*daughter), gen_particle_key, calo_particle_h, gen_particle_barcodes);
     if (DEBUG)
       std::cout << std::endl;
   }
@@ -157,12 +165,13 @@ void SimTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   Handle<std::vector<CaloParticle>> CaloParticle_h;
   iEvent.getByToken(caloParticle_token_, CaloParticle_h);
+
   edm::Handle<std::vector<reco::GenParticle>> gen_particles_h;
   iEvent.getByToken(genParticles_token_, gen_particles_h);
+
   Handle<std::vector<int>> gen_barcodes_h;
   iEvent.getByToken(genBarcodes_token_, gen_barcodes_h);
 
-  const auto& caloParticle = *CaloParticle_h;
   const auto& genParticles = *gen_particles_h;
   const auto& genBarcodes = *gen_barcodes_h;
 
@@ -179,8 +188,9 @@ void SimTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
         std::cout << std::endl;
       }
       TauDecay t;
-      buildSimTau(t, 0, -1, g, -1, caloParticle, genBarcodes);
+      buildSimTau(t, 0, -1, g, -1, CaloParticle_h, genBarcodes);
       t.dumpFullDecay();
+      t.dump();
     }
   }
 }
