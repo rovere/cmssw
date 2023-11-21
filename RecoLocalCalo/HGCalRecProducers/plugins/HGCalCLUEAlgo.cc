@@ -15,6 +15,8 @@
 #include <limits>
 #include "DataFormats/DetId/interface/DetId.h"
 
+#define DEBUG_CLUSTERS_ALPAKA 0
+
 using namespace hgcal_clustering;
 
 template <typename T, typename STRATEGY>
@@ -129,8 +131,10 @@ std::vector<reco::BasicCluster> HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool) {
     cellsIdInCluster.clear();
   }
 
+#if DEBUG_CLUSTERS_ALPAKA
   hgcalUtils::DumpLegacySoA dumperLegacySoA;
   dumperLegacySoA.dumpInfos(*cells_);
+#endif
 
   return clusters_v_;
 }
@@ -147,7 +151,7 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateLocalDensity(const T& lt,
                                                  cellsOnLayer.dim2[i] - delta,
                                                  cellsOnLayer.dim2[i] + delta);
 
-    bool print = (cellsOnLayer.detid[i] == 2149648421);
+    bool print = false; //(cellsOnLayer.detid[i] == 2149648421);
     for (int xBin = search_box[0]; xBin < search_box[1] + 1; ++xBin) {
       for (int yBin = search_box[2]; yBin < search_box[3] + 1; ++yBin) {
         int binId = lt.getGlobalBinByBin(xBin, yBin);
@@ -264,7 +268,7 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateDistanceToHigher(const T& lt, const u
     float rho_max = 0.f;
     int i_nearestHigher = -1;
     auto range = outlierDeltaFactor_ * delta;
-    bool print = (cellsOnLayer.detid[i] == 2149108264);
+    bool print = false; //(cellsOnLayer.detid[i] == 2149108264);
     std::array<int, 4> search_box = lt.searchBox(cellsOnLayer.dim1[i] - range,
                                                  cellsOnLayer.dim1[i] + range,
                                                  cellsOnLayer.dim2[i] - range,
