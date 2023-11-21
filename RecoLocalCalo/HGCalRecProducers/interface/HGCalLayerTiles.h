@@ -31,9 +31,11 @@ public:
     for (unsigned int i = 0; i < cellsSize; ++i) {
       auto idx = getGlobalBin(dim1[i], dim2[i]);
       tiles_[idx].push_back(i);
+#if 0
       if (i == 1952) {
         printf("ZZZx %d in globalBin %d\n", i, idx);
       }
+#endif
     }
   }
   /**
@@ -77,8 +79,10 @@ public:
       d2 = reco::deltaPhi(dim2Cell1, dim2Cell2);
       d2 *= d2;
       return std::fmaf(d1, d1, d2);
+      //return d1 * d1 + d2;
     }
     return std::fmaf(d1, d1, d2 * d2);
+    // return d1 * d1 + d2 * d2;
   }
   int getGlobalBin(float dim1, float dim2) const { return getDim1Bin(dim1) + getDim2Bin(dim2) * T::nColumns; }
 

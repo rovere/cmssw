@@ -20,6 +20,7 @@
 #include "DataFormats/HGCalReco/interface/HGCalSoAOutHostCollection.h"
 #include "DataFormats/HGCalReco/interface/HGCalSoAOut.h"
 
+#define DEBUG_CLUSTERS_ALPAKA 0
 
 class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
   public:
@@ -77,6 +78,7 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
         iEvent.put( std::move(layerClustersMask), "InitialLayerClustersMask");
       }
 
+#if DEBUG_CLUSTERS_ALPAKA
       hgcalUtils::DumpCellsSoA dumperCellsSoA;
       dumperCellsSoA.dumpInfos(cells);
 
@@ -85,6 +87,7 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
 
       hgcalUtils::DumpClustersSoA dumperSoA;
       dumperSoA.dumpInfos(clustersSoA);
+#endif
 
       //std::cout << "Before put clusters" << std::endl;
       auto clusterHandle = iEvent.put(std::move(clusters));
@@ -211,14 +214,14 @@ class HGCalLayerClustersFromAlpakaProducer : public edm::stream::EDProducer<> {
           continue;
         auto globalClusterIdx = clusterSoAV.clusterIndex();
         if (usedIdx.find(globalClusterIdx) != usedIdx.end()){
-          std::cout << fmt::format("Re-Converting Original Cl {} into legacy {}", globalClusterIdx, originalClIdx_CondensedClIx[globalClusterIdx]) << std::endl;
+          //std::cout << fmt::format("Re-Converting Original Cl {} into legacy {}", globalClusterIdx, originalClIdx_CondensedClIx[globalClusterIdx]) << std::endl;
           auto const & currentIdx = originalClIdx_CondensedClIx[globalClusterIdx];
           clusters[currentIdx].setEnergy(clusters[currentIdx].energy() + cellV.weight());
           clusters[currentIdx].addHitAndFraction(cellV.detid(), 1.f);
           assert( cellV.detid() !=0 );
         } else {
           originalClIdx_CondensedClIx[globalClusterIdx] = orderedClIdx;
-          std::cout << fmt::format("Converting Original Cl {} into legacy {}", globalClusterIdx, originalClIdx_CondensedClIx[globalClusterIdx]) << std::endl;
+          //std::cout << fmt::format("Converting Original Cl {} into legacy {}", globalClusterIdx, originalClIdx_CondensedClIx[globalClusterIdx]) << std::endl;
           std::vector<std::pair<DetId, float>> thisCluster;
           thisCluster.emplace_back(cellV.detid(), 1.f);
           math::XYZPoint position = math::XYZPoint(0.f, 0.f, 0.f);

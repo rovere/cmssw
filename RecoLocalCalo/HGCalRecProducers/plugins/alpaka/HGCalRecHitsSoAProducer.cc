@@ -205,10 +205,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
               (fcPerMip_[ithick] * thicknessCorrection_[ithick]);
             thresholds_[ilayer - 1][ithick] = sigmaNoise * ecut_;
             v_sigmaNoise_[ilayer - 1][ithick] = sigmaNoise;
+#if 0
             std::cout << "ilayer: " << ilayer << " nonAgedNoises: " << nonAgedNoises_[ithick]
               << " fcPerEle: " << fcPerEle_ << " fcPerMip: " << fcPerMip_[ithick]
               << " noiseMip: " << fcPerEle_ * nonAgedNoises_[ithick] / fcPerMip_[ithick]
               << " sigmaNoise: " << sigmaNoise << "\n";
+#endif
           }
         }
       }
