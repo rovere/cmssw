@@ -35,6 +35,8 @@
 #include "CLUEAlgo.h"
 #include "TilesConstants.h"
 
+#define DEBUG_CLUSTERS_ALPAKA 0
+
 class HGCalLayerClusterProducer : public edm::stream::EDProducer<> {
 public:
   /**
@@ -395,9 +397,11 @@ void HGCalLayerClusterProducer::produce(edm::Event& evt, const edm::EventSetup& 
     }
   }
 
+#if DEBUG_CLUSTERS_ALPAKA
   hgcalUtils::DumpClusters dumper;
 
   dumper.dumpInfos(*clusters, true);
+#endif
 
   auto clusterHandle = evt.put(std::move(clusters));
 
@@ -417,7 +421,7 @@ void HGCalLayerClusterProducer::produce(edm::Event& evt, const edm::EventSetup& 
 }
 
 void HGCalLayerClusterProducer::setAlgoId() {
-  std::cout << "Producer: " << detector_ << std::endl;
+  //std::cout << "Producer: " << detector_ << std::endl;
   if (detector_ == "HFNose") {
     algoId_ = reco::CaloCluster::hfnose;
   } else if (detector_ == "EE") {
