@@ -21,7 +21,7 @@ struct HGCalSiliconTilesConstants {
   static constexpr int nTiles = nColumns * nRows;
   static constexpr float invDim1BinSize = nColumns / (maxDim1 - minDim1);
   static constexpr float invDim2BinSize = nRows / (maxDim2 - minDim2);
-  static constexpr int maxTileDepth = 32;  // For accelerators.
+  static constexpr int maxTileDepth = 64;  // For accelerators.
 };
 
 struct HGCalScintillatorTilesConstants {
