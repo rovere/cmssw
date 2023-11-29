@@ -45,11 +45,17 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         auto const inputClusters_v = deviceInputClusters.view();
         //
         // Allocate output SoA for the clusters, one entry for each cluster
-        ALPAKA_ACCELERATOR_NAMESPACE::PortableCollection<HGCalClustersSoA> output(deviceInputClusters.view().numberOfClustersScalar(), iEvent.queue());
+        auto numclusters = cms::alpakatools::make_device_view<const unsigned int>(alpaka::getDev(iEvent.queue()), inputClusters_v.numberOfClustersScalar());
+        unsigned int p;
+        auto host_p = cms::alpakatools::make_host_view<unsigned int>(p);
+        alpaka::memcpy(iEvent.queue(), host_p, numclusters);
+        alpaka::wait(iEvent.queue());
+
+        ALPAKA_ACCELERATOR_NAMESPACE::PortableCollection<HGCalClustersSoA> output(p, iEvent.queue());
         auto output_v = output.view();
 
         algo_.run(iEvent.queue(),
-            deviceInputClusters.view().numberOfClustersScalar(),
+            p,
             inputRechits_v, inputClusters_v, output_v);
         iEvent.emplace(deviceTokenSoAClusters_, std::move(output));
       }
@@ -58,6 +64,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
         edm::ParameterSetDescription desc;
         desc.add<edm::InputTag>("hgcalLayerClustersSoA", edm::InputTag("TO BE DEFINED"));
+        desc.add<edm::InputTag>("hgcalRecHitsSoA", edm::InputTag("TO BE DEFINED"));
         descriptions.addWithDefaultLabel(desc);
       }
 

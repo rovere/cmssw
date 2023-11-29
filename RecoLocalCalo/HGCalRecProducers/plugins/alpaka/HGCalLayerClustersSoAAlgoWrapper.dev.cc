@@ -29,21 +29,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         const HGCalSoACellsDeviceCollection::ConstView input_rechits_soa,
         const HGCalSoAOutDeviceCollection::ConstView input_clusters_soa,
         HGCalSoAClustersDeviceCollection::View outputs) const {
-      /*
-      // global index of the thread within the grid
-      const int32_t thread = alpaka::getIdx<alpaka::Grid, alpaka::Threads>(acc)[0u];
-      const portabletest::Matrix matrix{{1, 2, 3, 4, 5, 6}, {2, 4, 6, 8, 10, 12}, {3, 6, 9, 12, 15, 18}};
-
-      // set this only once in the whole kernel grid
-      if (thread == 0) {
-        view.r() = 1.;
-      }
 
       // make a strided loop over the kernel grid, covering up to "size" elements
-      for (int32_t i : elements_with_stride(acc, size)) {
-        view[i] = {xvalue, 0., 0., i, matrix * i};
+      for (int32_t i : elements_with_stride(acc, input_rechits_soa.metadata().size())) {
+        // Skip unassigned rechits
+        if (input_clusters_soa[i].clusterIndex() == -1) {
+          continue;
+        }
+        auto clIdx = input_clusters_soa[i].clusterIndex();
+        alpaka::atomicAdd(acc, &outputs[clIdx].energy(), input_rechits_soa[i].weight());
       }
-      */
     }
   };
 
@@ -54,20 +49,20 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       const HGCalSoAOutDeviceCollection::ConstView input_clusters_soa,
       HGCalSoAClustersDeviceCollection::View outputs) const {
 
-    /*
+    auto energy = cms::alpakatools::make_device_view<float>(alpaka::getDev(queue), outputs.energy(), size);
+    alpaka::memset(queue, energy, 0x0);
+
     // use 64 items per group (this value is arbitrary, but it's a reasonable starting point)
     uint32_t items = 64;
 
     // use as many groups as needed to cover the whole problem
-    uint32_t groups = divide_up_by(collection->metadata().size(), items);
+    uint32_t groups = divide_up_by(input_rechits_soa.metadata().size(), items);
 
     // map items to
     //   - threads with a single element per thread on a GPU backend
     //   - elements within a single thread on a CPU backend
     auto workDiv = make_workdiv<Acc1D>(groups, items);
 
-    alpaka::exec<Acc1D>(queue, workDiv, TestAlgoKernel{}, collection.view(), collection->metadata().size(), xvalue);
-    */
+    alpaka::exec<Acc1D>(queue, workDiv, HGCalLayerClustersSoAAlgoKernel{}, size, input_rechits_soa, input_clusters_soa, outputs);
   }
-
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE
