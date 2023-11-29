@@ -13,6 +13,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     public:
       void run(Queue& queue,
           const unsigned int numer_of_clusters,
+          float thresholdW0,
+          float positionDeltaRho2,
           const HGCalSoACellsDeviceCollection::ConstView input_rechits_soa,
           const HGCalSoAOutDeviceCollection::ConstView input_clusters_soa,
           HGCalSoAClustersDeviceCollection::View outputs

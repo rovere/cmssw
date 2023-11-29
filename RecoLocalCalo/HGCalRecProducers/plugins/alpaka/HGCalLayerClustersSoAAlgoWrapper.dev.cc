@@ -21,7 +21,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   using namespace cms::alpakatools;
 
-  class HGCalLayerClustersSoAAlgoKernel {
+  class HGCalLayerClustersSoAAlgoKernelEnergy {
   public:
     template <typename TAcc, typename = std::enable_if_t<alpaka::isAccelerator<TAcc>>>
     ALPAKA_FN_ACC void operator()(TAcc const& acc,
@@ -42,9 +42,70 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     }
   };
 
+  class HGCalLayerClustersSoAAlgoKernelPosition {
+  public:
+    template <typename TAcc, typename = std::enable_if_t<alpaka::isAccelerator<TAcc>>>
+    ALPAKA_FN_ACC void operator()(TAcc const& acc,
+        const unsigned int numer_of_clusters,
+        float thresholdW0,
+        float positionDeltaRho2,
+        const HGCalSoACellsDeviceCollection::ConstView input_rechits_soa,
+        const HGCalSoAOutDeviceCollection::ConstView input_clusters_soa,
+        HGCalSoAClustersDeviceCollection::View outputs) const {
+
+      // global index of the thread within the grid
+      const int32_t thread_idx = alpaka::getIdx<alpaka::Grid, alpaka::Threads>(acc)[0u];
+
+      outputs[thread_idx].x() = 0.f;
+      outputs[thread_idx].y() = 0.f;
+      outputs[thread_idx].z() = 0.f;
+      float maxEnergyValue = 0.f;
+      float total_weight = 0.f;
+      unsigned int maxEnergyIndex = 0;
+
+      for (auto hit = 0; hit < input_rechits_soa.metadata().size(); ++hit) {
+        if (input_clusters_soa[hit].clusterIndex() != thread_idx) {
+          continue;
+        }
+        total_weight += input_rechits_soa[hit].weight();
+        if (input_rechits_soa[hit].weight() > maxEnergyValue) {
+          maxEnergyValue = input_rechits_soa[hit].weight();
+          maxEnergyIndex = hit;
+        }
+      }
+
+      float total_weight_log = 0.f;
+      float reference_x = input_rechits_soa[maxEnergyIndex].dim1();
+      float reference_y = input_rechits_soa[maxEnergyIndex].dim2();
+      float reference_z = input_rechits_soa[maxEnergyIndex].dim3();
+      for (auto hit = 0; hit < input_rechits_soa.metadata().size(); ++hit) {
+        if (input_clusters_soa[hit].clusterIndex() != thread_idx) {
+          continue;
+        }
+        //for silicon only just use 1+6 cells = 1.3cm for all thicknesses
+        const float d1 = input_rechits_soa[hit].dim1() - reference_x;
+        const float d2 = input_rechits_soa[hit].dim2() - reference_y;
+        if ((d1 * d1 + d2 * d2) > positionDeltaRho2) {
+          continue;
+        }
+        float Wi = std::max(thresholdW0 + std::log(input_rechits_soa[hit].weight() / total_weight), 0.f);
+        outputs[thread_idx].x() += input_rechits_soa[hit].dim1() * Wi;
+        outputs[thread_idx].y() += input_rechits_soa[hit].dim2() * Wi;
+        total_weight_log += Wi;
+      }
+      total_weight = total_weight_log;
+      float inv_tot_weight = 1.f / total_weight;
+      outputs[thread_idx].x() *= inv_tot_weight;
+      outputs[thread_idx].y() *= inv_tot_weight;
+      outputs[thread_idx].z() = reference_z;
+    }
+  };
+
 
   void HGCalLayerClustersSoAAlgoWrapper::run(Queue& queue,
       const unsigned int size,
+      float thresholdW0,
+      float positionDeltaRho2,
       const HGCalSoACellsDeviceCollection::ConstView input_rechits_soa,
       const HGCalSoAOutDeviceCollection::ConstView input_clusters_soa,
       HGCalSoAClustersDeviceCollection::View outputs) const {
@@ -63,6 +124,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     //   - elements within a single thread on a CPU backend
     auto workDiv = make_workdiv<Acc1D>(groups, items);
 
-    alpaka::exec<Acc1D>(queue, workDiv, HGCalLayerClustersSoAAlgoKernel{}, size, input_rechits_soa, input_clusters_soa, outputs);
+    alpaka::exec<Acc1D>(queue, workDiv, HGCalLayerClustersSoAAlgoKernelEnergy{}, size, input_rechits_soa, input_clusters_soa, outputs);
+
+    // From now on, we divide work by cluster...
+
+    // use as many groups as needed to cover the whole problem
+    uint32_t group_clusters = divide_up_by(size, items);
+    auto workDivClusters = make_workdiv<Acc1D>(group_clusters, items);
+
+    alpaka::exec<Acc1D>(queue, workDivClusters, HGCalLayerClustersSoAAlgoKernelPosition{},
+        size, thresholdW0, positionDeltaRho2, input_rechits_soa, input_clusters_soa, outputs);
   }
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE
