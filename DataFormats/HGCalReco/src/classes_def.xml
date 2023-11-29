@@ -94,4 +94,24 @@
   </read>
 
   <class name="edm::Wrapper<HGCalSoAOutHostCollection>" splitLevel="0"/>
+
+  <class  name="HGCalClustersSoA"/>
+  <!-- <class  name="HGCalClustersSoA<128, false>"/> -->
+  <!-- <class  name="HGCalClustersSoA::View"/> -->
+
+  <class name="HGCalSoAClustersHostCollection"/>
+  <!-- Read streamer declaration for dictionary. It ensures allocation of buffer and data copying to it -->
+  <read
+    sourceClass="HGCalSoAClustersHostCollection"
+    targetClass="HGCalSoAClustersHostCollection"
+    version="[1-]"
+    source="HGCalClustersSoA layout_;"
+    target="buffer_,layout_,view_"
+    embed="false">
+  <![CDATA[
+    HGCalSoAClustersHostCollection::ROOTReadStreamer(newObj, onfile.layout_);
+  ]]>
+  </read>
+  <class name="edm::Wrapper<HGCalSoAClustersHostCollection>" splitLevel="0"/>
+
 </lcgdict>

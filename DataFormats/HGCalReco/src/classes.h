@@ -9,3 +9,5 @@
 #include "DataFormats/HGCalReco/interface/HGCalSoACells.h"
 #include "DataFormats/HGCalReco/interface/HGCalSoAOutHostCollection.h"
 #include "DataFormats/HGCalReco/interface/HGCalSoAOut.h"
+#include "DataFormats/HGCalReco/interface/HGCalSoAClusters.h"
+#include "DataFormats/HGCalReco/interface/HGCalSoAClustersHostCollection.h"
