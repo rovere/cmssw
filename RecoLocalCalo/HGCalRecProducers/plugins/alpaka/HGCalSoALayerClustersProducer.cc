@@ -4,7 +4,7 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 #include "FWCore/Utilities/interface/InputTag.h"
-#include "HeterogeneousCore/AlpakaCore/interface/alpaka/stream/EDProducer.h"
+#include "HeterogeneousCore/AlpakaCore/interface/alpaka/stream/SynchronizingEDProducer.h"
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/EDPutToken.h"
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/ESGetToken.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
@@ -22,7 +22,7 @@
 
 namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
-  class HGCalSoALayerClustersProducer : public stream::EDProducer<> {
+  class HGCalSoALayerClustersProducer : public stream::SynchronizingEDProducer<> {
     public:
       HGCalSoALayerClustersProducer(edm::ParameterSet const& config)
         : getTokenDeviceRecHits_{consumes(config.getParameter<edm::InputTag>("hgcalRecHitsSoA"))},
@@ -31,8 +31,24 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       ~HGCalSoALayerClustersProducer() override = default;
 
-      void produce(device::Event& iEvent, device::EventSetup const& iSetup) override {
+      void acquire(device::Event const& iEvent, device::EventSetup const& iSetup) override {
 
+
+        // Get LayerClusters almost-SoA on device: this has still the same
+        // cardinality as the RecHitsSoA, but has all the required information
+        // to assemble the clusters, i.e., it has the cluster index assigned to
+        // each rechit.
+        auto const & deviceInputClusters = iEvent.get(getTokenDeviceClusters_);
+        auto const inputClusters_v = deviceInputClusters.view();
+        //
+        // Allocate output SoA for the clusters, one entry for each cluster
+        auto device_numclusters = cms::alpakatools::make_device_view<const unsigned int>(alpaka::getDev(iEvent.queue()), inputClusters_v.numberOfClustersScalar());
+        auto host_numclusters = cms::alpakatools::make_host_view<unsigned int>(num_clusters_);
+        alpaka::memcpy(iEvent.queue(), host_numclusters, device_numclusters);
+      }
+
+
+      void produce(device::Event & iEvent, device::EventSetup const& iSetup) override {
         // Get RecHitsSoA on the device
         auto const & deviceInputRecHits = iEvent.get(getTokenDeviceRecHits_);
         auto const inputRechits_v = deviceInputRecHits.view();
@@ -43,23 +59,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         // each rechit.
         auto const & deviceInputClusters = iEvent.get(getTokenDeviceClusters_);
         auto const inputClusters_v = deviceInputClusters.view();
-        //
-        // Allocate output SoA for the clusters, one entry for each cluster
-        auto numclusters = cms::alpakatools::make_device_view<const unsigned int>(alpaka::getDev(iEvent.queue()), inputClusters_v.numberOfClustersScalar());
-        unsigned int p;
-        auto host_p = cms::alpakatools::make_host_view<unsigned int>(p);
-        alpaka::memcpy(iEvent.queue(), host_p, numclusters);
-        alpaka::wait(iEvent.queue());
 
-        ALPAKA_ACCELERATOR_NAMESPACE::PortableCollection<HGCalClustersSoA> output(p, iEvent.queue());
+        ALPAKA_ACCELERATOR_NAMESPACE::PortableCollection<HGCalClustersSoA> output(num_clusters_, iEvent.queue());
         auto output_v = output.view();
 
         algo_.run(iEvent.queue(),
-            p,
+            num_clusters_,
             inputRechits_v, inputClusters_v, output_v);
         iEvent.emplace(deviceTokenSoAClusters_, std::move(output));
       }
-
 
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
         edm::ParameterSetDescription desc;
@@ -73,6 +81,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       device::EDGetToken<ALPAKA_ACCELERATOR_NAMESPACE::PortableCollection<HGCalCellsOutSoA>> const getTokenDeviceClusters_;
       device::EDPutToken<ALPAKA_ACCELERATOR_NAMESPACE::PortableCollection<HGCalClustersSoA>> const deviceTokenSoAClusters_;
       HGCalLayerClustersSoAAlgoWrapper algo_;
+      unsigned int num_clusters_;
   };
 
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE
