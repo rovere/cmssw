@@ -22,6 +22,22 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   using namespace cms::alpakatools;
 
+  class HGCalLayerClustersSoAAlgoKernelFast {
+  public:
+    template <typename TAcc, typename = std::enable_if_t<alpaka::isAccelerator<TAcc>>>
+    ALPAKA_FN_ACC void operator()(TAcc const& acc,
+        const unsigned int numer_of_clusters,
+        const HGCalSoACellsDeviceCollection::ConstView input_rechits_soa,
+        const HGCalSoAOutDeviceCollection::ConstView input_clusters_soa,
+        HGCalSoAClustersDeviceCollection::View outputs) const {
+
+      // make a strided loop over the kernel grid, covering up to "size" elements
+      for (int32_t i : elements_with_stride(acc, input_rechits_soa.metadata().size())) {
+       [[maybe_unused]] auto clIdx = input_clusters_soa[i].clusterIndex();
+      }
+    }
+  };
+
   class HGCalLayerClustersSoAAlgoKernelEnergy {
   public:
     template <typename TAcc, typename = std::enable_if_t<alpaka::isAccelerator<TAcc>>>
@@ -267,5 +283,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     auto workDivClusters = make_workdiv<Acc1D>(group_clusters, items);
     alpaka::exec<Acc1D>(queue, workDivClusters, HGCalLayerClustersSoAAlgoKernelPositionByHits3{},
         size, thresholdW0, positionDeltaRho2, input_rechits_soa, input_clusters_soa, outputs, outputs_service);
+
+    alpaka::exec<Acc1D>(queue, workDiv, HGCalLayerClustersSoAAlgoKernelFast{}, size, input_rechits_soa, input_clusters_soa, outputs);
   }
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE
