@@ -1,0 +1,11 @@
+#ifndef DataFormats_HGCalReco_interface_HGCalSoAClustersServiceHostCollection_h
+#define DataFormats_HGCalReco_interface_HGCalSoAClustersServiceHostCollection_h
+
+#include "DataFormats/Portable/interface/PortableHostCollection.h"
+#include "DataFormats/HGCalReco/interface/HGCalSoAClustersService.h"
+
+
+using HGCalSoAClustersServiceHostCollection = PortableHostCollection<HGCalClustersServiceSoA>;
+
+
+#endif  // DataFormats_HGCalReco_interface_HGCalSoAClustersServiceHostCollection_h

@@ -17,6 +17,8 @@
 #include "DataFormats/HGCalReco/interface/HGCalSoACellsHostCollection.h"
 #include "DataFormats/HGCalReco/interface/alpaka/HGCalSoAClustersDeviceCollection.h"
 #include "DataFormats/HGCalReco/interface/alpaka/HGCalSoAOutDeviceCollection.h"
+#include "DataFormats/HGCalReco/interface/HGCalSoAClusters.h"
+#include "DataFormats/HGCalReco/interface/HGCalSoAClustersService.h"
 #include "HGCalLayerClustersSoAAlgoWrapper.h"
 
 
@@ -64,12 +66,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
         ALPAKA_ACCELERATOR_NAMESPACE::PortableCollection<HGCalClustersSoA> output(num_clusters_, iEvent.queue());
         auto output_v = output.view();
+        // Allocate service SoA cluster
+        ALPAKA_ACCELERATOR_NAMESPACE::PortableCollection<HGCalClustersServiceSoA> outputService(num_clusters_, iEvent.queue());
+        auto output_service_v = outputService.view();
 
         algo_.run(iEvent.queue(),
             num_clusters_,
             thresholdW0_,
             positionDeltaRho2_,
-            inputRechits_v, inputClusters_v, output_v);
+            inputRechits_v, inputClusters_v, output_v,
+            output_service_v);
         iEvent.emplace(deviceTokenSoAClusters_, std::move(output));
       }
 

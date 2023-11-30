@@ -5,6 +5,7 @@
 #include "DataFormats/HGCalReco/interface/alpaka/HGCalSoACellsDeviceCollection.h"
 #include "DataFormats/HGCalReco/interface/alpaka/HGCalSoAOutDeviceCollection.h"
 #include "DataFormats/HGCalReco/interface/alpaka/HGCalSoAClustersDeviceCollection.h"
+#include "DataFormats/HGCalReco/interface/alpaka/HGCalSoAClustersServiceDeviceCollection.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
 namespace ALPAKA_ACCELERATOR_NAMESPACE {
@@ -17,7 +18,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           float positionDeltaRho2,
           const HGCalSoACellsDeviceCollection::ConstView input_rechits_soa,
           const HGCalSoAOutDeviceCollection::ConstView input_clusters_soa,
-          HGCalSoAClustersDeviceCollection::View outputs
+          HGCalSoAClustersDeviceCollection::View outputs,
+          HGCalSoAClustersServiceDeviceCollection::View outputs_service
           ) const;
   };
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE
