@@ -223,7 +223,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             for (int32_t cluster_index : elements_with_stride(acc, outputs.metadata().size())) {
               const int max_energy_index = outputs_service[cluster_index].maxEnergyIndex();
 
-              float inv_tot_weight = 1.f / outputs_service[cluster_index].total_weight();
+              float inv_tot_weight = 1.f / outputs_service[cluster_index].total_weight_log();
               outputs[cluster_index].x() *= inv_tot_weight;
               outputs[cluster_index].y() *= inv_tot_weight;
               outputs[cluster_index].z() = input_rechits_soa[max_energy_index].dim3();

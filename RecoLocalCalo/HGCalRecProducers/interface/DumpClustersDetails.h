@@ -27,9 +27,10 @@ namespace hgcalUtils {
         void dumpInfos(const T& clusters, bool dumpCellsDetId) const {
           int count=0;
           for (auto &i: clusters) {
-            std::cout << fmt::format("Seed: {}, Idx: {}, x: {}, y: {}, z: {}, eta: {}, phi: {}",
+            std::cout << fmt::format("Seed: {}, Idx: {}, energy: {}, x: {}, y: {}, z: {}, eta: {}, phi: {}",
                 i.seed().rawId(),
                 count++,
+                (float)i.energy(),
                 roundToN<N>(i.x()),
                 roundToN<N>(i.y()),
                 roundToN<N>(i.z()),
