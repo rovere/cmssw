@@ -36457,9 +36457,6 @@ process.HLTHgcalTiclPFClusteringForEgammaL1Seeded = cms.Sequence(process.HLTHgca
 process.HLTL1Sequence = cms.Sequence()
 
 
-process.HLTL1UnpackerSequence = cms.Sequence()
-
-
 process.HLTPFClusteringForEgammaL1Seeded = cms.Sequence(process.HLTPFClusteringForEgammaL1SeededTask)
 
 
@@ -36508,7 +36505,7 @@ process.L1TTkIsoEm36Sequence = cms.Sequence(process.HLTL1Sequence+process.l1tTkI
 process.endOfProcess = cms.Sequence(process.MEtoEDMConverter)
 
 
-process.HLTBeginSequence = cms.Sequence(process.hltTriggerType+process.HLTL1UnpackerSequence+process.HLTBeamSpot)
+process.HLTBeginSequence = cms.Sequence(process.hltTriggerType+process.HLTBeamSpot)
 
 
 process.HLTDiphoton3023IsoCaloIdL1SeededSequence = cms.Sequence(process.HLTL1Sequence+process.hltEGL1SeedsForDoublePhotonIsolatedFilter+process.HLTDoFullUnpackingEgammaEcalL1SeededSequence+process.HLTPFClusteringForEgammaL1Seeded+process.HLTHgcalTiclPFClusteringForEgammaL1Seeded+process.hltEgammaCandidatesWrapperL1Seeded+process.hltEG30EtL1SeededFilter+process.hltDiEG23EtL1SeededFilter+process.hltDiEG3023IsoCaloIdClusterShapeL1SeededFilter+process.hltDiEG3023IsoCaloIdClusterShapeSigmavvL1SeededFilter+process.hltDiEG3023IsoCaloIdClusterShapeSigmawwL1SeededFilter+process.hltDiEG3023IsoCaloIdHgcalHEL1SeededFilter+process.HLTEGammaDoLocalHcalSequence+process.HLTFastJetForEgamma+process.hltDiEG3023IsoCaloIdHEL1SeededFilter+process.hltDiEG3023IsoCaloIdEcalIsoL1SeededFilter+process.hltDiEG3023IsoCaloIdHgcalIsoL1SeededFilter+process.HLTPFHcalClusteringForEgamma+process.hltDiEG3023IsoCaloIdHcalIsoL1SeededFilter, process.HLTDiphoton3023IsoCaloIdL1SeededTask)
