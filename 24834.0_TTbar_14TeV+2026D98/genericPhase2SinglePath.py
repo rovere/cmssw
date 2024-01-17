@@ -18,7 +18,17 @@ process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring('file:step2.root'),
     inputCommands = cms.untracked.vstring(
         'keep *',
-        'drop *_hlt*_*_HLT',
+        'drop *_*_*_HLT',
+        'keep *_l1t*_*_HLT',
+        'keep *_rawDataCollector_*_HLT',
+        'keep *_*_bunchSpacing_HLT',
+        'keep *_mix_*_HLT',
+        'keep *_simSiPixelDigis_*_HLT',
+        'keep *_simMuonGEMDigis_*_HLT',
+        'keep *_simMuonRPCDigis_*_HLT',
+        'keep *_simMuonDTDigis_*_HLT',
+        'keep *_simMuonCSCDigis_*_HLT',
+        'keep *_ecalDetailedTimeRecHit_*_HLT',
         'drop triggerTriggerFilterObjectWithRefs_l1t*_*_HLT'
     ),
     secondaryFileNames = cms.untracked.vstring()
