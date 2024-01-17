@@ -36211,7 +36211,13 @@ process.HLTBeamSpotTask = cms.ConditionalTask(process.hltOnlineBeamSpot)
 process.HLTDiphoton3023IsoCaloIdL1SeededTask = cms.ConditionalTask(process.hltEgammaCandidatesL1Seeded, process.hltEgammaClusterShapeL1Seeded, process.hltEgammaEcalPFClusterIsoL1Seeded, process.hltEgammaHGCALIDVarsL1Seeded, process.hltEgammaHGCalLayerClusterIsoL1Seeded, process.hltEgammaHcalPFClusterIsoL1Seeded, process.hltEgammaHoverEL1Seeded)
 
 
-process.HLTDoFullUnpackingEgammaEcalL1SeededTask = cms.ConditionalTask(process.bunchSpacingProducer, process.hltEcalBarrelDigisInRegions, process.hltEcalDetIdToBeRecovered, process.hltEcalDigis, process.hltEcalRecHitL1Seeded, process.hltEcalUncalibRecHitL1Seeded, process.hltL1TEGammaFilteredCollectionProducer)
+process.HLTDoFullUnpackingEgammaEcalL1SeededTask = cms.ConditionalTask(process.bunchSpacingProducer,
+    process.hltEcalBarrelDigisInRegions,
+    process.hltEcalDetIdToBeRecovered,
+    process.hltEcalDigis,
+    process.hltEcalRecHitL1Seeded,
+    process.hltEcalUncalibRecHitL1Seeded,
+    process.hltL1TEGammaFilteredCollectionProducer)
 
 
 process.HLTDoFullUnpackingEgammaEcalTask = cms.ConditionalTask(process.bunchSpacingProducer, process.hltEcalDetIdToBeRecovered, process.hltEcalDigis, process.hltEcalRecHit, process.hltEcalUncalibRecHit)
@@ -36247,7 +36253,7 @@ process.HLTEle32WPTightL1SeededTask = cms.ConditionalTask(process.hltEgammaCandi
 process.HLTElePixelMatchL1SeededTask = cms.ConditionalTask(process.MeasurementTrackerEvent, process.hltEgammaElectronPixelSeedsL1Seeded, process.hltEgammaHoverEL1Seeded, process.hltEgammaPixelMatchVarsL1Seeded, process.hltEgammaSuperClustersToPixelMatchL1Seeded, process.hltElePixelHitDoubletsForTripletsL1Seeded, process.hltElePixelHitDoubletsL1Seeded, process.hltElePixelHitTripletsClusterRemoverL1Seeded, process.hltElePixelHitTripletsL1Seeded, process.hltElePixelSeedsCombinedL1Seeded, process.hltElePixelSeedsDoubletsL1Seeded, process.hltElePixelSeedsTripletsL1Seeded, process.hltEleSeedsTrackingRegionsL1Seeded, process.hltPixelLayerPairsL1Seeded, process.hltPixelLayerTriplets)
 
 
-process.HLTFastJetForEgammaTask = cms.ConditionalTask(process.hltFixedGridRhoFastjetAllCaloForEGamma)
+process.HLTFastJetForEgammaTask = cms.ConditionalTask(process.hltEcalUncalibRecHit, process.hltEcalRecHit, process.hltFixedGridRhoFastjetAllCaloForEGamma)
 
 
 process.HLTGsfElectronL1SeededTask = cms.ConditionalTask(
@@ -36516,7 +36522,20 @@ process.HLTParticleFlowSequence = cms.Sequence(process.HLTParticleFlowTask)
 
 
 
-process.HLTPhoton108EBTightIDTightIsoL1SeededSequence = cms.Sequence(process.HLTL1Sequence+process.hltEGL1SeedsForSinglePhotonIsolatedFilter+process.HLTDoFullUnpackingEgammaEcalL1SeededSequence+process.HLTPFClusteringForEgammaL1Seeded+process.HLTHgcalTiclPFClusteringForEgammaL1Seeded+process.hltEgammaCandidatesWrapperL1Seeded+process.hltEG108EtL1SeededFilter+process.hltPhoton108EBTightIDTightIsoClusterShapeL1SeededFilter+process.HLTEGammaDoLocalHcalSequence+process.HLTFastJetForEgamma+process.hltPhoton108EBTightIDTightIsoHEL1SeededFilter+process.hltPhoton108EBTightIDTightIsoEcalIsoL1SeededFilter+process.HLTPFHcalClusteringForEgamma+process.hltPhoton108EBTightIDTightIsoHcalIsoL1SeededFilter, process.HLTPhoton108EBTightIDTightIsoL1SeededTask)
+process.HLTPhoton108EBTightIDTightIsoL1SeededSequence = cms.Sequence(process.HLTL1Sequence+
+    process.hltEGL1SeedsForSinglePhotonIsolatedFilter+
+    process.HLTDoFullUnpackingEgammaEcalL1SeededSequence+
+    process.HLTPFClusteringForEgammaL1Seeded+
+    process.HLTHgcalTiclPFClusteringForEgammaL1Seeded+
+    process.hltEgammaCandidatesWrapperL1Seeded+
+    process.hltEG108EtL1SeededFilter+
+    process.hltPhoton108EBTightIDTightIsoClusterShapeL1SeededFilter+
+    process.HLTEGammaDoLocalHcalSequence+
+    process.HLTFastJetForEgamma+
+    process.hltPhoton108EBTightIDTightIsoHEL1SeededFilter+
+    process.hltPhoton108EBTightIDTightIsoEcalIsoL1SeededFilter+
+    process.HLTPFHcalClusteringForEgamma+
+    process.hltPhoton108EBTightIDTightIsoHcalIsoL1SeededFilter, process.HLTPhoton108EBTightIDTightIsoL1SeededTask)
 
 
 process.HLTPhoton187L1SeededSequence = cms.Sequence(process.HLTL1Sequence+process.l1tTkEmSingle51Filter+process.HLTDoFullUnpackingEgammaEcalL1SeededSequence+process.HLTPFClusteringForEgammaL1Seeded+process.HLTHgcalTiclPFClusteringForEgammaL1Seeded+process.hltEgammaCandidatesWrapperL1Seeded+process.hltEG187EtL1SeededFilter+process.hltPhoton187HgcalHEL1SeededFilter+process.HLTEGammaDoLocalHcalSequence+process.hltPhoton187HEL1SeededFilter, process.HLTPhoton187L1SeededTask)
@@ -36622,7 +36641,6 @@ process.HLT_Diphoton30_23_IsoCaloId_L1Seeded = cms.Path(process.HLTBeginSequence
     +process.hltPreDiphoton3023IsoCaloIdL1Seeded
     +process.HLTDiphoton3023IsoCaloIdL1SeededSequence
     +process.HLTEndSequence,
-    cms.ConditionalTask(process.allProducersInATask)
     )
 
 
@@ -36724,7 +36742,10 @@ process.HLT_PFPuppiMETTypeOne140_PFPuppiMHT140 = cms.Path(process.HLTBeginSequen
     )
 
 
-process.HLT_Photon108EB_TightID_TightIso_L1Seeded = cms.Path(process.HLTBeginSequence+process.hltPrePhoton108EBTightIDTightIsoL1Seeded+process.HLTPhoton108EBTightIDTightIsoL1SeededSequence+process.HLTEndSequence,
+process.HLT_Photon108EB_TightID_TightIso_L1Seeded = cms.Path(process.HLTBeginSequence+
+    process.hltPrePhoton108EBTightIDTightIsoL1Seeded+
+    process.HLTPhoton108EBTightIDTightIsoL1SeededSequence+
+    process.HLTEndSequence,
     cms.ConditionalTask(process.allProducersInATask)
     )
 
