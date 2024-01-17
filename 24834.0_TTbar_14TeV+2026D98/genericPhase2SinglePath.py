@@ -19673,11 +19673,11 @@ process.ecalBarrelClusterFastTimer = cms.EDProducer("EcalBarrelClusterFastTimer"
 
 process.ecalDetailedTimeRecHit = cms.EDProducer("EcalDetailedTimeRecHitProducer",
     EBDetailedTimeRecHitCollection = cms.string('EcalRecHitsEB'),
-    EBRecHitCollection = cms.InputTag("ecalRecHit","EcalRecHitsEB"),
+    EBRecHitCollection = cms.InputTag("hltEcalRecHit","EcalRecHitsEB"),
     EBTimeDigiCollection = cms.InputTag("mix","EBTimeDigi"),
     EBTimeLayer = cms.int32(7),
     EEDetailedTimeRecHitCollection = cms.string('EcalRecHitsEE'),
-    EERecHitCollection = cms.InputTag("ecalRecHit","EcalRecHitsEE"),
+    EERecHitCollection = cms.InputTag("hltEcalRecHit","EcalRecHitsEE"),
     EETimeDigiCollection = cms.InputTag("mix","EETimeDigi"),
     EETimeLayer = cms.int32(3),
     correctForVertexZPosition = cms.bool(False),
@@ -28157,8 +28157,8 @@ process.particleFlowClusterECAL = cms.EDProducer("CorrectedECALPFClusterProducer
         ebSrFlagLabel = cms.InputTag("hltEcalDigis"),
         eeSrFlagLabel = cms.InputTag("hltEcalDigis"),
         maxPtForMVAEvaluation = cms.double(300.0),
-        recHitsEBLabel = cms.InputTag("ecalRecHit","EcalRecHitsEB"),
-        recHitsEELabel = cms.InputTag("ecalRecHit","EcalRecHitsEE"),
+        recHitsEBLabel = cms.InputTag("hltEcalRecHit","EcalRecHitsEB"),
+        recHitsEELabel = cms.InputTag("hltEcalRecHit","EcalRecHitsEE"),
         setEnergyUncertainty = cms.bool(False),
         srfAwareCorrection = cms.bool(True)
     ),
@@ -28559,7 +28559,7 @@ process.particleFlowRecHitECAL = cms.EDProducer("PFRecHitProducer",
                 )
             ),
             srFlags = cms.InputTag(""),
-            src = cms.InputTag("ecalRecHit","EcalRecHitsEB")
+            src = cms.InputTag("hltEcalRecHit","EcalRecHitsEB")
         ),
         cms.PSet(
             name = cms.string('PFEERecHitCreator'),
@@ -28577,7 +28577,7 @@ process.particleFlowRecHitECAL = cms.EDProducer("PFRecHitProducer",
                 )
             ),
             srFlags = cms.InputTag(""),
-            src = cms.InputTag("ecalRecHit","EcalRecHitsEE")
+            src = cms.InputTag("hltEcalRecHit","EcalRecHitsEE")
         )
     )
 )
@@ -28757,10 +28757,10 @@ process.particleFlowSuperClusterECAL = cms.EDProducer("PFECALSuperClusterProduce
     PFSuperClusterCollectionEndcap = cms.string('particleFlowSuperClusterECALEndcap'),
     PFSuperClusterCollectionEndcapWithPreshower = cms.string('particleFlowSuperClusterECALEndcapWithPreshower'),
     applyCrackCorrections = cms.bool(False),
-    barrelRecHits = cms.InputTag("ecalRecHit","EcalRecHitsEE"),
+    barrelRecHits = cms.InputTag("hltEcalRecHit","EcalRecHitsEE"),
     doSatelliteClusterMerge = cms.bool(False),
     dropUnseedable = cms.bool(False),
-    endcapRecHits = cms.InputTag("ecalRecHit","EcalRecHitsEB"),
+    endcapRecHits = cms.InputTag("hltEalRecHit","EcalRecHitsEB"),
     etawidth_SuperClusterBarrel = cms.double(0.04),
     etawidth_SuperClusterEndcap = cms.double(0.04),
     isOOTCollection = cms.bool(False),
@@ -28770,8 +28770,8 @@ process.particleFlowSuperClusterECAL = cms.EDProducer("PFECALSuperClusterProduce
     regressionConfig = cms.PSet(
         applySigmaIetaIphiBug = cms.bool(False),
         eRecHitThreshold = cms.double(1),
-        ecalRecHitsEB = cms.InputTag("ecalRecHit","EcalRecHitsEB"),
-        ecalRecHitsEE = cms.InputTag("ecalRecHit","EcalRecHitsEE"),
+        ecalRecHitsEB = cms.InputTag("hltEcalRecHit","EcalRecHitsEB"),
+        ecalRecHitsEE = cms.InputTag("hltEcalRecHit","EcalRecHitsEE"),
         hgcalCylinderR = cms.double(2.79999995232),
         hgcalRecHits = cms.InputTag(""),
         isHLT = cms.bool(False),
@@ -28818,10 +28818,10 @@ process.particleFlowSuperClusterHGCal = cms.EDProducer("PFECALSuperClusterProduc
     PFSuperClusterCollectionEndcap = cms.string(''),
     PFSuperClusterCollectionEndcapWithPreshower = cms.string(''),
     applyCrackCorrections = cms.bool(False),
-    barrelRecHits = cms.InputTag("ecalRecHit","EcalRecHitsEE"),
+    barrelRecHits = cms.InputTag("hltEcalRecHit","EcalRecHitsEE"),
     doSatelliteClusterMerge = cms.bool(False),
     dropUnseedable = cms.bool(True),
-    endcapRecHits = cms.InputTag("ecalRecHit","EcalRecHitsEB"),
+    endcapRecHits = cms.InputTag("hltEcalRecHit","EcalRecHitsEB"),
     etawidth_SuperClusterBarrel = cms.double(0.04),
     etawidth_SuperClusterEndcap = cms.double(0.04),
     isOOTCollection = cms.bool(False),
@@ -28831,8 +28831,8 @@ process.particleFlowSuperClusterHGCal = cms.EDProducer("PFECALSuperClusterProduc
     regressionConfig = cms.PSet(
         applySigmaIetaIphiBug = cms.bool(False),
         eRecHitThreshold = cms.double(1),
-        ecalRecHitsEB = cms.InputTag("ecalRecHit","EcalRecHitsEB"),
-        ecalRecHitsEE = cms.InputTag("ecalRecHit","EcalRecHitsEE"),
+        ecalRecHitsEB = cms.InputTag("hltEcalRecHit","EcalRecHitsEB"),
+        ecalRecHitsEE = cms.InputTag("hltEcalRecHit","EcalRecHitsEE"),
         hgcalCylinderR = cms.double(2.79999995232),
         hgcalRecHits = cms.InputTag(""),
         isHLT = cms.bool(False),
@@ -29527,7 +29527,7 @@ process.towerMaker = cms.EDProducer("CaloTowersCreator",
     UseRejectedRecoveredHcalHits = cms.bool(True),
     UseSymEBTreshold = cms.bool(True),
     UseSymEETreshold = cms.bool(True),
-    ecalInputs = cms.VInputTag(cms.InputTag("ecalRecHit","EcalRecHitsEB"), cms.InputTag("ecalRecHit","EcalRecHitsEE")),
+    ecalInputs = cms.VInputTag(cms.InputTag("hltEcalRecHit","EcalRecHitsEB"), cms.InputTag("hltEcalRecHit","EcalRecHitsEE")),
     hbheInput = cms.InputTag("hltHbhereco"),
     hfInput = cms.InputTag("hltHfreco"),
     hoInput = cms.InputTag("hltHoreco"),
@@ -36280,16 +36280,10 @@ process.csclocalrecoTask = cms.ConditionalTask(process.hltCsc2DRecHits, process.
 process.dtlocalrecoTask = cms.ConditionalTask(process.hltDt1DRecHits, process.hltDt4DSegments)
 
 
-process.ecalMultiFitUncalibRecHitTask = cms.ConditionalTask(process.ecalMultiFitUncalibRecHit)
-
-
-process.ecalRecHitNoTPTask = cms.ConditionalTask(process.ecalRecHit)
+process.ecalRecHitNoTPTask = cms.ConditionalTask(process.hltEcalRecHit)
 
 
 process.ecalRecHitTask = cms.ConditionalTask(process.ecalDetailedTimeRecHit, process.ecalRecHitNoTPTask)
-
-
-process.ecalUncalibRecHitTask = cms.ConditionalTask(process.ecalMultiFitUncalibRecHitTask, process.hltEcalDetIdToBeRecovered)
 
 
 process.gemLocalRecoTask = cms.ConditionalTask(process.hltGemRecHits, process.hltGemSegments)
@@ -36379,7 +36373,7 @@ process.RawToDigiTask = cms.ConditionalTask(process.hgcalDigis, process.hltEcalD
 process.ecalClustersTask = cms.ConditionalTask(process.particleFlowSuperClusteringTask)
 
 
-process.ecalLocalRecoTask = cms.ConditionalTask(process.ecalRecHitTask, process.ecalUncalibRecHitTask)
+process.ecalLocalRecoTask = cms.ConditionalTask(process.HLTDoFullUnpackingEgammaEcalTask)
 
 
 process.highlevelrecoTask = cms.ConditionalTask(process.particleFlowRecoTask)
@@ -36413,9 +36407,6 @@ process.HLTBtagDeepFlavourSequencePFPuppiModEta2p4 = cms.Sequence(process.hltPFP
 
 
 process.HLTDoFullUnpackingEgammaEcalL1SeededSequence = cms.Sequence(process.HLTDoFullUnpackingEgammaEcalL1SeededTask)
-
-
-process.HLTDoFullUnpackingEgammaEcalSequence = cms.Sequence(process.HLTDoFullUnpackingEgammaEcalTask)
 
 
 process.HLTEGammaDoLocalHcalSequence = cms.Sequence(process.HLTEGammaDoLocalHcalTask)
@@ -36555,7 +36546,6 @@ with open('final_HLT_{}.txt'.format(args.path), 'r') as f:
 
 process.HLT_AK4PFPuppiJet520 = cms.Path(process.HLTBeginSequence+
 process.l1tSinglePFPuppiJet230off+
-process.HLTDoFullUnpackingEgammaEcalSequence+
 process.HLTParticleFlowSequence+
 process.HLTAK4PFPuppiJetsReconstruction+
 process.hltSingleAK4PFPuppiJet520+
