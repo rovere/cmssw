@@ -36648,7 +36648,6 @@ process.HLT_DoubleEle23_12_Iso_L1Seeded = cms.Path(process.HLTBeginSequence
     +process.hltPreDoubleEle2312IsoL1Seeded
     +process.HLTDoubleEle2312IsoL1SeededSequence
     +process.HLTEndSequence,
-    cms.ConditionalTask(process.allProducersInATask)
     )
 
 
@@ -36656,7 +36655,6 @@ process.HLT_DoubleEle25_CaloIdL_PMS2_L1Seeded = cms.Path(process.HLTBeginSequenc
     +process.hltPreDoubleEle25CaloIdLPMS2L1Seeded
     +process.HLTDoubleEle25CaloIdLPMS2L1SeededSequence
     +process.HLTEndSequence,
-    cms.ConditionalTask(process.allProducersInATask)
     )
 
 
@@ -36678,17 +36676,20 @@ process.HLT_Ele115_NonIso_L1Seeded_MR = cms.Path(process.HLTBeginSequence
     +process.hltPreEle115NonIsoL1Seeded
     +process.HLTEle115NonIsoL1SeededSequence
     +process.HLTEndSequence,
-    cms.ConditionalTask(process.allProducersInATask)
     )
 
 
-process.HLT_Ele26_WP70_L1Seeded = cms.Path(process.HLTBeginSequence+process.hltPreEle26WP70L1Seeded+process.HLTEle26WP70L1SeededSequence+process.HLTEndSequence,
-    cms.ConditionalTask(process.allProducersInATask)
+process.HLT_Ele26_WP70_L1Seeded = cms.Path(process.HLTBeginSequence+
+    process.hltPreEle26WP70L1Seeded+
+    process.HLTEle26WP70L1SeededSequence+
+    process.HLTEndSequence,
     )
 
 
-process.HLT_Ele32_WPTight_L1Seeded = cms.Path(process.HLTBeginSequence+process.hltPreEle32WPTightL1Seeded+process.HLTEle32WPTightL1SeededSequence+process.HLTEndSequence,
-    cms.ConditionalTask(process.allProducersInATask)
+process.HLT_Ele32_WPTight_L1Seeded = cms.Path(process.HLTBeginSequence+
+    process.hltPreEle32WPTightL1Seeded+
+    process.HLTEle32WPTightL1SeededSequence+
+    process.HLTEndSequence,
     )
 
 
@@ -36746,12 +36747,13 @@ process.HLT_Photon108EB_TightID_TightIso_L1Seeded = cms.Path(process.HLTBeginSeq
     process.hltPrePhoton108EBTightIDTightIsoL1Seeded+
     process.HLTPhoton108EBTightIDTightIsoL1SeededSequence+
     process.HLTEndSequence,
-    cms.ConditionalTask(process.allProducersInATask)
     )
 
 
-process.HLT_Photon187_L1Seeded = cms.Path(process.HLTBeginSequence+process.hltPrePhoton187L1Seeded+process.HLTPhoton187L1SeededSequence+process.HLTEndSequence,
-    cms.ConditionalTask(process.allProducersInATask)
+process.HLT_Photon187_L1Seeded = cms.Path(process.HLTBeginSequence+
+    process.hltPrePhoton187L1Seeded+
+    process.HLTPhoton187L1SeededSequence+
+    process.HLTEndSequence,
     )
 
 
