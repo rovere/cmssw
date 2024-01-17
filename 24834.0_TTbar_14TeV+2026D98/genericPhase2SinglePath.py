@@ -36295,9 +36295,6 @@ process.ecalUncalibRecHitTask = cms.ConditionalTask(process.ecalMultiFitUncalibR
 process.gemLocalRecoTask = cms.ConditionalTask(process.hltGemRecHits, process.hltGemSegments)
 
 
-process.hcalGlobalRecoTask = cms.ConditionalTask(process.hltHbhereco)
-
-
 process.hcalLocalRecoTask = cms.ConditionalTask(process.hltHfprereco, process.hltHfreco, process.hltHoreco)
 
 
@@ -36403,7 +36400,7 @@ process.calolocalrecoTask = cms.ConditionalTask(process.ecalLocalRecoTask, proce
 process.localrecoTask = cms.ConditionalTask(process.bunchSpacingProducer, process.calolocalrecoTask, process.muonlocalrecoTask, process.trackerlocalrecoTask)
 
 
-process.HLTParticleFlowTask = cms.ConditionalTask(process.RawToDigiTask, process.caloTowersRecTask, process.ecalClustersTask, process.generalTracks, process.hcalGlobalRecoTask, process.hgcalLocalRecoTask, process.highPtTripletStepTask, process.highlevelrecoTask, process.hltOnlineBeamSpot, process.hltPhase2PixelTracksTask, process.hltPhase2PixelVertices, process.initialStepTask, process.itLocalRecoTask, process.iterTICLTask, process.localrecoTask, process.otLocalRecoTask, process.particleFlowClusterTask, process.trackerClusterCheck, process.vertexRecoTask)
+process.HLTParticleFlowTask = cms.ConditionalTask(process.RawToDigiTask, process.caloTowersRecTask, process.ecalClustersTask, process.generalTracks, process.hgcalLocalRecoTask, process.highPtTripletStepTask, process.highlevelrecoTask, process.hltOnlineBeamSpot, process.hltPhase2PixelTracksTask, process.hltPhase2PixelVertices, process.initialStepTask, process.itLocalRecoTask, process.iterTICLTask, process.localrecoTask, process.otLocalRecoTask, process.particleFlowClusterTask, process.trackerClusterCheck, process.vertexRecoTask)
 
 
 process.HLTAK4PFPuppiJetsReconstruction = cms.Sequence(process.goodOfflinePrimaryVertices+process.hltPixelClustersMultiplicity+process.hltPFPuppi+process.hltAK4PFPuppiJets+process.hltAK4PFPuppiJetCorrectorL1+process.hltAK4PFPuppiJetCorrectorL2+process.hltAK4PFPuppiJetCorrectorL3+process.hltAK4PFPuppiJetCorrector+process.hltAK4PFPuppiJetsCorrected)
