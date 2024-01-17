@@ -36278,7 +36278,36 @@ process.HLTPhoton108EBTightIDTightIsoL1SeededTask = cms.ConditionalTask(process.
 process.HLTPhoton187L1SeededTask = cms.ConditionalTask(process.hltEgammaCandidatesL1Seeded, process.hltEgammaHGCALIDVarsL1Seeded, process.hltEgammaHoverEL1Seeded)
 
 
-process.HLTTrackingV61Task = cms.ConditionalTask(process.HLTBeamSpotTask, process.MeasurementTrackerEvent, process.generalTracks, process.highPtTripletStepClusters, process.highPtTripletStepHitDoublets, process.highPtTripletStepHitTriplets, process.highPtTripletStepSeedLayers, process.highPtTripletStepSeeds, process.highPtTripletStepTrackCandidates, process.highPtTripletStepTrackCutClassifier, process.highPtTripletStepTrackSelectionHighPurity, process.highPtTripletStepTracks, process.hltPhase2PixelFitterByHelixProjections, process.hltPhase2PixelTrackFilterByKinematics, process.hltPhase2PixelTracks, process.hltPhase2PixelTracksAndHighPtStepTrackingRegions, process.hltPhase2PixelTracksHitDoublets, process.hltPhase2PixelTracksHitSeeds, process.hltPhase2PixelTracksSeedLayers, process.hltPhase2PixelVertices, process.initialStepSeeds, process.initialStepTrackCandidates, process.initialStepTrackCutClassifier, process.initialStepTrackSelectionHighPurity, process.initialStepTracks, process.siPhase2Clusters, process.siPixelClusterShapeCache, process.siPixelClusters, process.siPixelRecHits, process.trackerClusterCheck)
+### MR process.HLTTrackingV61Task = cms.ConditionalTask(process.HLTBeamSpotTask,
+### MR     process.MeasurementTrackerEvent,
+### MR     process.generalTracks,
+### MR     process.highPtTripletStepClusters,
+### MR     process.highPtTripletStepHitDoublets,
+### MR     process.highPtTripletStepHitTriplets,
+### MR     process.highPtTripletStepSeedLayers,
+### MR     process.highPtTripletStepSeeds,
+### MR     process.highPtTripletStepTrackCandidates,
+### MR     process.highPtTripletStepTrackCutClassifier,
+### MR     process.highPtTripletStepTrackSelectionHighPurity,
+### MR     process.highPtTripletStepTracks,
+### MR     process.hltPhase2PixelFitterByHelixProjections,
+### MR     process.hltPhase2PixelTrackFilterByKinematics,
+### MR     process.hltPhase2PixelTracks,
+### MR     process.hltPhase2PixelTracksAndHighPtStepTrackingRegions,
+### MR     process.hltPhase2PixelTracksHitDoublets,
+### MR     process.hltPhase2PixelTracksHitSeeds,
+### MR     process.hltPhase2PixelTracksSeedLayers,
+### MR     process.hltPhase2PixelVertices,
+### MR     process.initialStepSeeds,
+### MR     process.initialStepTrackCandidates,
+### MR     process.initialStepTrackCutClassifier,
+### MR     process.initialStepTrackSelectionHighPurity,
+### MR     process.initialStepTracks,
+### MR     process.siPhase2Clusters,
+### MR     process.siPixelClusterShapeCache,
+### MR     process.siPixelClusters,
+### MR     process.siPixelRecHits,
+### MR     process.trackerClusterCheck)
 
 
 process.caloTowersRecTask = cms.ConditionalTask(process.towerMaker)
@@ -36401,7 +36430,6 @@ process.calolocalrecoTask = cms.ConditionalTask(process.ecalLocalRecoTask, proce
 process.localrecoTask = cms.ConditionalTask(process.bunchSpacingProducer, process.calolocalrecoTask, process.muonlocalrecoTask, process.trackerlocalrecoTask)
 
 
-process.HLTParticleFlowTask = cms.ConditionalTask(process.RawToDigiTask, process.caloTowersRecTask, process.ecalClustersTask, process.generalTracks, process.hgcalLocalRecoTask, process.highPtTripletStepTask, process.highlevelrecoTask, process.hltOnlineBeamSpot, process.hltPhase2PixelTracksTask, process.hltPhase2PixelVertices, process.initialStepTask, process.itLocalRecoTask, process.iterTICLTask, process.localrecoTask, process.otLocalRecoTask, process.particleFlowClusterTask, process.trackerClusterCheck, process.vertexRecoTask)
 
 
 process.HLTAK4PFPuppiJetsReconstruction = cms.Sequence(process.goodOfflinePrimaryVertices+process.hltPixelClustersMultiplicity+process.hltPFPuppi+process.hltAK4PFPuppiJets+process.hltAK4PFPuppiJetCorrectorL1+process.hltAK4PFPuppiJetCorrectorL2+process.hltAK4PFPuppiJetCorrectorL3+process.hltAK4PFPuppiJetCorrector+process.hltAK4PFPuppiJetsCorrected)
@@ -36458,7 +36486,34 @@ process.HLTPFHcalClusteringForEgamma = cms.Sequence(process.HLTPFHcalClusteringF
 process.HLTPFPuppiMETReconstruction = cms.Sequence(process.goodOfflinePrimaryVertices+process.hltPixelClustersMultiplicity+process.hltPFPuppiNoLep+process.hltPFPuppiMET)
 
 
+
+process.HLTTrackingV61Task = cms.ConditionalTask(process.generalTracks,
+    process.highPtTripletStepTask,
+    process.hltPhase2PixelTracksTask,
+    process.initialStepTask,
+    process.itLocalRecoTask,
+    process.otLocalRecoTask,
+    process.trackerlocalrecoTask,
+    process.trackerClusterCheck,
+    process.hltPhase2PixelVertices)
+
+
+process.HLTParticleFlowTask = cms.ConditionalTask(process.RawToDigiTask,
+    process.caloTowersRecTask,
+    process.ecalClustersTask,
+    process.hgcalLocalRecoTask,
+    process.highlevelrecoTask,
+    process.hltOnlineBeamSpot,
+    process.iterTICLTask,
+    process.localrecoTask,
+    process.particleFlowClusterTask,
+    process.HLTTrackingV61Task,
+    process.vertexRecoTask)
+
+
+
 process.HLTParticleFlowSequence = cms.Sequence(process.HLTParticleFlowTask)
+
 
 
 process.HLTPhoton108EBTightIDTightIsoL1SeededSequence = cms.Sequence(process.HLTL1Sequence+process.hltEGL1SeedsForSinglePhotonIsolatedFilter+process.HLTDoFullUnpackingEgammaEcalL1SeededSequence+process.HLTPFClusteringForEgammaL1Seeded+process.HLTHgcalTiclPFClusteringForEgammaL1Seeded+process.hltEgammaCandidatesWrapperL1Seeded+process.hltEG108EtL1SeededFilter+process.hltPhoton108EBTightIDTightIsoClusterShapeL1SeededFilter+process.HLTEGammaDoLocalHcalSequence+process.HLTFastJetForEgamma+process.hltPhoton108EBTightIDTightIsoHEL1SeededFilter+process.hltPhoton108EBTightIDTightIsoEcalIsoL1SeededFilter+process.HLTPFHcalClusteringForEgamma+process.hltPhoton108EBTightIDTightIsoHcalIsoL1SeededFilter, process.HLTPhoton108EBTightIDTightIsoL1SeededTask)
