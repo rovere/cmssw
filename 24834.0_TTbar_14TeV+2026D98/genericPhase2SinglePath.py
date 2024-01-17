@@ -36295,9 +36295,6 @@ process.ecalUncalibRecHitTask = cms.ConditionalTask(process.ecalMultiFitUncalibR
 process.gemLocalRecoTask = cms.ConditionalTask(process.hltGemRecHits, process.hltGemSegments)
 
 
-process.hcalLocalRecoTask = cms.ConditionalTask(process.hltHfprereco, process.hltHfreco, process.hltHoreco)
-
-
 process.hgcalLocalRecoTask = cms.ConditionalTask(process.HGCalRecHit, process.HGCalUncalibRecHit, process.hgcalLayerClustersEE, process.hgcalLayerClustersHSci, process.hgcalLayerClustersHSi, process.hgcalMergeLayerClusters)
 
 
@@ -36394,7 +36391,7 @@ process.iterTICLTask = cms.ConditionalTask(process.ticlLayerTileTask, process.ti
 process.particleFlowClusterTask = cms.ConditionalTask(process.particleFlowBadHcalPseudoCluster, process.pfClusteringECALTask, process.pfClusteringHBHEHFTask, process.pfClusteringHGCalTask, process.pfClusteringHOTask)
 
 
-process.calolocalrecoTask = cms.ConditionalTask(process.ecalLocalRecoTask, process.hcalLocalRecoTask)
+process.calolocalrecoTask = cms.ConditionalTask(process.ecalLocalRecoTask, process.HLTDoLocalHcalTask)
 
 
 process.localrecoTask = cms.ConditionalTask(process.bunchSpacingProducer, process.calolocalrecoTask, process.muonlocalrecoTask, process.trackerlocalrecoTask)
@@ -36419,9 +36416,6 @@ process.HLTDoFullUnpackingEgammaEcalL1SeededSequence = cms.Sequence(process.HLTD
 
 
 process.HLTDoFullUnpackingEgammaEcalSequence = cms.Sequence(process.HLTDoFullUnpackingEgammaEcalTask)
-
-
-process.HLTDoLocalHcalSequence = cms.Sequence(process.HLTDoLocalHcalTask)
 
 
 process.HLTEGammaDoLocalHcalSequence = cms.Sequence(process.HLTEGammaDoLocalHcalTask)
@@ -36561,7 +36555,6 @@ with open('final_HLT_{}.txt'.format(args.path), 'r') as f:
 
 process.HLT_AK4PFPuppiJet520 = cms.Path(process.HLTBeginSequence+
 process.l1tSinglePFPuppiJet230off+
-process.HLTDoLocalHcalSequence+
 process.HLTDoFullUnpackingEgammaEcalSequence+
 process.HLTParticleFlowSequence+
 process.HLTAK4PFPuppiJetsReconstruction+
