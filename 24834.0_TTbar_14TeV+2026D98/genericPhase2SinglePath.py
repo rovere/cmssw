@@ -25043,7 +25043,7 @@ process.hltPhase2L3GlbMuon = cms.EDProducer("L3MuonProducer",
             input = cms.InputTag("hltL2MuonsFromL1TkMuon","UpdatedAtVtx"),
             maxRegions = cms.int32(2),
             precise = cms.bool(True),
-            vertexCollection = cms.InputTag("hltPhase2PixelVertices")
+#            vertexCollection = cms.InputTag("hltPhase2PixelVertices")
         ),
         PCut = cms.double(2.5),
         PtCut = cms.double(1.0),
@@ -36418,7 +36418,7 @@ process.trackerlocalrecoTask = cms.ConditionalTask(process.pixeltrackerlocalreco
 process.vertexRecoTask = cms.ConditionalTask(process.ak4CaloJetsForTrk, process.initialStepPVTask, process.offlinePrimaryVertices, process.trackRefsForJetsBeforeSorting, process.trackWithVertexRefSelectorBeforeSorting, process.unsortedOfflinePrimaryVertices)
 
 
-process.patAlgosToolsTask = cms.ConditionalTask()
+process.patAlgosToolsTask = cms.Task()
 
 
 process.RawToDigiTask = cms.ConditionalTask(process.hgcalDigis, process.hltEcalDigisTask, process.hltHcalDigis, process.muonCSCDigis, process.muonDTDigis, process.muonGEMDigis)
