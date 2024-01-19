@@ -36879,8 +36879,14 @@ process.HLT_PFHT330PT30_QuadPFPuppiJet_75_60_45_40_TriplePFPuppiBTagDeepFlavour_
     )
 
 
-process.HLT_PFPuppiHT1070 = cms.Path(process.HLTBeginSequence+process.l1tPFPuppiHT450off+process.HLTParticleFlowSequence+process.HLTAK4PFPuppiJetsReconstruction+process.hltPFPuppiHT+process.hltPFPuppiHT1070+process.HLTEndSequence,
-    cms.ConditionalTask(process.allProducersInATask)
+process.HLT_PFPuppiHT1070 = cms.Path(process.HLTBeginSequence+
+    process.l1tPFPuppiHT450off+
+    process.HLTMuonsSequence+
+    process.HLTParticleFlowSequence+
+    process.HLTAK4PFPuppiJetsReconstruction+
+    process.hltPFPuppiHT+
+    process.hltPFPuppiHT1070+
+    process.HLTEndSequence,
     )
 
 
