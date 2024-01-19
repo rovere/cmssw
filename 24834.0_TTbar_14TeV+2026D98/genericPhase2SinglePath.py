@@ -36795,8 +36795,23 @@ process.HLT_Mu50_FromL1TkMuon = cms.Path(process.HLTBeginSequence+process.hltL1T
     )
 
 
-process.HLT_PFHT200PT30_QuadPFPuppiJet_70_40_30_30_TriplePFPuppiBTagDeepCSV_2p4 = cms.Path(process.HLTBeginSequence+process.l1tPFPuppiHT400offMaxEta2p4+process.l1t1PFPuppiJet70offMaxEta2p4+process.l1t2PFPuppiJet55offMaxEta2p4+process.l1t4PFPuppiJet40offMaxEta2p4+process.l1t4PFPuppiJet25OnlineMaxEta2p4+process.HLTParticleFlowSequence+process.HLTAK4PFPuppiJetsReconstruction+process.hltPFPuppiCentralJetQuad30MaxEta2p4+process.hlt1PFPuppiCentralJet70MaxEta2p4+process.hlt2PFPuppiCentralJet40MaxEta2p4+process.hltHtMhtPFPuppiCentralJetsQuadC30MaxEta2p4+process.hltPFPuppiCentralJetsQuad30HT200MaxEta2p4+process.HLTBtagDeepCSVSequencePFPuppiModEta2p4+process.hltBTagPFPuppiDeepCSV0p38Eta2p4TripleEta2p4+process.HLTEndSequence,
-    cms.ConditionalTask(process.allProducersInATask)
+process.HLT_PFHT200PT30_QuadPFPuppiJet_70_40_30_30_TriplePFPuppiBTagDeepCSV_2p4 = cms.Path(process.HLTBeginSequence+
+    process.l1tPFPuppiHT400offMaxEta2p4+
+    process.l1t1PFPuppiJet70offMaxEta2p4+
+    process.l1t2PFPuppiJet55offMaxEta2p4+
+    process.l1t4PFPuppiJet40offMaxEta2p4+
+    process.l1t4PFPuppiJet25OnlineMaxEta2p4+
+    process.HLTMuonsSequence+
+    process.HLTParticleFlowSequence+
+    process.HLTAK4PFPuppiJetsReconstruction+
+    process.hltPFPuppiCentralJetQuad30MaxEta2p4+
+    process.hlt1PFPuppiCentralJet70MaxEta2p4+
+    process.hlt2PFPuppiCentralJet40MaxEta2p4+
+    process.hltHtMhtPFPuppiCentralJetsQuadC30MaxEta2p4+
+    process.hltPFPuppiCentralJetsQuad30HT200MaxEta2p4+
+    process.HLTBtagDeepCSVSequencePFPuppiModEta2p4+
+    process.hltBTagPFPuppiDeepCSV0p38Eta2p4TripleEta2p4+
+    process.HLTEndSequence,
     )
 
 
