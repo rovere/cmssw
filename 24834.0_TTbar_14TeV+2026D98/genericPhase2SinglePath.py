@@ -36358,13 +36358,22 @@ process.initialStepTask = cms.ConditionalTask(process.initialStepSeeds, process.
 process.itLocalRecoTask = cms.ConditionalTask(process.siPhase2Clusters, process.siPixelClusterShapeCache, process.siPixelClusters, process.siPixelRecHits)
 
 
+process.itLocalRecoSequence = cms.Sequence(process.itLocalRecoTask)
+
+
 process.me0LocalRecoTask = cms.ConditionalTask(process.hltMe0RecHits, process.hltMe0Segments)
 
 
 process.muonlocalrecoTask = cms.ConditionalTask(process.csclocalrecoTask, process.dtlocalrecoTask, process.gemLocalRecoTask, process.hltRpcRecHits, process.me0LocalRecoTask)
 
 
+process.muonlocalrecoSequence = cms.Sequence(process.muonlocalrecoTask)
+
+
 process.otLocalRecoTask = cms.ConditionalTask(process.MeasurementTrackerEvent)
+
+
+process.otLocalRecoSequence = cms.Sequence(process.otLocalRecoTask)
 
 
 process.particleFlowClusterECALTask = cms.ConditionalTask(process.ecalBarrelClusterFastTimer, process.particleFlowClusterECAL, process.particleFlowTimeAssignerECAL)
@@ -36434,8 +36443,6 @@ process.calolocalrecoTask = cms.ConditionalTask(process.ecalLocalRecoTask, proce
 
 
 process.localrecoTask = cms.ConditionalTask(process.bunchSpacingProducer, process.calolocalrecoTask, process.muonlocalrecoTask, process.trackerlocalrecoTask)
-
-
 
 
 process.HLTAK4PFPuppiJetsReconstruction = cms.Sequence(process.goodOfflinePrimaryVertices+process.hltPixelClustersMultiplicity+process.hltPFPuppi+process.hltAK4PFPuppiJets+process.hltAK4PFPuppiJetCorrectorL1+process.hltAK4PFPuppiJetCorrectorL2+process.hltAK4PFPuppiJetCorrectorL3+process.hltAK4PFPuppiJetCorrector+process.hltAK4PFPuppiJetsCorrected)
@@ -36688,12 +36695,13 @@ process.allProducersInATask = cms.ConditionalTask(
 #   process.allProducersInATask.add(getattr(process,k))
 
 # Patch the selected path
-with open('final_HLT_{}.txt'.format(args.path), 'r') as f:
-  print('From {}'.format(f.name))
-  for p in f:
-    if len(p.strip()):
-      print(" adding {}".format(p.strip()))
-      process.allProducersInATask.add(getattr(process, p.strip()))
+if args.path != "all":
+  with open('final_HLT_{}.txt'.format(args.path), 'r') as f:
+    print('From {}'.format(f.name))
+    for p in f:
+      if len(p.strip()):
+        print(" adding {}".format(p.strip()))
+        process.allProducersInATask.add(getattr(process, p.strip()))
 
 
 process.HLT_AK4PFPuppiJet520 = cms.Path(process.HLTBeginSequence+
@@ -36791,7 +36799,17 @@ process.HLT_Mu37_Mu27_FromL1TkMuon = cms.Path(process.HLTBeginSequence+process.h
     )
 
 
-process.HLT_Mu50_FromL1TkMuon = cms.Path(process.HLTBeginSequence+process.hltL1TkSingleMuFiltered22+process.hltL3fL1TkSingleMu22L3Filtered50Q+process.HLTEndSequence, cms.ConditionalTask(process.MeasurementTrackerEvent, process.hltCsc2DRecHits, process.hltCscSegments, process.hltDt1DRecHits, process.hltDt4DSegments, process.hltGemRecHits, process.hltGemSegments, process.hltIter0Phase2L3FromL1TkMuonCkfTrackCandidates, process.hltIter0Phase2L3FromL1TkMuonCtfWithMaterialTracks, process.hltIter0Phase2L3FromL1TkMuonPixelSeedsFromPixelTracks, process.hltIter0Phase2L3FromL1TkMuonTrackCutClassifier, process.hltIter0Phase2L3FromL1TkMuonTrackSelectionHighPurity, process.hltIter2Phase2L3FromL1TkMuonCkfTrackCandidates, process.hltIter2Phase2L3FromL1TkMuonClustersRefRemoval, process.hltIter2Phase2L3FromL1TkMuonCtfWithMaterialTracks, process.hltIter2Phase2L3FromL1TkMuonMaskedMeasurementTrackerEvent, process.hltIter2Phase2L3FromL1TkMuonMerged, process.hltIter2Phase2L3FromL1TkMuonPixelClusterCheck, process.hltIter2Phase2L3FromL1TkMuonPixelHitDoublets, process.hltIter2Phase2L3FromL1TkMuonPixelHitTriplets, process.hltIter2Phase2L3FromL1TkMuonPixelLayerTriplets, process.hltIter2Phase2L3FromL1TkMuonPixelSeeds, process.hltIter2Phase2L3FromL1TkMuonPixelSeedsFiltered, process.hltIter2Phase2L3FromL1TkMuonTrackCutClassifier, process.hltIter2Phase2L3FromL1TkMuonTrackSelectionHighPurity, process.hltL2MuonSeedsFromL1TkMuon, process.hltL2MuonsFromL1TkMuon, process.hltL2OfflineMuonSeeds, process.hltMe0RecHits, process.hltMe0Segments, process.hltPhase2L3FromL1TkMuonPixelLayerQuadruplets, process.hltPhase2L3FromL1TkMuonPixelTracks, process.hltPhase2L3FromL1TkMuonPixelTracksHitDoublets, process.hltPhase2L3FromL1TkMuonPixelTracksHitQuadruplets, process.hltPhase2L3FromL1TkMuonPixelTracksTrackingRegions, process.hltPhase2L3FromL1TkMuonPixelVertices, process.hltPhase2L3FromL1TkMuonTrimmedPixelVertices, process.hltPhase2L3GlbMuon, process.hltPhase2L3MuonCandidates, process.hltPhase2L3MuonMerged, process.hltPhase2L3Muons, process.hltPhase2L3MuonsNoID, process.hltPhase2L3OIMuCtfWithMaterialTracks, process.hltPhase2L3OIMuonTrackCutClassifier, process.hltPhase2L3OIMuonTrackSelectionHighPurity, process.hltPhase2L3OISeedsFromL2Muons, process.hltPhase2L3OITrackCandidates, process.hltPhase2PixelFitterByHelixProjections, process.hltPhase2PixelTrackFilterByKinematics, process.hltRpcRecHits, process.siPhase2Clusters, process.siPixelClusterShapeCache, process.siPixelClusters, process.siPixelRecHits)
+process.HLT_Mu50_FromL1TkMuon = cms.Path(process.HLTBeginSequence+
+    process.hltL1TkSingleMuFiltered22+
+    process.muonlocalrecoSequence+
+    process.itLocalRecoSequence+
+    process.otLocalRecoSequence+
+    process.hltPhase2PixelFitterByHelixProjections+
+    process.hltPhase2PixelTrackFilterByKinematics+
+    process.HLTMuonsSequence+
+    process.hltPhase2L3MuonCandidates+
+    process.hltL3fL1TkSingleMu22L3Filtered50Q+
+    process.HLTEndSequence
     )
 
 
@@ -36944,27 +36962,28 @@ process.L1T_TripleTkMuon_5_3_3 = cms.Path(process.HLTBeginSequence+process.hltL1
 process.L1T_DoubleNNTau52 = cms.Path(process.HLTL1Sequence+process.hltL1DoubleNNTau52)
 process.L1T_SingleNNTau150 = cms.Path(process.HLTL1Sequence+process.hltL1SingleNNTau150)
 
-process.schedule = cms.Schedule(*[
-  process.L1T_SinglePFPuppiJet230off,
-  process.L1T_PFPuppiHT450off,
-  process.L1T_PFPuppiMET220off,
-  process.L1T_TkEm51,
-  process.L1T_TkEle36,
-  process.L1T_TkIsoEm36,
-  process.L1T_TkIsoEle28,
-  process.L1T_TkEm37TkEm24,
-  process.L1T_TkEle25TkEle12,
-  process.L1T_TkIsoEm22TkIsoEm12,
-  process.L1T_TkIsoEle22TkEm12,
-  process.L1T_PFHT400PT30_QuadPFPuppiJet_70_55_40_40_2p4,
-  process.L1T_DoublePFPuppiJets112_2p4_DEta1p6,
-  process.L1T_SingleTkMuon_22,
-  process.L1T_DoubleTkMuon_15_7,
-  process.L1T_TripleTkMuon_5_3_3,
-])
+if args.path != 'all':
+  process.schedule = cms.Schedule(*[
+    process.L1T_SinglePFPuppiJet230off,
+    process.L1T_PFPuppiHT450off,
+    process.L1T_PFPuppiMET220off,
+    process.L1T_TkEm51,
+    process.L1T_TkEle36,
+    process.L1T_TkIsoEm36,
+    process.L1T_TkIsoEle28,
+    process.L1T_TkEm37TkEm24,
+    process.L1T_TkEle25TkEle12,
+    process.L1T_TkIsoEm22TkIsoEm12,
+    process.L1T_TkIsoEle22TkEm12,
+    process.L1T_PFHT400PT30_QuadPFPuppiJet_70_55_40_40_2p4,
+    process.L1T_DoublePFPuppiJets112_2p4_DEta1p6,
+    process.L1T_SingleTkMuon_22,
+    process.L1T_DoubleTkMuon_15_7,
+    process.L1T_TripleTkMuon_5_3_3,
+  ])
+  process.schedule.append(getattr(process, 'HLT_{}'.format(args.path)))
 
 # Enable the selected path by adding that to the schedule
-process.schedule.append(getattr(process, 'HLT_{}'.format(args.path)))
 #process.schedule.append(process.HLT_AK4PFPuppiJet520)
 #process.schedule.append(process.HLT_Diphoton30_23_IsoCaloId_L1Seeded)
 #process.schedule.append(process.HLT_DoubleEle23_12_Iso_L1Seeded)
@@ -36991,10 +37010,10 @@ process.schedule.append(getattr(process, 'HLT_{}'.format(args.path)))
 
 #
 
-#process.HLTAnalyzerEndpath = cms.EndPath(process.hltPreHLTAnalyzerEndpath+process.hltTrigReport)
+process.HLTAnalyzerEndpath = cms.EndPath(process.hltPreHLTAnalyzerEndpath+process.hltTrigReport)
 
 
-#process.endjob_step = cms.EndPath(process.endOfProcess)
+process.endjob_step = cms.EndPath(process.endOfProcess)
 
 
 process.simAPVsaturation = cms.EDAlias(
@@ -37079,51 +37098,53 @@ process.simSiStripDigis = cms.EDAlias(
 
 
 # process.Tracer = cms.Service('Tracer')
+# process.DependencyGraph = cms.Service('DependencyGraph')
 
-#process.schedule = cms.Schedule(*[
-#  process.L1T_SinglePFPuppiJet230off,
-#  process.L1T_PFPuppiHT450off,
-#  process.L1T_PFPuppiMET220off,
-#  process.L1T_TkEm51,
-#  process.L1T_TkEle36,
-#  process.L1T_TkIsoEm36,
-#  process.L1T_TkIsoEle28,
-#  process.L1T_TkEm37TkEm24,
-#  process.L1T_TkEle25TkEle12,
-#  process.L1T_TkIsoEm22TkIsoEm12,
-#  process.L1T_TkIsoEle22TkEm12,
-#  process.L1T_PFHT400PT30_QuadPFPuppiJet_70_55_40_40_2p4,
-#  process.L1T_DoublePFPuppiJets112_2p4_DEta1p6,
-#  process.L1T_SingleTkMuon_22,
-#  process.L1T_DoubleTkMuon_15_7,
-#  process.L1T_TripleTkMuon_5_3_3,
-#  process.HLT_AK4PFPuppiJet520,
-#  process.HLT_PFPuppiHT1070,
-#  process.HLT_PFPuppiMETTypeOne140_PFPuppiMHT140,
-#  process.HLT_PFHT330PT30_QuadPFPuppiJet_75_60_45_40_TriplePFPuppiBTagDeepCSV_2p4,
-#  process.HLT_PFHT200PT30_QuadPFPuppiJet_70_40_30_30_TriplePFPuppiBTagDeepCSV_2p4,
-#  process.HLT_DoublePFPuppiJets128_DoublePFPuppiBTagDeepCSV_2p4,
-#  process.HLT_PFHT330PT30_QuadPFPuppiJet_75_60_45_40_TriplePFPuppiBTagDeepFlavour_2p4,
-#  process.HLT_PFHT200PT30_QuadPFPuppiJet_70_40_30_30_TriplePFPuppiBTagDeepFlavour_2p4,
-#  process.HLT_DoublePFPuppiJets128_DoublePFPuppiBTagDeepFlavour_2p4,
-#  process.HLT_Mu50_FromL1TkMuon,
-#  process.HLT_IsoMu24_FromL1TkMuon,
-#  process.HLT_Mu37_Mu27_FromL1TkMuon,
-#  process.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_FromL1TkMuon,
-#  process.HLT_TriMu_10_5_5_DZ_FromL1TkMuon,
-#  process.HLT_Ele32_WPTight_L1Seeded,
-#  process.HLT_Ele115_NonIso_L1Seeded,
-#  process.HLT_Ele26_WP70_L1Seeded,
-#  process.HLT_Photon108EB_TightID_TightIso_L1Seeded,
-#  process.HLT_Photon187_L1Seeded,
-#  process.HLT_DoubleEle25_CaloIdL_PMS2_L1Seeded,
-#  process.HLT_DoubleEle23_12_Iso_L1Seeded,
-#  process.HLT_Diphoton30_23_IsoCaloId_L1Seeded,
-#  process.HLTriggerFinalPath,
-#  process.HLTAnalyzerEndpath,
-#  process.endjob_step ],
-#  )
-#  tasks=[process.patAlgosToolsTask])
+if args.path == "all":
+  process.schedule = cms.Schedule(*[ process.L1T_SinglePFPuppiJet230off,
+   process.L1T_PFPuppiHT450off,
+   process.L1T_PFPuppiMET220off,
+   process.HLT_AK4PFPuppiJet520,
+   process.HLT_PFPuppiHT1070,
+   process.HLT_PFPuppiMETTypeOne140_PFPuppiMHT140,
+   process.L1T_PFHT400PT30_QuadPFPuppiJet_70_55_40_40_2p4,
+   process.L1T_DoublePFPuppiJets112_2p4_DEta1p6,
+   process.HLT_PFHT330PT30_QuadPFPuppiJet_75_60_45_40_TriplePFPuppiBTagDeepCSV_2p4,
+   process.HLT_PFHT200PT30_QuadPFPuppiJet_70_40_30_30_TriplePFPuppiBTagDeepCSV_2p4,
+   process.HLT_DoublePFPuppiJets128_DoublePFPuppiBTagDeepCSV_2p4,
+   process.HLT_PFHT330PT30_QuadPFPuppiJet_75_60_45_40_TriplePFPuppiBTagDeepFlavour_2p4,
+   process.HLT_PFHT200PT30_QuadPFPuppiJet_70_40_30_30_TriplePFPuppiBTagDeepFlavour_2p4,
+   process.HLT_DoublePFPuppiJets128_DoublePFPuppiBTagDeepFlavour_2p4,
+   process.L1T_SingleTkMuon_22,
+   process.L1T_DoubleTkMuon_15_7,
+   process.L1T_TripleTkMuon_5_3_3,
+   process.HLT_Mu50_FromL1TkMuon,
+   process.HLT_IsoMu24_FromL1TkMuon,
+   process.HLT_Mu37_Mu27_FromL1TkMuon,
+   process.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_FromL1TkMuon,
+   process.HLT_TriMu_10_5_5_DZ_FromL1TkMuon,
+   process.L1T_TkEm51,
+   process.L1T_TkEle36,
+   process.L1T_TkIsoEm36,
+   process.L1T_TkIsoEle28,
+   process.L1T_TkEm37TkEm24,
+   process.L1T_TkEle25TkEle12,
+   process.L1T_TkIsoEm22TkIsoEm12,
+   process.L1T_TkIsoEle22TkEm12,
+   process.HLT_Ele32_WPTight_L1Seeded,
+   process.HLT_Ele115_NonIso_L1Seeded,
+   process.HLT_Ele26_WP70_L1Seeded,
+   process.HLT_Photon108EB_TightID_TightIso_L1Seeded,
+   process.HLT_Photon187_L1Seeded,
+   process.HLT_DoubleEle25_CaloIdL_PMS2_L1Seeded,
+   process.HLT_DoubleEle23_12_Iso_L1Seeded,
+   process.HLT_Diphoton30_23_IsoCaloId_L1Seeded,
+   process.HLTriggerFinalPath,
+   process.HLTAnalyzerEndpath,
+   process.endjob_step ],
+   tasks=[process.patAlgosToolsTask])
+
+
 
 def expandPath(process, path, indent=''):
     indent += 2*" "
