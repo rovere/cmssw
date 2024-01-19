@@ -36890,8 +36890,18 @@ process.HLT_PFPuppiHT1070 = cms.Path(process.HLTBeginSequence+
     )
 
 
-process.HLT_PFPuppiMETTypeOne140_PFPuppiMHT140 = cms.Path(process.HLTBeginSequence+process.l1tPFPuppiMET220off+process.HLTParticleFlowSequence+process.HLTAK4PFPuppiJetsReconstruction+process.HLTPFPuppiMETReconstruction+process.hltPFPuppiMETTypeOneCorrector+process.hltPFPuppiMETTypeOne+process.hltPFPuppiMETTypeOne140+process.hltPFPuppiMHT+process.hltPFPuppiMHT140+process.HLTEndSequence,
-    cms.ConditionalTask(process.allProducersInATask)
+process.HLT_PFPuppiMETTypeOne140_PFPuppiMHT140 = cms.Path(process.HLTBeginSequence+
+    process.l1tPFPuppiMET220off+
+    process.HLTMuonsSequence+
+    process.HLTParticleFlowSequence+
+    process.HLTAK4PFPuppiJetsReconstruction+
+    process.HLTPFPuppiMETReconstruction+
+    process.hltPFPuppiMETTypeOneCorrector+
+    process.hltPFPuppiMETTypeOne+
+    process.hltPFPuppiMETTypeOne140+
+    process.hltPFPuppiMHT+
+    process.hltPFPuppiMHT140+
+    process.HLTEndSequence,
     )
 
 
