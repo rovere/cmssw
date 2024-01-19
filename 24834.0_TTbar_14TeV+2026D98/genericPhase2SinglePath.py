@@ -36726,13 +36726,31 @@ process.HLT_DoubleEle25_CaloIdL_PMS2_L1Seeded = cms.Path(process.HLTBeginSequenc
     )
 
 
-process.HLT_DoublePFPuppiJets128_DoublePFPuppiBTagDeepCSV_2p4 = cms.Path(process.HLTBeginSequence+process.l1tDoublePFPuppiJet112offMaxEta2p4+process.l1tDoublePFPuppiJets112offMaxDeta1p6+process.HLTParticleFlowSequence+process.HLTAK4PFPuppiJetsReconstruction+process.hltDoublePFPuppiJets128MaxEta2p4+process.hltDoublePFPuppiJets128Eta2p4MaxDeta1p6+process.HLTBtagDeepCSVSequencePFPuppiModEta2p4+process.hltBTagPFPuppiDeepCSV0p865DoubleEta2p4+process.HLTEndSequence,
-    cms.ConditionalTask(process.allProducersInATask)
+process.HLT_DoublePFPuppiJets128_DoublePFPuppiBTagDeepCSV_2p4 = cms.Path(process.HLTBeginSequence+
+    process.l1tDoublePFPuppiJet112offMaxEta2p4+
+    process.l1tDoublePFPuppiJets112offMaxDeta1p6+
+    process.HLTMuonsSequence+
+    process.HLTParticleFlowSequence+
+    process.HLTAK4PFPuppiJetsReconstruction+
+    process.hltDoublePFPuppiJets128MaxEta2p4+
+    process.hltDoublePFPuppiJets128Eta2p4MaxDeta1p6+
+    process.HLTBtagDeepCSVSequencePFPuppiModEta2p4+
+    process.hltBTagPFPuppiDeepCSV0p865DoubleEta2p4+
+    process.HLTEndSequence,
     )
 
 
-process.HLT_DoublePFPuppiJets128_DoublePFPuppiBTagDeepFlavour_2p4 = cms.Path(process.HLTBeginSequence+process.l1tDoublePFPuppiJet112offMaxEta2p4+process.l1tDoublePFPuppiJets112offMaxDeta1p6+process.HLTParticleFlowSequence+process.HLTAK4PFPuppiJetsReconstruction+process.hltDoublePFPuppiJets128MaxEta2p4+process.hltDoublePFPuppiJets128Eta2p4MaxDeta1p6+process.HLTBtagDeepFlavourSequencePFPuppiModEta2p4+process.hltBTagPFPuppiDeepFlavour0p935DoubleEta2p4+process.HLTEndSequence,
-    cms.ConditionalTask(process.allProducersInATask)
+process.HLT_DoublePFPuppiJets128_DoublePFPuppiBTagDeepFlavour_2p4 = cms.Path(process.HLTBeginSequence+
+    process.l1tDoublePFPuppiJet112offMaxEta2p4+
+    process.l1tDoublePFPuppiJets112offMaxDeta1p6+
+    process.HLTMuonsSequence+
+    process.HLTParticleFlowSequence+
+    process.HLTAK4PFPuppiJetsReconstruction+
+    process.hltDoublePFPuppiJets128MaxEta2p4+
+    process.hltDoublePFPuppiJets128Eta2p4MaxDeta1p6+
+    process.HLTBtagDeepFlavourSequencePFPuppiModEta2p4+
+    process.hltBTagPFPuppiDeepFlavour0p935DoubleEta2p4+
+    process.HLTEndSequence,
     )
 
 
