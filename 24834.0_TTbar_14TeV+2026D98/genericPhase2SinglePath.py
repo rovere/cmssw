@@ -36211,7 +36211,8 @@ process.HLTBeamSpotTask = cms.ConditionalTask(process.hltOnlineBeamSpot)
 process.HLTDiphoton3023IsoCaloIdL1SeededTask = cms.ConditionalTask(process.hltEgammaCandidatesL1Seeded, process.hltEgammaClusterShapeL1Seeded, process.hltEgammaEcalPFClusterIsoL1Seeded, process.hltEgammaHGCALIDVarsL1Seeded, process.hltEgammaHGCalLayerClusterIsoL1Seeded, process.hltEgammaHcalPFClusterIsoL1Seeded, process.hltEgammaHoverEL1Seeded)
 
 
-process.HLTDoFullUnpackingEgammaEcalL1SeededTask = cms.ConditionalTask(process.bunchSpacingProducer,
+process.HLTDoFullUnpackingEgammaEcalL1SeededTask = cms.ConditionalTask(
+    process.bunchSpacingProducer,
     process.hltEcalBarrelDigisInRegions,
     process.hltEcalDetIdToBeRecovered,
     process.hltEcalDigis,
@@ -36220,7 +36221,12 @@ process.HLTDoFullUnpackingEgammaEcalL1SeededTask = cms.ConditionalTask(process.b
     process.hltL1TEGammaFilteredCollectionProducer)
 
 
-process.HLTDoFullUnpackingEgammaEcalTask = cms.ConditionalTask(process.bunchSpacingProducer, process.hltEcalDetIdToBeRecovered, process.hltEcalDigis, process.hltEcalRecHit, process.hltEcalUncalibRecHit)
+process.HLTDoFullUnpackingEgammaEcalTask = cms.ConditionalTask(
+    process.bunchSpacingProducer,
+    process.hltEcalDetIdToBeRecovered,
+    process.hltEcalDigis,
+    process.hltEcalRecHit,
+    process.hltEcalUncalibRecHit)
 
 
 process.HLTDoLocalHcalTask = cms.ConditionalTask(process.hltHbhereco, process.hltHcalDigis, process.hltHfprereco, process.hltHfreco, process.hltHoreco)
@@ -36361,10 +36367,7 @@ process.itLocalRecoTask = cms.ConditionalTask(process.siPhase2Clusters, process.
 process.itLocalRecoSequence = cms.Sequence(process.itLocalRecoTask)
 
 
-process.me0LocalRecoTask = cms.ConditionalTask(process.hltMe0RecHits, process.hltMe0Segments)
-
-
-process.muonlocalrecoTask = cms.ConditionalTask(process.csclocalrecoTask, process.dtlocalrecoTask, process.gemLocalRecoTask, process.hltRpcRecHits, process.me0LocalRecoTask)
+process.muonlocalrecoTask = cms.ConditionalTask(process.csclocalrecoTask, process.dtlocalrecoTask, process.gemLocalRecoTask, process.hltRpcRecHits)
 
 
 process.muonlocalrecoSequence = cms.Sequence(process.muonlocalrecoTask)
