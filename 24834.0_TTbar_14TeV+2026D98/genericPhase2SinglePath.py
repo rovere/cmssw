@@ -36205,89 +36205,191 @@ process.prefer("SiPhase2OTFakeBadStripsESSource")
 
 process.prefer("es_hardcode")
 
-process.HLTBeamSpotTask = cms.ConditionalTask(process.hltOnlineBeamSpot)
+process.HLTBeamSpotTask = cms.Sequence(process.hltOnlineBeamSpot)
 
 
-process.HLTDiphoton3023IsoCaloIdL1SeededTask = cms.ConditionalTask(process.hltEgammaCandidatesL1Seeded, process.hltEgammaClusterShapeL1Seeded, process.hltEgammaEcalPFClusterIsoL1Seeded, process.hltEgammaHGCALIDVarsL1Seeded, process.hltEgammaHGCalLayerClusterIsoL1Seeded, process.hltEgammaHcalPFClusterIsoL1Seeded, process.hltEgammaHoverEL1Seeded)
+process.HLTDiphoton3023IsoCaloIdL1SeededTask = cms.Sequence(
+    process.hltEgammaCandidatesL1Seeded+
+    process.hltEgammaClusterShapeL1Seeded+
+    process.hltEgammaHGCALIDVarsL1Seeded+
+    process.hltEgammaHoverEL1Seeded+
+    process.hltEgammaEcalPFClusterIsoL1Seeded+
+    process.hltEgammaHGCalLayerClusterIsoL1Seeded+
+    process.hltEgammaHcalPFClusterIsoL1Seeded)
 
 
-process.HLTDoFullUnpackingEgammaEcalL1SeededTask = cms.ConditionalTask(
-    process.bunchSpacingProducer,
-    process.hltEcalBarrelDigisInRegions,
-    process.hltEcalDetIdToBeRecovered,
-    process.hltEcalDigis,
-    process.hltEcalRecHitL1Seeded,
-    process.hltEcalUncalibRecHitL1Seeded,
-    process.hltL1TEGammaFilteredCollectionProducer)
+process.HLTDoFullUnpackingEgammaEcalL1SeededTask = cms.Sequence(
+    process.hltEcalDigis+
+    process.bunchSpacingProducer+
+    process.hltEcalDetIdToBeRecovered+
+    process.hltL1TEGammaFilteredCollectionProducer+
+    process.hltEcalBarrelDigisInRegions+
+    process.hltEcalUncalibRecHitL1Seeded+
+    process.hltEcalRecHitL1Seeded)
 
 
-process.HLTDoFullUnpackingEgammaEcalTask = cms.ConditionalTask(
-    process.bunchSpacingProducer,
-    process.hltEcalDetIdToBeRecovered,
-    process.hltEcalDigis,
-    process.hltEcalRecHit,
-    process.hltEcalUncalibRecHit)
+process.HLTDoFullUnpackingEgammaEcalTask = cms.Sequence(
+    process.hltEcalDigis+
+    process.bunchSpacingProducer+
+    process.hltEcalDetIdToBeRecovered+
+    process.hltEcalUncalibRecHit+
+    process.hltEcalRecHit)
 
 
-process.HLTDoLocalHcalTask = cms.ConditionalTask(process.hltHbhereco, process.hltHcalDigis, process.hltHfprereco, process.hltHfreco, process.hltHoreco)
+process.HLTDoLocalHcalTask = cms.Sequence(
+    process.hltHcalDigis+
+    process.hltHbhereco+
+    process.hltHoreco+
+    process.hltHfprereco+
+    process.hltHfreco)
 
 
-process.HLTEGammaDoLocalHcalTask = cms.ConditionalTask(process.hltHbhereco, process.hltHcalDigis)
+process.HLTEGammaDoLocalHcalTask = cms.Sequence(
+    process.hltHcalDigis+
+    process.hltHbhereco)
 
 
-process.HLTDoLocalPixelTask = cms.ConditionalTask(process.siPixelClusters, process.siPixelRecHits)
+process.HLTDoLocalPixelTask = cms.Sequence(process.siPixelClusters+process.siPixelRecHits)
 
 
-process.HLTDoLocalStripTask = cms.ConditionalTask(process.siPhase2Clusters)
+process.HLTDoLocalStripTask = cms.Sequence(process.siPhase2Clusters)
 
 
-process.HLTDoubleEle2312IsoL1SeededTask = cms.ConditionalTask(process.hltEgammaCandidatesL1Seeded, process.hltEgammaClusterShapeL1Seeded, process.hltEgammaEcalPFClusterIsoL1Seeded, process.hltEgammaEleGsfTrackIsoV6L1Seeded, process.hltEgammaEleL1TrkIsoL1Seeded, process.hltEgammaHGCALIDVarsL1Seeded, process.hltEgammaHGCalLayerClusterIsoL1Seeded, process.hltEgammaHcalPFClusterIsoL1Seeded, process.hltEgammaHoverEL1Seeded)
+process.HLTDoubleEle2312IsoL1SeededTask = cms.Sequence(
+    process.hltEgammaCandidatesL1Seeded+
+    process.hltEgammaClusterShapeL1Seeded+
+    process.hltEgammaHGCALIDVarsL1Seeded+
+    process.hltEgammaHoverEL1Seeded+
+    process.hltEgammaEcalPFClusterIsoL1Seeded+
+    process.hltEgammaHGCalLayerClusterIsoL1Seeded+
+    process.hltEgammaHcalPFClusterIsoL1Seeded+
+    process.hltEgammaEleL1TrkIsoL1Seeded+
+    process.hltEgammaEleGsfTrackIsoV6L1Seeded)
 
 
-process.HLTDoubleEle25CaloIdLPMS2L1SeededTask = cms.ConditionalTask(process.hltEgammaCandidatesL1Seeded, process.hltEgammaClusterShapeL1Seeded, process.hltEgammaHGCALIDVarsL1Seeded, process.hltEgammaHoverEL1Seeded)
+process.HLTDoubleEle25CaloIdLPMS2L1SeededTask = cms.Sequence(
+    process.hltEgammaCandidatesL1Seeded+
+    process.hltEgammaClusterShapeL1Seeded+
+    process.hltEgammaHGCALIDVarsL1Seeded+
+    process.hltEgammaHoverEL1Seeded)
 
 
-process.HLTEle115NonIsoL1SeededTask = cms.ConditionalTask(process.hltEgammaCandidatesL1Seeded, process.hltEgammaClusterShapeL1Seeded, process.hltEgammaHGCALIDVarsL1Seeded, process.hltEgammaHoverEL1Seeded)
+process.HLTEle115NonIsoL1SeededTask = cms.Sequence(
+    process.hltEgammaCandidatesL1Seeded+
+    process.hltEgammaClusterShapeL1Seeded+
+    process.hltEgammaHGCALIDVarsL1Seeded+
+    process.hltEgammaHoverEL1Seeded)
 
 
-process.HLTEle26WP70L1SeededTask = cms.ConditionalTask(process.hltEgammaCandidatesL1Seeded, process.hltEgammaClusterShapeL1Seeded, process.hltEgammaEcalPFClusterIsoL1Seeded, process.hltEgammaEleGsfTrackIsoV6L1Seeded, process.hltEgammaEleL1TrkIsoL1Seeded, process.hltEgammaHGCALIDVarsL1Seeded, process.hltEgammaHGCalLayerClusterIsoL1Seeded, process.hltEgammaHcalPFClusterIsoL1Seeded, process.hltEgammaHoverEL1Seeded)
+process.HLTEle26WP70L1SeededTask = cms.Sequence(
+    process.hltEgammaCandidatesL1Seeded+
+    process.hltEgammaClusterShapeL1Seeded+
+    process.hltEgammaHGCALIDVarsL1Seeded+
+    process.hltEgammaHoverEL1Seeded+
+    process.hltEgammaEcalPFClusterIsoL1Seeded+
+    process.hltEgammaHGCalLayerClusterIsoL1Seeded+
+    process.hltEgammaHcalPFClusterIsoL1Seeded+
+    process.hltEgammaEleL1TrkIsoL1Seeded+
+    process.hltEgammaEleGsfTrackIsoV6L1Seeded)
 
 
-process.HLTEle32WPTightL1SeededTask = cms.ConditionalTask(process.hltEgammaCandidatesL1Seeded, process.hltEgammaClusterShapeL1Seeded, process.hltEgammaEcalPFClusterIsoL1Seeded, process.hltEgammaEleGsfTrackIsoV6L1Seeded, process.hltEgammaEleL1TrkIsoL1Seeded, process.hltEgammaHGCALIDVarsL1Seeded, process.hltEgammaHGCalLayerClusterIsoL1Seeded, process.hltEgammaHcalPFClusterIsoL1Seeded, process.hltEgammaHoverEL1Seeded)
+process.HLTEle32WPTightL1SeededTask = cms.Sequence(
+    process.hltEgammaHGCALIDVarsL1Seeded+
+    process.hltEgammaEcalPFClusterIsoL1Seeded+
+    process.hltEgammaHGCalLayerClusterIsoL1Seeded+
+    process.hltEgammaHcalPFClusterIsoL1Seeded+
+    process.hltEgammaEleL1TrkIsoL1Seeded+
+    process.hltEgammaEleGsfTrackIsoV6L1Seeded)
+
+process.HLTElePixelMatchL1SeededTask = cms.Sequence(
+    process.hltEgammaCandidatesL1Seeded+
+    process.hltEgammaHoverEL1Seeded+
+    process.hltEgammaClusterShapeL1Seeded+
+    process.MeasurementTrackerEvent+
+#    process.hltEgammaHoverEL1Seeded+
+    process.hltPixelLayerTriplets+
+    process.hltEgammaSuperClustersToPixelMatchL1Seeded+
+    process.hltEleSeedsTrackingRegionsL1Seeded+
+    process.hltElePixelHitDoubletsForTripletsL1Seeded+
+    process.hltElePixelHitTripletsL1Seeded+
+    process.hltElePixelSeedsTripletsL1Seeded+
+    process.hltElePixelHitTripletsClusterRemoverL1Seeded+
+    process.hltPixelLayerPairsL1Seeded+
+    process.hltElePixelHitDoubletsL1Seeded+
+    process.hltElePixelSeedsDoubletsL1Seeded+
+    process.hltElePixelSeedsCombinedL1Seeded+
+    process.hltEgammaElectronPixelSeedsL1Seeded+
+    process.hltEgammaPixelMatchVarsL1Seeded)
 
 
-process.HLTElePixelMatchL1SeededTask = cms.ConditionalTask(process.MeasurementTrackerEvent, process.hltEgammaElectronPixelSeedsL1Seeded, process.hltEgammaHoverEL1Seeded, process.hltEgammaPixelMatchVarsL1Seeded, process.hltEgammaSuperClustersToPixelMatchL1Seeded, process.hltElePixelHitDoubletsForTripletsL1Seeded, process.hltElePixelHitDoubletsL1Seeded, process.hltElePixelHitTripletsClusterRemoverL1Seeded, process.hltElePixelHitTripletsL1Seeded, process.hltElePixelSeedsCombinedL1Seeded, process.hltElePixelSeedsDoubletsL1Seeded, process.hltElePixelSeedsTripletsL1Seeded, process.hltEleSeedsTrackingRegionsL1Seeded, process.hltPixelLayerPairsL1Seeded, process.hltPixelLayerTriplets)
+process.HLTFastJetForEgammaTask = cms.Sequence(
+    process.hltEcalUncalibRecHit+
+    process.hltEcalRecHit+
+    process.hltFixedGridRhoFastjetAllCaloForEGamma)
 
 
-process.HLTFastJetForEgammaTask = cms.ConditionalTask(process.hltEcalUncalibRecHit, process.hltEcalRecHit, process.hltFixedGridRhoFastjetAllCaloForEGamma)
+process.HLTGsfElectronL1SeededTask = cms.Sequence(
+    process.hltEgammaCkfTrackCandidatesForGSFL1Seeded+
+    process.hltEgammaGsfTracksL1Seeded+
+    process.hltEgammaGsfTrackVarsL1Seeded+
+    process.hltEgammaGsfElectronsL1Seeded+
+    process.hltEgammaBestGsfTrackVarsL1Seeded)
+
+process.HLTEle115NonIsoL1SeededGsfElectronL1SeededTask = cms.Sequence(
+    process.hltEgammaCkfTrackCandidatesForGSFL1Seeded+
+    process.hltEgammaGsfTracksL1Seeded+
+    process.hltEgammaGsfTrackVarsL1Seeded)
 
 
-process.HLTGsfElectronL1SeededTask = cms.ConditionalTask(
-    process.hltEgammaBestGsfTrackVarsL1Seeded,
-    process.hltEgammaCkfTrackCandidatesForGSFL1Seeded,
-    process.hltEgammaGsfElectronsL1Seeded,
-    process.hltEgammaGsfTrackVarsL1Seeded,
-    process.hltEgammaGsfTracksL1Seeded)
-
-process.HLTEle115NonIsoL1SeededGsfElectronL1SeededTask = cms.ConditionalTask(
-    process.hltEgammaCkfTrackCandidatesForGSFL1Seeded,
-    process.hltEgammaGsfTrackVarsL1Seeded,
-    process.hltEgammaGsfTracksL1Seeded)
-
-
-process.HLTHgcalTiclPFClusteringForEgammaL1SeededTask = cms.ConditionalTask(process.HGCalRecHitL1Seeded, process.HGCalUncalibRecHitL1Seeded, process.HLTBeamSpotTask, process.filteredLayerClustersCLUE3DHighL1Seeded, process.hgcalDigis, process.hgcalDigisL1Seeded, process.hgcalLayerClustersEEL1Seeded, process.hgcalLayerClustersHSciL1Seeded, process.hgcalLayerClustersHSiL1Seeded, process.hgcalMergeLayerClustersL1Seeded, process.hltL1TEGammaHGCFilteredCollectionProducer, process.hltRechitInRegionsHGCAL, process.particleFlowClusterHGCalFromTICLL1Seeded, process.particleFlowRecHitHGCL1Seeded, process.particleFlowSuperClusterHGCalFromTICLL1Seeded, process.ticlLayerTileProducerL1Seeded, process.ticlSeedingL1, process.ticlTrackstersCLUE3DHighL1Seeded)
-
-
-process.HLTPFClusteringForEgammaL1SeededTask = cms.ConditionalTask(process.hltL1TEGammaFilteredCollectionProducer, process.hltParticleFlowClusterECALL1Seeded, process.hltParticleFlowClusterECALUncorrectedL1Seeded, process.hltParticleFlowRecHitECALL1Seeded, process.hltParticleFlowSuperClusterECALL1Seeded, process.hltRechitInRegionsECAL)
-
-
-process.HLTPFHcalClusteringForEgammaTask = cms.ConditionalTask(process.hltParticleFlowClusterHBHE, process.hltParticleFlowClusterHCAL, process.hltParticleFlowRecHitHBHE)
-
-
-process.HLTPhoton108EBTightIDTightIsoL1SeededTask = cms.ConditionalTask(process.hltEgammaCandidatesL1Seeded, process.hltEgammaClusterShapeL1Seeded, process.hltEgammaEcalPFClusterIsoL1Seeded, process.hltEgammaHcalPFClusterIsoL1Seeded, process.hltEgammaHoverEL1Seeded)
+process.HLTHgcalTiclPFClusteringForEgammaL1SeededTask = cms.Sequence(
+    process.HLTBeamSpotTask+
+    process.hgcalDigis+
+    process.hltL1TEGammaHGCFilteredCollectionProducer+
+    process.hgcalDigisL1Seeded+
+    process.HGCalUncalibRecHitL1Seeded+
+    process.HGCalRecHitL1Seeded+
+    process.particleFlowRecHitHGCL1Seeded+
+    process.hltRechitInRegionsHGCAL+
+    process.hgcalLayerClustersEEL1Seeded+
+    process.hgcalLayerClustersHSciL1Seeded+
+    process.hgcalLayerClustersHSiL1Seeded+
+    process.hgcalMergeLayerClustersL1Seeded+
+    process.filteredLayerClustersCLUE3DHighL1Seeded+
+    process.ticlSeedingL1+
+    process.ticlLayerTileProducerL1Seeded+
+    process.ticlTrackstersCLUE3DHighL1Seeded+
+    process.particleFlowClusterHGCalFromTICLL1Seeded+
+    process.particleFlowSuperClusterHGCalFromTICLL1Seeded)
 
 
-process.HLTPhoton187L1SeededTask = cms.ConditionalTask(process.hltEgammaCandidatesL1Seeded, process.hltEgammaHGCALIDVarsL1Seeded, process.hltEgammaHoverEL1Seeded)
+
+process.HLTPFClusteringForEgammaL1SeededTask = cms.Sequence(
+    process.hltL1TEGammaFilteredCollectionProducer+
+    process.hltRechitInRegionsECAL+
+    process.hltParticleFlowRecHitECALL1Seeded+
+    process.hltParticleFlowClusterECALUncorrectedL1Seeded+
+    process.hltParticleFlowClusterECALL1Seeded+
+    process.hltParticleFlowSuperClusterECALL1Seeded)
+
+
+process.HLTPFHcalClusteringForEgammaTask = cms.Sequence(
+    process.hltParticleFlowRecHitHBHE+
+    process.hltParticleFlowClusterHBHE+
+    process.hltParticleFlowClusterHCAL)
+
+
+process.HLTPhoton108EBTightIDTightIsoL1SeededTask = cms.Sequence(
+    process.hltEgammaCandidatesL1Seeded+
+    process.hltEgammaClusterShapeL1Seeded+
+    process.hltEgammaHoverEL1Seeded+
+    process.hltEgammaEcalPFClusterIsoL1Seeded+
+    process.hltEgammaHcalPFClusterIsoL1Seeded)
+
+
+process.HLTPhoton187L1SeededTask = cms.Sequence(
+    process.hltEgammaCandidatesL1Seeded+
+    process.hltEgammaHGCALIDVarsL1Seeded+
+    process.hltEgammaHoverEL1Seeded)
 
 
 ### MR process.HLTTrackingV61Task = cms.ConditionalTask(process.HLTBeamSpotTask,
@@ -36322,133 +36424,230 @@ process.HLTPhoton187L1SeededTask = cms.ConditionalTask(process.hltEgammaCandidat
 ### MR     process.trackerClusterCheck)
 
 
-process.caloTowersRecTask = cms.ConditionalTask(process.towerMaker)
+process.caloTowersRecTask = cms.Sequence(process.towerMaker)
 
 
-process.csclocalrecoTask = cms.ConditionalTask(process.hltCsc2DRecHits, process.hltCscSegments)
+process.csclocalrecoTask = cms.Sequence(process.hltCsc2DRecHits+process.hltCscSegments)
 
 
-process.dtlocalrecoTask = cms.ConditionalTask(process.hltDt1DRecHits, process.hltDt4DSegments)
+process.dtlocalrecoTask = cms.Sequence(process.hltDt1DRecHits+process.hltDt4DSegments)
 
 
-process.ecalRecHitNoTPTask = cms.ConditionalTask(process.hltEcalRecHit)
+process.ecalRecHitNoTPTask = cms.Sequence(process.hltEcalRecHit)
 
 
-process.ecalRecHitTask = cms.ConditionalTask(process.ecalDetailedTimeRecHit, process.ecalRecHitNoTPTask)
+process.ecalRecHitTask = cms.Sequence(process.ecalDetailedTimeRecHit+process.ecalRecHitNoTPTask)
 
 
-process.gemLocalRecoTask = cms.ConditionalTask(process.hltGemRecHits, process.hltGemSegments)
+process.gemLocalRecoTask = cms.Sequence(process.hltGemRecHits+process.hltGemSegments)
 
 
-process.hgcalLocalRecoTask = cms.ConditionalTask(process.HGCalRecHit, process.HGCalUncalibRecHit, process.hgcalLayerClustersEE, process.hgcalLayerClustersHSci, process.hgcalLayerClustersHSi, process.hgcalMergeLayerClusters)
+process.hgcalLocalRecoTask = cms.Sequence(
+    process.HGCalUncalibRecHit+
+    process.HGCalRecHit+
+    process.hgcalLayerClustersEE+
+    process.hgcalLayerClustersHSci+
+    process.hgcalLayerClustersHSi+
+    process.hgcalMergeLayerClusters)
 
 
-process.highPtTripletStepSeedingTask = cms.ConditionalTask(process.highPtTripletStepClusters, process.highPtTripletStepHitDoublets, process.highPtTripletStepHitTriplets, process.highPtTripletStepSeedLayers, process.highPtTripletStepSeeds, process.hltPhase2PixelTracksAndHighPtStepTrackingRegions)
+process.highPtTripletStepSeedingTask = cms.Sequence(
+    process.hltPhase2PixelTracksAndHighPtStepTrackingRegions+
+    process.highPtTripletStepClusters+
+    process.highPtTripletStepSeedLayers+
+    process.highPtTripletStepHitDoublets+
+    process.highPtTripletStepHitTriplets+
+    process.highPtTripletStepSeeds)
 
 
-process.highPtTripletStepTask = cms.ConditionalTask(process.highPtTripletStepSeedingTask, process.highPtTripletStepTrackCandidates, process.highPtTripletStepTrackCutClassifier, process.highPtTripletStepTrackSelectionHighPurity, process.highPtTripletStepTracks)
+process.highPtTripletStepTask = cms.Sequence(
+    process.highPtTripletStepSeedingTask+
+    process.highPtTripletStepTrackCandidates+
+    process.highPtTripletStepTracks+
+    process.highPtTripletStepTrackCutClassifier+
+    process.highPtTripletStepTrackSelectionHighPurity)
 
 
-process.hltEcalDigisTask = cms.ConditionalTask(process.hltEcalDigis)
+process.hltEcalDigisTask = cms.Sequence(process.hltEcalDigis)
 
 
-process.hltPhase2PixelTracksTask = cms.ConditionalTask(process.hltPhase2PixelFitterByHelixProjections, process.hltPhase2PixelTrackFilterByKinematics, process.hltPhase2PixelTracks, process.hltPhase2PixelTracksAndHighPtStepTrackingRegions, process.hltPhase2PixelTracksHitDoublets, process.hltPhase2PixelTracksHitSeeds, process.hltPhase2PixelTracksSeedLayers)
+process.hltPhase2PixelTracksTask = cms.Sequence(
+    process.hltPhase2PixelTracksSeedLayers+
+    process.hltPhase2PixelTracksAndHighPtStepTrackingRegions+
+    process.hltPhase2PixelTracksHitDoublets+
+    process.hltPhase2PixelTracksHitSeeds+
+    process.hltPhase2PixelFitterByHelixProjections+
+    process.hltPhase2PixelTrackFilterByKinematics+
+    process.hltPhase2PixelTracks)
 
 
-process.initialStepPVTask = cms.ConditionalTask(process.ak4CaloJetsForTrk, process.firstStepPrimaryVerticesUnsorted, process.hltPhase2TowerMakerForAll)
+process.initialStepPVTask = cms.Sequence(
+    process.firstStepPrimaryVerticesUnsorted+
+    process.hltPhase2TowerMakerForAll+
+    process.ak4CaloJetsForTrk)
 
 
-process.initialStepTask = cms.ConditionalTask(process.initialStepSeeds, process.initialStepTrackCandidates, process.initialStepTrackCutClassifier, process.initialStepTrackSelectionHighPurity, process.initialStepTracks)
+process.initialStepTask = cms.Sequence(
+    process.initialStepSeeds+
+    process.initialStepTrackCandidates+
+    process.initialStepTracks+
+    process.initialStepTrackCutClassifier+
+    process.initialStepTrackSelectionHighPurity)
 
 
-process.itLocalRecoTask = cms.ConditionalTask(process.siPhase2Clusters, process.siPixelClusterShapeCache, process.siPixelClusters, process.siPixelRecHits)
+process.itLocalRecoTask = cms.Sequence(
+    process.siPhase2Clusters+
+    process.siPixelClusters+
+    process.siPixelClusterShapeCache+
+    process.siPixelRecHits)
 
 
 process.itLocalRecoSequence = cms.Sequence(process.itLocalRecoTask)
 
 
-process.muonlocalrecoTask = cms.ConditionalTask(process.csclocalrecoTask, process.dtlocalrecoTask, process.gemLocalRecoTask, process.hltRpcRecHits)
+process.muonlocalrecoTask = cms.Sequence(
+    process.csclocalrecoTask+
+    process.dtlocalrecoTask+
+    process.gemLocalRecoTask+
+    process.hltRpcRecHits)
 
 
 process.muonlocalrecoSequence = cms.Sequence(process.muonlocalrecoTask)
 
 
-process.otLocalRecoTask = cms.ConditionalTask(process.MeasurementTrackerEvent)
+process.otLocalRecoTask = cms.Sequence(process.MeasurementTrackerEvent)
 
 
 process.otLocalRecoSequence = cms.Sequence(process.otLocalRecoTask)
 
 
-process.particleFlowClusterECALTask = cms.ConditionalTask(process.ecalBarrelClusterFastTimer, process.particleFlowClusterECAL, process.particleFlowTimeAssignerECAL)
+process.particleFlowClusterECALTask = cms.Sequence(
+    process.ecalBarrelClusterFastTimer+
+    process.particleFlowTimeAssignerECAL+
+    process.particleFlowClusterECAL)
 
 
-process.particleFlowRecoTask = cms.ConditionalTask(process.fixedGridRhoFastjetAllTmp, process.particleFlowBlock, process.particleFlowTmp, process.particleFlowTmpBarrel, process.pfTrack)
+process.particleFlowRecoTask = cms.Sequence(
+    process.pfTrack+
+    process.particleFlowBlock+
+    process.particleFlowTmpBarrel+
+    process.particleFlowTmp+
+    process.fixedGridRhoFastjetAllTmp)
 
 
-process.particleFlowSuperClusteringTask = cms.ConditionalTask(process.particleFlowSuperClusterECAL)
+process.particleFlowSuperClusteringTask = cms.Sequence(process.particleFlowSuperClusterECAL)
 
 
-process.pfClusteringECALTask = cms.ConditionalTask(process.particleFlowClusterECALTask, process.particleFlowClusterECALUncorrected, process.particleFlowRecHitECAL)
+process.pfClusteringECALTask = cms.Sequence(
+    process.particleFlowRecHitECAL+
+    process.particleFlowClusterECALUncorrected+
+    process.particleFlowClusterECALTask)
 
 
-process.pfClusteringHBHEHFTask = cms.ConditionalTask(process.hltParticleFlowClusterHBHE, process.hltParticleFlowClusterHCAL, process.hltParticleFlowRecHitHBHE, process.particleFlowClusterHF, process.particleFlowRecHitHF)
+process.pfClusteringHBHEHFTask = cms.Sequence(
+    process.hltParticleFlowRecHitHBHE+
+    process.hltParticleFlowClusterHBHE+
+    process.hltParticleFlowClusterHCAL+
+    process.particleFlowRecHitHF+
+    process.particleFlowClusterHF)
 
 
-process.pfClusteringHGCalTask = cms.ConditionalTask()
+process.pfClusteringHGCalTask = cms.Sequence()
 
 
-process.pfClusteringHOTask = cms.ConditionalTask(process.particleFlowClusterHO, process.particleFlowRecHitHO)
+process.pfClusteringHOTask = cms.Sequence(process.particleFlowRecHitHO+process.particleFlowClusterHO)
 
 
-process.pixeltrackerlocalrecoTask = cms.ConditionalTask(process.siPhase2Clusters)
+process.pixeltrackerlocalrecoTask = cms.Sequence(process.siPhase2Clusters)
 
 
-process.ticlLayerTileTask = cms.ConditionalTask(process.ticlLayerTileProducer)
+process.ticlLayerTileTask = cms.Sequence(process.ticlLayerTileProducer)
 
 
-process.ticlPFTask = cms.ConditionalTask(process.pfTICL)
+process.ticlPFTask = cms.Sequence(process.pfTICL)
 
 
-process.ticlTracksterMergeTask = cms.ConditionalTask(process.ticlTrackstersMerge)
+process.ticlTracksterMergeTask = cms.Sequence(process.ticlTrackstersMerge)
 
 
-process.ticlTrackstersCLUE3DHighStepTask = cms.ConditionalTask(process.filteredLayerClustersCLUE3DHigh, process.ticlSeedingGlobal, process.ticlTrackstersCLUE3DHigh)
+process.ticlTrackstersCLUE3DHighStepTask = cms.Sequence(
+    process.filteredLayerClustersCLUE3DHigh+
+    process.ticlSeedingGlobal+
+    process.ticlTrackstersCLUE3DHigh)
 
 
-process.trackerlocalrecoTask = cms.ConditionalTask(process.pixeltrackerlocalrecoTask)
+process.trackerlocalrecoTask = cms.Sequence(process.pixeltrackerlocalrecoTask)
 
 
-process.vertexRecoTask = cms.ConditionalTask(process.ak4CaloJetsForTrk, process.initialStepPVTask, process.offlinePrimaryVertices, process.trackRefsForJetsBeforeSorting, process.trackWithVertexRefSelectorBeforeSorting, process.unsortedOfflinePrimaryVertices)
+process.vertexRecoTask = cms.Sequence(
+    process.initialStepPVTask+
+    process.unsortedOfflinePrimaryVertices+
+    process.trackWithVertexRefSelectorBeforeSorting+
+    process.trackRefsForJetsBeforeSorting+
+    process.ak4CaloJetsForTrk+
+    process.offlinePrimaryVertices)
+
 
 
 process.patAlgosToolsTask = cms.Task()
 
 
-process.RawToDigiTask = cms.ConditionalTask(process.hgcalDigis, process.hltEcalDigisTask, process.hltHcalDigis, process.muonCSCDigis, process.muonDTDigis, process.muonGEMDigis)
+process.RawToDigiTask = cms.Sequence(
+    process.hgcalDigis+
+    process.hltEcalDigisTask+
+    process.hltHcalDigis+
+    process.muonCSCDigis+
+    process.muonDTDigis+
+    process.muonGEMDigis)
 
 
-process.ecalClustersTask = cms.ConditionalTask(process.particleFlowSuperClusteringTask)
+process.ecalClustersTask = cms.Sequence(process.particleFlowSuperClusteringTask)
 
 
-process.ecalLocalRecoTask = cms.ConditionalTask(process.HLTDoFullUnpackingEgammaEcalTask)
+process.ecalLocalRecoTask = cms.Sequence(process.HLTDoFullUnpackingEgammaEcalTask)
 
 
-process.highlevelrecoTask = cms.ConditionalTask(process.particleFlowRecoTask)
+process.highlevelrecoTask = cms.Sequence(process.particleFlowRecoTask)
 
 
-process.iterTICLTask = cms.ConditionalTask(process.ticlLayerTileTask, process.ticlPFTask, process.ticlTracksterMergeTask, process.ticlTrackstersCLUE3DHighStepTask)
+process.iterTICLTask = cms.Sequence(
+    process.ticlLayerTileTask+
+    process.ticlTrackstersCLUE3DHighStepTask+
+    process.ticlTracksterMergeTask+
+    process.ticlPFTask
+    )
 
 
-process.particleFlowClusterTask = cms.ConditionalTask(process.particleFlowBadHcalPseudoCluster, process.pfClusteringECALTask, process.pfClusteringHBHEHFTask, process.pfClusteringHGCalTask, process.pfClusteringHOTask)
+process.particleFlowClusterTask = cms.Sequence(
+    process.particleFlowBadHcalPseudoCluster+
+    process.pfClusteringECALTask+
+    process.pfClusteringHBHEHFTask+
+    process.pfClusteringHGCalTask+
+    process.pfClusteringHOTask)
 
 
-process.calolocalrecoTask = cms.ConditionalTask(process.ecalLocalRecoTask, process.HLTDoLocalHcalTask)
+process.calolocalrecoTask = cms.Sequence(
+    process.ecalLocalRecoTask+
+    process.HLTDoLocalHcalTask)
 
 
-process.localrecoTask = cms.ConditionalTask(process.bunchSpacingProducer, process.calolocalrecoTask, process.muonlocalrecoTask, process.trackerlocalrecoTask)
+process.localrecoTask = cms.Sequence(
+    process.bunchSpacingProducer+
+    process.calolocalrecoTask+
+    process.muonlocalrecoTask+
+    process.trackerlocalrecoTask)
 
 
-process.HLTAK4PFPuppiJetsReconstruction = cms.Sequence(process.goodOfflinePrimaryVertices+process.hltPixelClustersMultiplicity+process.hltPFPuppi+process.hltAK4PFPuppiJets+process.hltAK4PFPuppiJetCorrectorL1+process.hltAK4PFPuppiJetCorrectorL2+process.hltAK4PFPuppiJetCorrectorL3+process.hltAK4PFPuppiJetCorrector+process.hltAK4PFPuppiJetsCorrected)
+process.HLTAK4PFPuppiJetsReconstruction = cms.Sequence(
+    process.goodOfflinePrimaryVertices+
+    process.hltPixelClustersMultiplicity+
+    process.hltPFPuppi+
+    process.hltAK4PFPuppiJets+
+    process.hltAK4PFPuppiJetCorrectorL1+
+    process.hltAK4PFPuppiJetCorrectorL2+
+    process.hltAK4PFPuppiJetCorrectorL3+
+    process.hltAK4PFPuppiJetCorrector+
+    process.hltAK4PFPuppiJetsCorrected)
 
 
 process.HLTBeamSpot = cms.Sequence(process.HLTBeamSpotTask)
@@ -36472,7 +36671,7 @@ process.HLTDoLocalPixelSequence = cms.Sequence(process.HLTDoLocalPixelTask)
 process.HLTDoLocalStripSequence = cms.Sequence(process.HLTDoLocalStripTask)
 
 
-process.HLTElePixelMatchL1SeededSequence = cms.Sequence(process.HLTDoLocalPixelSequence+process.HLTDoLocalStripSequence, process.HLTElePixelMatchL1SeededTask)
+process.HLTElePixelMatchL1SeededSequence = cms.Sequence(process.HLTDoLocalPixelSequence+process.HLTDoLocalStripSequence+ process.HLTElePixelMatchL1SeededTask)
 
 
 process.HLTEndSequence = cms.Sequence(process.hltBoolEnd)
@@ -36503,28 +36702,25 @@ process.HLTPFPuppiMETReconstruction = cms.Sequence(process.goodOfflinePrimaryVer
 
 
 
-process.HLTTrackingV61Task = cms.ConditionalTask(process.generalTracks,
-    process.highPtTripletStepTask,
-    process.hltPhase2PixelTracksTask,
-    process.initialStepTask,
-    process.itLocalRecoTask,
-    process.otLocalRecoTask,
-    process.trackerlocalrecoTask,
-    process.trackerClusterCheck,
-    process.hltPhase2PixelVertices)
+process.HLTTrackingV61Task = cms.Sequence(
+    process.itLocalRecoTask+
+    process.otLocalRecoTask+
+    process.trackerlocalrecoTask+
+    process.trackerClusterCheck+
+    process.hltPhase2PixelTracksTask+
+    process.hltPhase2PixelVertices+
+    process.initialStepTask+
+    process.highPtTripletStepTask+
+    process.generalTracks)
 
 
-process.HLTParticleFlowTask = cms.ConditionalTask(process.RawToDigiTask,
-    process.caloTowersRecTask,
-    process.ecalClustersTask,
-    process.hgcalLocalRecoTask,
-    process.highlevelrecoTask,
-    process.hltOnlineBeamSpot,
-    process.iterTICLTask,
-    process.localrecoTask,
-    process.particleFlowClusterTask,
-    process.HLTTrackingV61Task,
-    process.vertexRecoTask)
+process.HLTParticleFlowTask = cms.Sequence(
+    process.particleFlowClusterTask+
+    process.iterTICLTask+
+    process.vertexRecoTask+
+    process.ecalClustersTask+
+    process.caloTowersRecTask+
+    process.highlevelrecoTask)
 
 
 
@@ -36532,34 +36728,51 @@ process.HLTParticleFlowSequence = cms.Sequence(process.HLTParticleFlowTask)
 
 
 
-process.HLTPhoton108EBTightIDTightIsoL1SeededSequence = cms.Sequence(process.HLTL1Sequence+
+process.HLTPhoton108EBTightIDTightIsoL1SeededSequence = cms.Sequence(
+    process.HLTL1Sequence+
     process.hltEGL1SeedsForSinglePhotonIsolatedFilter+
     process.HLTDoFullUnpackingEgammaEcalL1SeededSequence+
+    process.HLTEGammaDoLocalHcalSequence+
     process.HLTPFClusteringForEgammaL1Seeded+
     process.HLTHgcalTiclPFClusteringForEgammaL1Seeded+
+    process.HLTFastJetForEgamma+
+    process.HLTPFHcalClusteringForEgamma+
+    process.HLTPhoton108EBTightIDTightIsoL1SeededTask+
     process.hltEgammaCandidatesWrapperL1Seeded+
     process.hltEG108EtL1SeededFilter+
     process.hltPhoton108EBTightIDTightIsoClusterShapeL1SeededFilter+
-    process.HLTEGammaDoLocalHcalSequence+
-    process.HLTFastJetForEgamma+
     process.hltPhoton108EBTightIDTightIsoHEL1SeededFilter+
     process.hltPhoton108EBTightIDTightIsoEcalIsoL1SeededFilter+
-    process.HLTPFHcalClusteringForEgamma+
-    process.hltPhoton108EBTightIDTightIsoHcalIsoL1SeededFilter, process.HLTPhoton108EBTightIDTightIsoL1SeededTask)
+    process.hltPhoton108EBTightIDTightIsoHcalIsoL1SeededFilter)
 
 
-process.HLTPhoton187L1SeededSequence = cms.Sequence(process.HLTL1Sequence+process.l1tTkEmSingle51Filter+process.HLTDoFullUnpackingEgammaEcalL1SeededSequence+process.HLTPFClusteringForEgammaL1Seeded+process.HLTHgcalTiclPFClusteringForEgammaL1Seeded+process.hltEgammaCandidatesWrapperL1Seeded+process.hltEG187EtL1SeededFilter+process.hltPhoton187HgcalHEL1SeededFilter+process.HLTEGammaDoLocalHcalSequence+process.hltPhoton187HEL1SeededFilter, process.HLTPhoton187L1SeededTask)
+process.HLTPhoton187L1SeededSequence = cms.Sequence(
+    process.HLTL1Sequence+
+    process.l1tTkEmSingle51Filter+
+    process.HLTDoFullUnpackingEgammaEcalL1SeededSequence+
+    process.HLTEGammaDoLocalHcalSequence+
+    process.HLTPFClusteringForEgammaL1Seeded+
+    process.HLTHgcalTiclPFClusteringForEgammaL1Seeded+
+    process.HLTPhoton187L1SeededTask+
+    process.hltEgammaCandidatesWrapperL1Seeded+
+    process.hltEG187EtL1SeededFilter+
+    process.hltPhoton187HgcalHEL1SeededFilter+
+    process.hltPhoton187HEL1SeededFilter)
 
 
 process.HLTTrackingV61Sequence = cms.Sequence(process.HLTTrackingV61Task)
 
 process.HLTL2MuonsFromL1TkSequence = cms.Sequence(
+    process.muonlocalrecoSequence+
     process.hltL2OfflineMuonSeeds+
     process.hltL2MuonSeedsFromL1TkMuon+
     process.hltL2MuonsFromL1TkMuon)
 
 
 process.HLTPhase2L3OISequence = cms.Sequence(
+    process.trackerlocalrecoTask+
+    process.itLocalRecoTask+
+    process.otLocalRecoSequence+
     process.hltPhase2L3OISeedsFromL2Muons+
     process.hltPhase2L3OITrackCandidates+
     process.hltPhase2L3OIMuCtfWithMaterialTracks+
@@ -36652,22 +36865,169 @@ process.endOfProcess = cms.Sequence(process.MEtoEDMConverter)
 process.HLTBeginSequence = cms.Sequence(process.hltTriggerType+process.HLTBeamSpot)
 
 
-process.HLTDiphoton3023IsoCaloIdL1SeededSequence = cms.Sequence(process.HLTL1Sequence+process.hltEGL1SeedsForDoublePhotonIsolatedFilter+process.HLTDoFullUnpackingEgammaEcalL1SeededSequence+process.HLTPFClusteringForEgammaL1Seeded+process.HLTHgcalTiclPFClusteringForEgammaL1Seeded+process.hltEgammaCandidatesWrapperL1Seeded+process.hltEG30EtL1SeededFilter+process.hltDiEG23EtL1SeededFilter+process.hltDiEG3023IsoCaloIdClusterShapeL1SeededFilter+process.hltDiEG3023IsoCaloIdClusterShapeSigmavvL1SeededFilter+process.hltDiEG3023IsoCaloIdClusterShapeSigmawwL1SeededFilter+process.hltDiEG3023IsoCaloIdHgcalHEL1SeededFilter+process.HLTEGammaDoLocalHcalSequence+process.HLTFastJetForEgamma+process.hltDiEG3023IsoCaloIdHEL1SeededFilter+process.hltDiEG3023IsoCaloIdEcalIsoL1SeededFilter+process.hltDiEG3023IsoCaloIdHgcalIsoL1SeededFilter+process.HLTPFHcalClusteringForEgamma+process.hltDiEG3023IsoCaloIdHcalIsoL1SeededFilter, process.HLTDiphoton3023IsoCaloIdL1SeededTask)
+process.HLTDiphoton3023IsoCaloIdL1SeededSequence = cms.Sequence(
+    process.HLTL1Sequence+
+    process.hltEGL1SeedsForDoublePhotonIsolatedFilter+
+    process.HLTDoFullUnpackingEgammaEcalL1SeededSequence+
+    process.HLTEGammaDoLocalHcalSequence+
+    process.HLTPFClusteringForEgammaL1Seeded+
+    process.HLTHgcalTiclPFClusteringForEgammaL1Seeded+
+    process.HLTFastJetForEgamma+
+    process.HLTPFHcalClusteringForEgamma+
+    process.HLTDiphoton3023IsoCaloIdL1SeededTask+
+    process.hltEgammaCandidatesWrapperL1Seeded+
+    process.hltEG30EtL1SeededFilter+
+    process.hltDiEG23EtL1SeededFilter+
+    process.hltDiEG3023IsoCaloIdClusterShapeL1SeededFilter+
+    process.hltDiEG3023IsoCaloIdClusterShapeSigmavvL1SeededFilter+
+    process.hltDiEG3023IsoCaloIdClusterShapeSigmawwL1SeededFilter+
+    process.hltDiEG3023IsoCaloIdHgcalHEL1SeededFilter+
+    process.hltDiEG3023IsoCaloIdHEL1SeededFilter+
+    process.hltDiEG3023IsoCaloIdEcalIsoL1SeededFilter+
+    process.hltDiEG3023IsoCaloIdHgcalIsoL1SeededFilter+
+    process.hltDiEG3023IsoCaloIdHcalIsoL1SeededFilter)
 
 
-process.HLTDoubleEle2312IsoL1SeededSequence = cms.Sequence(process.HLTL1Sequence+process.hltEGL1SeedsForDoubleEleIsolatedFilter+process.HLTDoFullUnpackingEgammaEcalL1SeededSequence+process.HLTPFClusteringForEgammaL1Seeded+process.HLTHgcalTiclPFClusteringForEgammaL1Seeded+process.hltEgammaCandidatesWrapperL1Seeded+process.hltEG23EtL1SeededFilter+process.hltDiEG12EtL1SeededFilter+process.hltDiEG2312IsoClusterShapeL1SeededFilter+process.hltDiEG2312IsoClusterShapeSigmavvL1SeededFilter+process.hltDiEG2312IsoClusterShapeSigmawwL1SeededFilter+process.hltDiEG2312IsoHgcalHEL1SeededFilter+process.HLTEGammaDoLocalHcalSequence+process.HLTFastJetForEgamma+process.hltDiEG2312IsoHEL1SeededFilter+process.hltDiEG2312IsoEcalIsoL1SeededFilter+process.hltDiEG2312IsoHgcalIsoL1SeededFilter+process.HLTPFHcalClusteringForEgamma+process.hltDiEG2312IsoHcalIsoL1SeededFilter+process.HLTElePixelMatchL1SeededSequence+process.hltDiEle2312IsoPixelMatchL1SeededFilter+process.hltDiEle2312IsoPMS2L1SeededFilter+process.HLTGsfElectronL1SeededSequence+process.hltDiEle2312IsoGsfOneOEMinusOneOPL1SeededFilter+process.hltDiEle2312IsoGsfDetaL1SeededFilter+process.hltDiEle2312IsoGsfDphiL1SeededFilter+process.hltDiEle2312IsoBestGsfNLayerITL1SeededFilter+process.hltDiEle2312IsoBestGsfChi2L1SeededFilter+process.hltDiEle2312IsoGsfTrackIsoFromL1TracksL1SeededFilter+process.HLTTrackingV61Sequence+process.hltDiEle2312IsoGsfTrackIsoL1SeededFilter, process.HLTDoubleEle2312IsoL1SeededTask)
+process.HLTDoubleEle2312IsoL1SeededSequence = cms.Sequence(
+    process.HLTL1Sequence+
+    process.hltEGL1SeedsForDoubleEleIsolatedFilter+
+    process.HLTDoFullUnpackingEgammaEcalL1SeededSequence+
+    process.HLTEGammaDoLocalHcalSequence+
+    process.HLTPFClusteringForEgammaL1Seeded+
+    process.HLTHgcalTiclPFClusteringForEgammaL1Seeded+
+    process.HLTFastJetForEgamma+
+    process.HLTPFHcalClusteringForEgamma+
+    process.HLTElePixelMatchL1SeededSequence+
+    process.HLTTrackingV61Sequence+
+    process.HLTGsfElectronL1SeededSequence+
+    process.HLTDoubleEle2312IsoL1SeededTask+
+    process.hltEgammaCandidatesWrapperL1Seeded+
+    process.hltEG23EtL1SeededFilter+
+    process.hltDiEG12EtL1SeededFilter+
+    process.hltDiEG2312IsoClusterShapeL1SeededFilter+
+    process.hltDiEG2312IsoClusterShapeSigmavvL1SeededFilter+
+    process.hltDiEG2312IsoClusterShapeSigmawwL1SeededFilter+
+    process.hltDiEG2312IsoHgcalHEL1SeededFilter+
+    process.hltDiEG2312IsoHEL1SeededFilter+
+    process.hltDiEG2312IsoEcalIsoL1SeededFilter+
+    process.hltDiEG2312IsoHgcalIsoL1SeededFilter+
+    process.hltDiEG2312IsoHcalIsoL1SeededFilter+
+    process.hltDiEle2312IsoPixelMatchL1SeededFilter+
+    process.hltDiEle2312IsoPMS2L1SeededFilter+
+    process.hltDiEle2312IsoGsfOneOEMinusOneOPL1SeededFilter+
+    process.hltDiEle2312IsoGsfDetaL1SeededFilter+
+    process.hltDiEle2312IsoGsfDphiL1SeededFilter+
+    process.hltDiEle2312IsoBestGsfNLayerITL1SeededFilter+
+    process.hltDiEle2312IsoBestGsfChi2L1SeededFilter+
+    process.hltDiEle2312IsoGsfTrackIsoFromL1TracksL1SeededFilter+
+    process.hltDiEle2312IsoGsfTrackIsoL1SeededFilter)
 
 
-process.HLTDoubleEle25CaloIdLPMS2L1SeededSequence = cms.Sequence(process.HLTL1Sequence+process.hltEGL1SeedsForDoubleEleNonIsolatedFilter+process.HLTDoFullUnpackingEgammaEcalL1SeededSequence+process.HLTPFClusteringForEgammaL1Seeded+process.HLTHgcalTiclPFClusteringForEgammaL1Seeded+process.hltEgammaCandidatesWrapperL1Seeded+process.hltDiEG25EtL1SeededFilter+process.hltDiEG25CaloIdLClusterShapeL1SeededFilter+process.hltDiEG25CaloIdLClusterShapeSigmavvL1SeededFilter+process.hltDiEG25CaloIdLHgcalHEL1SeededFilter+process.HLTEGammaDoLocalHcalSequence+process.hltDiEG25CaloIdLHEL1SeededFilter+process.HLTElePixelMatchL1SeededSequence+process.hltDiEle25CaloIdLPixelMatchL1SeededFilter+process.hltDiEle25CaloIdLPMS2L1SeededFilter, process.HLTDoubleEle25CaloIdLPMS2L1SeededTask)
+process.HLTDoubleEle25CaloIdLPMS2L1SeededSequence = cms.Sequence(
+    process.HLTL1Sequence+
+    process.hltEGL1SeedsForDoubleEleNonIsolatedFilter+
+    process.HLTDoFullUnpackingEgammaEcalL1SeededSequence+
+    process.HLTEGammaDoLocalHcalSequence+
+    process.HLTPFClusteringForEgammaL1Seeded+
+    process.HLTHgcalTiclPFClusteringForEgammaL1Seeded+
+    process.HLTDoubleEle25CaloIdLPMS2L1SeededTask+
+    process.hltEgammaCandidatesWrapperL1Seeded+
+    process.hltDiEG25EtL1SeededFilter+
+    process.hltDiEG25CaloIdLClusterShapeL1SeededFilter+
+    process.hltDiEG25CaloIdLClusterShapeSigmavvL1SeededFilter+
+    process.hltDiEG25CaloIdLHgcalHEL1SeededFilter+
+    process.hltDiEG25CaloIdLHEL1SeededFilter+
+    process.HLTElePixelMatchL1SeededSequence+
+    process.hltDiEle25CaloIdLPixelMatchL1SeededFilter+
+    process.hltDiEle25CaloIdLPMS2L1SeededFilter)
 
 
-process.HLTEle115NonIsoL1SeededSequence = cms.Sequence(process.HLTL1Sequence+process.hltEGL1SeedsForSingleEleNonIsolatedFilter+process.HLTDoFullUnpackingEgammaEcalL1SeededSequence+process.HLTPFClusteringForEgammaL1Seeded+process.HLTHgcalTiclPFClusteringForEgammaL1Seeded+process.hltEgammaCandidatesWrapperL1Seeded+process.hltEG115EtL1SeededFilter+process.hltEle115NonIsoClusterShapeL1SeededFilter+process.hltEle115NonIsoClusterShapeSigmavvL1SeededFilter+process.hltEle115NonIsoClusterShapeSigmawwL1SeededFilter+process.hltEle115NonIsoHgcalHEL1SeededFilter+process.HLTEGammaDoLocalHcalSequence+process.hltEle115NonIsoHEL1SeededFilter+process.HLTElePixelMatchL1SeededSequence+process.hltEle115NonIsoPixelMatchL1SeededFilter+process.hltEle115NonIsoPMS2L1SeededFilter+process.HLTEle115NonIsoL1SeededGsfElectronL1SeededSequence+process.hltEle115NonIsoGsfDetaL1SeededFilter+process.hltEle115NonIsoGsfDphiL1SeededFilter, process.HLTEle115NonIsoL1SeededTask)
+process.HLTEle115NonIsoL1SeededSequence = cms.Sequence(process.HLTL1Sequence+
+    process.hltEGL1SeedsForSingleEleNonIsolatedFilter+
+    process.HLTDoFullUnpackingEgammaEcalL1SeededSequence+
+    process.HLTEGammaDoLocalHcalSequence+
+    process.HLTPFClusteringForEgammaL1Seeded+
+    process.HLTHgcalTiclPFClusteringForEgammaL1Seeded+
+    process.HLTElePixelMatchL1SeededSequence+
+    process.HLTEle115NonIsoL1SeededTask+
+    process.hltEgammaCandidatesWrapperL1Seeded+
+    process.hltEG115EtL1SeededFilter+
+    process.hltEle115NonIsoClusterShapeL1SeededFilter+
+    process.hltEle115NonIsoClusterShapeSigmavvL1SeededFilter+
+    process.hltEle115NonIsoClusterShapeSigmawwL1SeededFilter+
+    process.hltEle115NonIsoHgcalHEL1SeededFilter+
+    process.hltEle115NonIsoHEL1SeededFilter+
+    process.hltEle115NonIsoPixelMatchL1SeededFilter+
+    process.hltEle115NonIsoPMS2L1SeededFilter+
+    process.HLTEle115NonIsoL1SeededGsfElectronL1SeededSequence+
+    process.hltEle115NonIsoGsfDetaL1SeededFilter+
+    process.hltEle115NonIsoGsfDphiL1SeededFilter)
 
 
-process.HLTEle26WP70L1SeededSequence = cms.Sequence(process.HLTL1Sequence+process.hltEGL1SeedsForSingleEleIsolatedFilter+process.HLTDoFullUnpackingEgammaEcalL1SeededSequence+process.HLTPFClusteringForEgammaL1Seeded+process.HLTHgcalTiclPFClusteringForEgammaL1Seeded+process.hltEgammaCandidatesWrapperL1Seeded+process.hltEG26EtL1SeededFilter+process.hltEle26WP70ClusterShapeL1SeededFilter+process.hltEle26WP70ClusterShapeSigmavvL1SeededFilter+process.hltEle26WP70ClusterShapeSigmawwL1SeededFilter+process.hltEle26WP70HgcalHEL1SeededFilter+process.HLTEGammaDoLocalHcalSequence+process.HLTFastJetForEgamma+process.hltEle26WP70HEL1SeededFilter+process.hltEle26WP70EcalIsoL1SeededFilter+process.hltEle26WP70HgcalIsoL1SeededFilter+process.HLTPFHcalClusteringForEgamma+process.hltEle26WP70HcalIsoL1SeededFilter+process.HLTElePixelMatchL1SeededSequence+process.hltEle26WP70PixelMatchL1SeededFilter+process.hltEle26WP70PMS2L1SeededFilter+process.HLTGsfElectronL1SeededSequence+process.hltEle26WP70GsfOneOEMinusOneOPL1SeededFilter+process.hltEle26WP70GsfDetaL1SeededFilter+process.hltEle26WP70GsfDphiL1SeededFilter+process.hltEle26WP70BestGsfNLayerITL1SeededFilter+process.hltEle26WP70BestGsfChi2L1SeededFilter+process.hltEle26WP70GsfTrackIsoFromL1TracksL1SeededFilter+process.HLTTrackingV61Sequence+process.hltEle26WP70GsfTrackIsoL1SeededFilter, process.HLTEle26WP70L1SeededTask)
+process.HLTEle26WP70L1SeededSequence = cms.Sequence(process.HLTL1Sequence+
+    process.hltEGL1SeedsForSingleEleIsolatedFilter+
+    process.HLTDoFullUnpackingEgammaEcalL1SeededSequence+
+    process.HLTEGammaDoLocalHcalSequence+
+    process.HLTPFClusteringForEgammaL1Seeded+
+    process.HLTHgcalTiclPFClusteringForEgammaL1Seeded+
+    process.HLTFastJetForEgamma+
+    process.HLTPFHcalClusteringForEgamma+
+    process.HLTElePixelMatchL1SeededSequence+
+    process.HLTTrackingV61Sequence+
+    process.HLTGsfElectronL1SeededSequence+
+    process.HLTEle26WP70L1SeededTask+
+    process.hltEgammaCandidatesWrapperL1Seeded+
+    process.hltEG26EtL1SeededFilter+
+    process.hltEle26WP70ClusterShapeL1SeededFilter+
+    process.hltEle26WP70ClusterShapeSigmavvL1SeededFilter+
+    process.hltEle26WP70ClusterShapeSigmawwL1SeededFilter+
+    process.hltEle26WP70HgcalHEL1SeededFilter+
+    process.hltEle26WP70HEL1SeededFilter+
+    process.hltEle26WP70EcalIsoL1SeededFilter+
+    process.hltEle26WP70HgcalIsoL1SeededFilter+
+    process.hltEle26WP70HcalIsoL1SeededFilter+
+    process.hltEle26WP70PixelMatchL1SeededFilter+
+    process.hltEle26WP70PMS2L1SeededFilter+
+    process.hltEle26WP70GsfOneOEMinusOneOPL1SeededFilter+
+    process.hltEle26WP70GsfDetaL1SeededFilter+
+    process.hltEle26WP70GsfDphiL1SeededFilter+
+    process.hltEle26WP70BestGsfNLayerITL1SeededFilter+
+    process.hltEle26WP70BestGsfChi2L1SeededFilter+
+    process.hltEle26WP70GsfTrackIsoFromL1TracksL1SeededFilter+
+    process.hltEle26WP70GsfTrackIsoL1SeededFilter)
 
 
-process.HLTEle32WPTightL1SeededSequence = cms.Sequence(process.HLTL1Sequence+process.hltEGL1SeedsForSingleEleIsolatedFilter+process.HLTDoFullUnpackingEgammaEcalL1SeededSequence+process.HLTPFClusteringForEgammaL1Seeded+process.HLTHgcalTiclPFClusteringForEgammaL1Seeded+process.hltEgammaCandidatesWrapperL1Seeded+process.hltEG32EtL1SeededFilter+process.hltEle32WPTightClusterShapeL1SeededFilter+process.hltEle32WPTightClusterShapeSigmavvL1SeededFilter+process.hltEle32WPTightClusterShapeSigmawwL1SeededFilter+process.hltEle32WPTightHgcalHEL1SeededFilter+process.HLTEGammaDoLocalHcalSequence+process.HLTFastJetForEgamma+process.hltEle32WPTightHEL1SeededFilter+process.hltEle32WPTightEcalIsoL1SeededFilter+process.hltEle32WPTightHgcalIsoL1SeededFilter+process.HLTPFHcalClusteringForEgamma+process.hltEle32WPTightHcalIsoL1SeededFilter+process.HLTElePixelMatchL1SeededSequence+process.hltEle32WPTightPixelMatchL1SeededFilter+process.hltEle32WPTightPMS2L1SeededFilter+process.HLTGsfElectronL1SeededSequence+process.hltEle32WPTightGsfOneOEMinusOneOPL1SeededFilter+process.hltEle32WPTightGsfDetaL1SeededFilter+process.hltEle32WPTightGsfDphiL1SeededFilter+process.hltEle32WPTightBestGsfNLayerITL1SeededFilter+process.hltEle32WPTightBestGsfChi2L1SeededFilter+process.hltEle32WPTightGsfTrackIsoFromL1TracksL1SeededFilter+process.HLTTrackingV61Sequence+process.hltEle32WPTightGsfTrackIsoL1SeededFilter, process.HLTEle32WPTightL1SeededTask)
+process.HLTEle32WPTightL1SeededSequence = cms.Sequence(process.HLTL1Sequence+
+    process.hltEGL1SeedsForSingleEleIsolatedFilter+
+    process.HLTDoFullUnpackingEgammaEcalL1SeededSequence+
+    process.HLTEGammaDoLocalHcalSequence+
+    process.HLTPFClusteringForEgammaL1Seeded+
+    process.HLTHgcalTiclPFClusteringForEgammaL1Seeded+
+    process.HLTFastJetForEgamma+
+    process.HLTPFHcalClusteringForEgamma+
+    process.HLTElePixelMatchL1SeededSequence+
+    process.HLTTrackingV61Sequence+
+    process.HLTGsfElectronL1SeededSequence+
+    process.HLTEle32WPTightL1SeededTask+
+    process.hltEgammaCandidatesWrapperL1Seeded+
+    process.hltEG32EtL1SeededFilter+
+    process.hltEle32WPTightClusterShapeL1SeededFilter+
+    process.hltEle32WPTightClusterShapeSigmavvL1SeededFilter+
+    process.hltEle32WPTightClusterShapeSigmawwL1SeededFilter+
+    process.hltEle32WPTightHgcalHEL1SeededFilter+
+    process.hltEle32WPTightHEL1SeededFilter+
+    process.hltEle32WPTightEcalIsoL1SeededFilter+
+    process.hltEle32WPTightHgcalIsoL1SeededFilter+
+    process.hltEle32WPTightHcalIsoL1SeededFilter+
+    process.hltEle32WPTightPixelMatchL1SeededFilter+
+    process.hltEle32WPTightPMS2L1SeededFilter+
+    process.hltEle32WPTightGsfOneOEMinusOneOPL1SeededFilter+
+    process.hltEle32WPTightGsfDetaL1SeededFilter+
+    process.hltEle32WPTightGsfDphiL1SeededFilter+
+    process.hltEle32WPTightBestGsfNLayerITL1SeededFilter+
+    process.hltEle32WPTightBestGsfChi2L1SeededFilter+
+    process.hltEle32WPTightGsfTrackIsoFromL1TracksL1SeededFilter+
+    process.hltEle32WPTightGsfTrackIsoL1SeededFilter)
 
 process.allProducersInATask = cms.ConditionalTask(
 #    process.hltPhase2L3MuonMerged,
@@ -36707,19 +37067,25 @@ if args.path != "all":
         process.allProducersInATask.add(getattr(process, p.strip()))
 
 
-process.HLT_AK4PFPuppiJet520 = cms.Path(process.HLTBeginSequence+
-process.l1tSinglePFPuppiJet230off+
-process.HLTParticleFlowSequence+
-process.HLTMuonsSequence+
-process.HLTAK4PFPuppiJetsReconstruction+
-process.hltSingleAK4PFPuppiJet520+
-process.HLTEndSequence,
-)
+process.HLT_AK4PFPuppiJet520 = cms.Path(
+    process.HLTBeginSequence+
+    process.hltOnlineBeamSpot+
+    process.l1tSinglePFPuppiJet230off+
+    process.RawToDigiTask+
+    process.hgcalLocalRecoTask+
+    process.localrecoTask+
+    process.HLTTrackingV61Task+
+    process.HLTMuonsSequence+
+    process.HLTParticleFlowSequence+
+    process.HLTAK4PFPuppiJetsReconstruction+
+    process.hltSingleAK4PFPuppiJet520+
+    process.HLTEndSequence
+    )
 
 process.HLT_Diphoton30_23_IsoCaloId_L1Seeded = cms.Path(process.HLTBeginSequence
     +process.hltPreDiphoton3023IsoCaloIdL1Seeded
     +process.HLTDiphoton3023IsoCaloIdL1SeededSequence
-    +process.HLTEndSequence,
+    +process.HLTEndSequence
     )
 
 
@@ -36740,6 +37106,10 @@ process.HLT_DoubleEle25_CaloIdL_PMS2_L1Seeded = cms.Path(process.HLTBeginSequenc
 process.HLT_DoublePFPuppiJets128_DoublePFPuppiBTagDeepCSV_2p4 = cms.Path(process.HLTBeginSequence+
     process.l1tDoublePFPuppiJet112offMaxEta2p4+
     process.l1tDoublePFPuppiJets112offMaxDeta1p6+
+    process.RawToDigiTask+
+    process.hgcalLocalRecoTask+
+    process.localrecoTask+
+    process.HLTTrackingV61Task+
     process.HLTMuonsSequence+
     process.HLTParticleFlowSequence+
     process.HLTAK4PFPuppiJetsReconstruction+
@@ -36754,6 +37124,10 @@ process.HLT_DoublePFPuppiJets128_DoublePFPuppiBTagDeepCSV_2p4 = cms.Path(process
 process.HLT_DoublePFPuppiJets128_DoublePFPuppiBTagDeepFlavour_2p4 = cms.Path(process.HLTBeginSequence+
     process.l1tDoublePFPuppiJet112offMaxEta2p4+
     process.l1tDoublePFPuppiJets112offMaxDeta1p6+
+    process.RawToDigiTask+
+    process.hgcalLocalRecoTask+
+    process.localrecoTask+
+    process.HLTTrackingV61Task+
     process.HLTMuonsSequence+
     process.HLTParticleFlowSequence+
     process.HLTAK4PFPuppiJetsReconstruction+
@@ -36766,7 +37140,7 @@ process.HLT_DoublePFPuppiJets128_DoublePFPuppiBTagDeepFlavour_2p4 = cms.Path(pro
 
 
 process.HLT_Ele115_NonIso_L1Seeded = cms.Path(process.HLTBeginSequence+process.hltPreEle115NonIsoL1Seeded+process.HLTEle115NonIsoL1SeededSequence+process.HLTEndSequence,
-    cms.ConditionalTask(process.allProducersInATask)
+#    cms.ConditionalTask(process.allProducersInATask)
     )
 
 process.HLT_Ele115_NonIso_L1Seeded_MR = cms.Path(process.HLTBeginSequence
@@ -36783,7 +37157,8 @@ process.HLT_Ele26_WP70_L1Seeded = cms.Path(process.HLTBeginSequence+
     )
 
 
-process.HLT_Ele32_WPTight_L1Seeded = cms.Path(process.HLTBeginSequence+
+process.HLT_Ele32_WPTight_L1Seeded = cms.Path(
+    process.HLTBeginSequence+
     process.hltPreEle32WPTightL1Seeded+
     process.HLTEle32WPTightL1SeededSequence+
     process.HLTEndSequence,
@@ -36797,6 +37172,7 @@ process.HLT_IsoMu24_FromL1TkMuon = cms.Path(process.HLTBeginSequence+
     process.hltL3crIsoL1TkSingleMu22L3f24QL3pfhcalIsoFiltered0p40+
     process.hltL3crIsoL1TkSingleMu22L3f24QL3pfhgcalIsoFiltered4p70+
     process.hltL3crIsoL1TkSingleMu22L3f24QL3trkIsoRegionalNewFiltered0p07EcalHcalHgcalTrk+
+    process.itLocalRecoTask+
     process.HLTEndSequence,
     cms.ConditionalTask(
       process.HGCalRecHit,
@@ -36899,7 +37275,6 @@ process.HLT_IsoMu24_FromL1TkMuon = cms.Path(process.HLTBeginSequence+
       process.siPixelClusters,
       process.siPixelRecHits,
       process.trackerClusterCheck,
-      process.itLocalRecoTask,
       process.hltPhase2PixelTrackFilterByKinematics,
       process.hltPhase2PixelFitterByHelixProjections),
     )
@@ -37004,6 +37379,7 @@ process.HLT_Mu37_Mu27_FromL1TkMuon = cms.Path(
     process.otLocalRecoSequence+
     process.hltPhase2PixelFitterByHelixProjections+
     process.hltPhase2PixelTrackFilterByKinematics+
+    process.HLTTrackingV61Task+
     process.HLTMuonsSequence+
     process.hltPhase2L3MuonCandidates+
     process.hltL3fL1DoubleMu155fPreFiltered27+
@@ -37019,6 +37395,7 @@ process.HLT_Mu50_FromL1TkMuon = cms.Path(process.HLTBeginSequence+
     process.otLocalRecoSequence+
     process.hltPhase2PixelFitterByHelixProjections+
     process.hltPhase2PixelTrackFilterByKinematics+
+    process.HLTTrackingV61Task+
     process.HLTMuonsSequence+
     process.hltPhase2L3MuonCandidates+
     process.hltL3fL1TkSingleMu22L3Filtered50Q+
@@ -37032,6 +37409,10 @@ process.HLT_PFHT200PT30_QuadPFPuppiJet_70_40_30_30_TriplePFPuppiBTagDeepCSV_2p4 
     process.l1t2PFPuppiJet55offMaxEta2p4+
     process.l1t4PFPuppiJet40offMaxEta2p4+
     process.l1t4PFPuppiJet25OnlineMaxEta2p4+
+    process.RawToDigiTask+
+    process.hgcalLocalRecoTask+
+    process.localrecoTask+
+    process.HLTTrackingV61Task+
     process.HLTMuonsSequence+
     process.HLTParticleFlowSequence+
     process.HLTAK4PFPuppiJetsReconstruction+
@@ -37052,6 +37433,10 @@ process.HLT_PFHT200PT30_QuadPFPuppiJet_70_40_30_30_TriplePFPuppiBTagDeepFlavour_
     process.l1t2PFPuppiJet55offMaxEta2p4+
     process.l1t4PFPuppiJet40offMaxEta2p4+
     process.l1t4PFPuppiJet25OnlineMaxEta2p4+
+    process.RawToDigiTask+
+    process.hgcalLocalRecoTask+
+    process.localrecoTask+
+    process.HLTTrackingV61Task+
     process.HLTMuonsSequence+
     process.HLTParticleFlowSequence+
     process.HLTAK4PFPuppiJetsReconstruction+
@@ -37072,6 +37457,10 @@ process.HLT_PFHT330PT30_QuadPFPuppiJet_75_60_45_40_TriplePFPuppiBTagDeepCSV_2p4 
     process.l1t2PFPuppiJet55offMaxEta2p4+
     process.l1t4PFPuppiJet40offMaxEta2p4+
     process.l1t4PFPuppiJet25OnlineMaxEta2p4+
+    process.RawToDigiTask+
+    process.hgcalLocalRecoTask+
+    process.localrecoTask+
+    process.HLTTrackingV61Task+
     process.HLTMuonsSequence+
     process.HLTParticleFlowSequence+
     process.HLTAK4PFPuppiJetsReconstruction+
@@ -37094,6 +37483,10 @@ process.HLT_PFHT330PT30_QuadPFPuppiJet_75_60_45_40_TriplePFPuppiBTagDeepFlavour_
     process.l1t2PFPuppiJet55offMaxEta2p4+
     process.l1t4PFPuppiJet40offMaxEta2p4+
     process.l1t4PFPuppiJet25OnlineMaxEta2p4+
+    process.RawToDigiTask+
+    process.hgcalLocalRecoTask+
+    process.localrecoTask+
+    process.HLTTrackingV61Task+
     process.HLTMuonsSequence+
     process.HLTParticleFlowSequence+
     process.HLTAK4PFPuppiJetsReconstruction+
@@ -37112,6 +37505,10 @@ process.HLT_PFHT330PT30_QuadPFPuppiJet_75_60_45_40_TriplePFPuppiBTagDeepFlavour_
 
 process.HLT_PFPuppiHT1070 = cms.Path(process.HLTBeginSequence+
     process.l1tPFPuppiHT450off+
+    process.RawToDigiTask+
+    process.hgcalLocalRecoTask+
+    process.localrecoTask+
+    process.HLTTrackingV61Task+
     process.HLTMuonsSequence+
     process.HLTParticleFlowSequence+
     process.HLTAK4PFPuppiJetsReconstruction+
@@ -37121,8 +37518,13 @@ process.HLT_PFPuppiHT1070 = cms.Path(process.HLTBeginSequence+
     )
 
 
-process.HLT_PFPuppiMETTypeOne140_PFPuppiMHT140 = cms.Path(process.HLTBeginSequence+
+process.HLT_PFPuppiMETTypeOne140_PFPuppiMHT140 = cms.Path(
+    process.HLTBeginSequence+
     process.l1tPFPuppiMET220off+
+    process.RawToDigiTask+
+    process.hgcalLocalRecoTask+
+    process.localrecoTask+
+    process.HLTTrackingV61Task+
     process.HLTMuonsSequence+
     process.HLTParticleFlowSequence+
     process.HLTAK4PFPuppiJetsReconstruction+
