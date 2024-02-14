@@ -6,15 +6,15 @@ from ..modules.hltPFPuppiMETTypeOneCorrector_cfi import *
 from ..modules.hltPFPuppiMHT_cfi import *
 from ..modules.hltPFPuppiMHT140_cfi import *
 from ..modules.l1tPFPuppiMET220off_cfi import *
-from ..sequences.hgcalLocalRecoTask_cfi import *
+from ..sequences.hgcalLocalRecoSequence_cfi import *
 from ..sequences.HLTAK4PFPuppiJetsReconstruction_cfi import *
 from ..sequences.HLTBeginSequence_cfi import *
 from ..sequences.HLTEndSequence_cfi import *
 from ..sequences.HLTMuonsSequence_cfi import *
 from ..sequences.HLTParticleFlowSequence_cfi import *
 from ..sequences.HLTPFPuppiMETReconstruction_cfi import *
-from ..sequences.HLTTrackingV61Task_cfi import *
-from ..sequences.localrecoTask_cfi import *
-from ..sequences.RawToDigiTask_cfi import *
+from ..sequences.HLTTrackingV61Sequence_cfi import *
+from ..sequences.localrecoSequence_cfi import *
+from ..sequences.RawToDigiSequence_cfi import *
 
-HLT_PFPuppiMETTypeOne140_PFPuppiMHT140 = cms.Path(HLTBeginSequence+l1tPFPuppiMET220off+RawToDigiTask+hgcalLocalRecoTask+localrecoTask+HLTTrackingV61Task+HLTMuonsSequence+HLTParticleFlowSequence+HLTAK4PFPuppiJetsReconstruction+HLTPFPuppiMETReconstruction+hltPFPuppiMETTypeOneCorrector+hltPFPuppiMETTypeOne+hltPFPuppiMETTypeOne140+hltPFPuppiMHT+hltPFPuppiMHT140+HLTEndSequence)
+HLT_PFPuppiMETTypeOne140_PFPuppiMHT140 = cms.Path(HLTBeginSequence+l1tPFPuppiMET220off+RawToDigiSequence+hgcalLocalRecoSequence+localrecoSequence+HLTTrackingV61Sequence+HLTMuonsSequence+HLTParticleFlowSequence+HLTAK4PFPuppiJetsReconstruction+HLTPFPuppiMETReconstruction+hltPFPuppiMETTypeOneCorrector+hltPFPuppiMETTypeOne+hltPFPuppiMETTypeOne140+hltPFPuppiMHT+hltPFPuppiMHT140+HLTEndSequence)
