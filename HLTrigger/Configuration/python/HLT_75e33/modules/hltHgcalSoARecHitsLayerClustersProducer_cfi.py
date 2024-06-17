@@ -3,7 +3,7 @@ from ..psets.hgcal_reco_constants_cfi import HGCAL_reco_constants as HGCAL_reco_
 
 hltHgcalSoARecHitsLayerClustersProducer = cms.EDProducer("HGCalSoARecHitsLayerClustersProducer@alpaka",
     alpaka = cms.untracked.PSet(
-        backend = cms.untracked.string('cuda_async')
+        backend = cms.untracked.string('')
     ),
     hgcalRecHitsSoA = cms.InputTag("hltHgcalSoARecHitsProducer"),
     deltac = cms.double(1.3),

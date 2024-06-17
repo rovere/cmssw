@@ -31,8 +31,8 @@ _hgcalLocalRecoSequence_heterogeneous = cms.Sequence(
         hgcalLayerClustersHSi+
         hgcalMergeLayerClusters)
 
-from Configuration.ProcessModifiers.heterogeneousCLUE_cff import heterogeneousCLUE
-heterogeneousCLUE.toReplaceWith(hgcalLocalRecoSequence, _hgcalLocalRecoSequence_heterogeneous)
-heterogeneousCLUE.toModify(hgcalMergeLayerClusters,
+from Configuration.ProcessModifiers.alpaka_cff import alpaka
+alpaka.toReplaceWith(hgcalLocalRecoSequence, _hgcalLocalRecoSequence_heterogeneous)
+alpaka.toModify(hgcalMergeLayerClusters,
         layerClustersEE = cms.InputTag("hltHgCalLayerClustersFromSoAProducer"),
         time_layerclustersEE = cms.InputTag("hltHgCalLayerClustersFromSoAProducer", "timeLayerCluster"))
