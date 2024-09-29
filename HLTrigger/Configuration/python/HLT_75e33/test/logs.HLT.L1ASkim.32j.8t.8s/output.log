@@ -1,0 +1,32 @@
+17:14 $ ./runHLTTiming.sh
+Local repository: |/data/user/rovere/store/relval/CMSSW_14_1_0_pre6/RelValMinBias_14TeV/GEN-SIM-DIGI-RAW/PU_141X_mcRun4_realistic_v1_STD_2026D110_PU-v3|                                                                             
+Discovered files: file:/data/user/rovere/store/relval/CMSSW_14_1_0_pre6/RelValMinBias_14TeV/GEN-SIM-DIGI-RAW/PU_141X_mcRun4_realistic_v1_STD_2026D110_PU-v3/output_Phase2_L1ASkim_merged.root                                        
+2 CPUs:
+  0: AMD EPYC 7763 64-Core Processor (64 cores, 128 threads)
+  1: AMD EPYC 7763 64-Core Processor (64 cores, 128 threads)
+
+2 visible NVIDIA GPUs:
+  0: NVIDIA L4
+  1: NVIDIA L4
+
+Benchmarking only I/O
+Warming up
+
+Running 3 times over 1000 events with 32 jobs, each with 8 threads, 8 streams and 1 GPUs
+ 15444.5 ±   8.6 ev/s (825 events, 19.3% overlap)
+ 15822.3 ±   3.4 ev/s (825 events, 0.0% overlap)
+ 14781.2 ±   3.0 ev/s (825 events, 95.2% overlap)
+ --------------------
+ 14781.2 ev/s (based on a single measurement)
+
+
+Benchmarking Phase2_L1P2GT_HLT.py
+Warming up
+
+Running 3 times over 1000 events with 32 jobs, each with 8 threads, 8 streams and 1 GPUs
+    59.7 ±   0.1 ev/s (825 events, 95.6% overlap)
+    59.8 ±   0.1 ev/s (825 events, 95.9% overlap)
+    59.8 ±   0.1 ev/s (825 events, 95.4% overlap)
+ --------------------
+    59.8 ±   0.1 ev/s
+

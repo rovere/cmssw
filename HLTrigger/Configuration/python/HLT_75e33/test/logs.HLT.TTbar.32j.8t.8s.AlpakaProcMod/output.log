@@ -1,0 +1,40 @@
+14:35 $ ./runHLTTiming.sh                                                                                                                                                                                                             
+Local repository: |/data/user/rovere/store/mc/Phase2Spring24DIGIRECOMiniAOD/TT_TuneCP5_14TeV-powheg-pythia8/GEN-SIM-DIGI-RAW-MINIAOD/PU200_AllTP_140X_mcRun4_realistic_v4-v1/2560000|                                                 
+Discovered files: file:/data/user/rovere/store/mc/Phase2Spring24DIGIRECOMiniAOD/TT_TuneCP5_14TeV-powheg-pythia8/GEN-SIM-DIGI-RAW-MINIAOD/PU200_AllTP_140X_mcRun4_realistic_v4-v1/2560000/output_Phase2_L1T_Reduced.root               
+L1P2GT,HLT:75e33_timing,ENDJOB                                                                                                                                                                                                        
+entry file:/data/user/rovere/store/mc/Phase2Spring24DIGIRECOMiniAOD/TT_TuneCP5_14TeV-powheg-pythia8/GEN-SIM-DIGI-RAW-MINIAOD/PU200_AllTP_140X_mcRun4_realistic_v4-v1/2560000/output_Phase2_L1T_Reduced.root                           
+Step: L1P2GT Spec:                                                                                                                                                                                                                    
+Step: HLT Spec: ['75e33_timing']                                                                                                                                                                                                      
+Step: ENDJOB Spec:                                                                                                                                                                                                                    
+customising the process with customise_aging_1000 from SLHCUpgradeSimulations/Configuration/aging                                                                                                                                     
+customising the process with customizeHLTforMC from HLTrigger/Configuration/customizeHLTforMC                                                                                                                                         
+Config file Phase2_L1P2GT_HLT.py created                                                                                                                                                                                              
+2 CPUs:                                                                                                                                                                                                                               
+  0: AMD EPYC 7763 64-Core Processor (64 cores, 128 threads)                                                                                                                                                                          
+  1: AMD EPYC 7763 64-Core Processor (64 cores, 128 threads)                                                                                                                                                                          
+                                                                                                                                                                                                                                      
+2 visible NVIDIA GPUs:                                                                                                                                                                                                                
+  0: NVIDIA L4                                                                                                                                                                                                                        
+  1: NVIDIA L4                                                                                                                                                                                                                        
+
+Benchmarking only I/O
+Warming up
+
+Running 3 times over 1000 events with 32 jobs, each with 8 threads, 8 streams and 1 GPUs
+ 16984.4 ±  10.5 ev/s (400 events, 0.0% overlap)
+ 16989.2 ±   6.8 ev/s (400 events, 0.0% overlap)
+ 17279.3 ±   7.1 ev/s (400 events, 0.0% overlap)
+ --------------------
+ 16984.4 ev/s (single measurement with the highest overlap)
+
+
+Benchmarking Phase2_L1P2GT_HLT.py
+Warming up
+
+Running 3 times over 1000 events with 32 jobs, each with 8 threads, 8 streams and 1 GPUs
+    29.5 ±   0.0 ev/s (400 events, 98.7% overlap)
+    29.5 ±   0.0 ev/s (400 events, 98.8% overlap)
+    29.4 ±   0.0 ev/s (400 events, 98.8% overlap)
+ --------------------
+    29.5 ±   0.0 ev/s
+
