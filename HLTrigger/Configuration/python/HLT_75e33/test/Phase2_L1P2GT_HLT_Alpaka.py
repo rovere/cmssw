@@ -2,12 +2,13 @@
 # using:
 # Revision: 1.19
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v
-# with command line options: Phase2 -s L1P2GT,HLT:75e33_timing --processName=HLTX --conditions auto:phase2_realistic_T33 --geometry Extended2026D110 --era Phase2C17I13M9 --customise SLHCUpgradeSimulations/Configuration/aging.customise_aging_1000 --eventcontent FEVTDEBUGHLT --filein=file:/data/user/rovere/store/mc/Phase2Spring24DIGIRECOMiniAOD/TT_TuneCP5_14TeV-powheg-pythia8/GEN-SIM-DIGI-RAW-MINIAOD/PU200_AllTP_140X_mcRun4_realistic_v4-v1/2560000/output_Phase2_L1T_Reduced.root --mc --nThreads 8 --inputCommands=keep *, drop *_hlt*_*_HLT, drop triggerTriggerFilterObjectWithRefs_l1t*_*_HLT -n 1000 --no_exec --output={}
+# with command line options: Phase2 -s L1P2GT,HLT:75e33_timing --processName=HLTX --conditions auto:phase2_realistic_T33 --geometry Extended2026D110 --era Phase2C17I13M9 --customise SLHCUpgradeSimulations/Configuration/aging.customise_aging_1000 --eventcontent FEVTDEBUGHLT --filein=file:/data/user/rovere/store/mc/Phase2Spring24DIGIRECOMiniAOD/TT_TuneCP5_14TeV-powheg-pythia8/GEN-SIM-DIGI-RAW-MINIAOD/PU200_AllTP_140X_mcRun4_realistic_v4-v1/2560000/output_Phase2_L1T_Reduced.root --mc --nThreads 8 --inputCommands=keep *, drop *_hlt*_*_HLT, drop triggerTriggerFilterObjectWithRefs_l1t*_*_HLT -n 1000 --no_exec --output={} --procModifier alpaka
 import FWCore.ParameterSet.Config as cms
 
 from Configuration.Eras.Era_Phase2C17I13M9_cff import Phase2C17I13M9
+from Configuration.ProcessModifiers.alpaka_cff import alpaka
 
-process = cms.Process('HLTX',Phase2C17I13M9)
+process = cms.Process('HLTX',Phase2C17I13M9,alpaka)
 
 # import of standard configurations
 process.load('Configuration.StandardSequences.Services_cff')
