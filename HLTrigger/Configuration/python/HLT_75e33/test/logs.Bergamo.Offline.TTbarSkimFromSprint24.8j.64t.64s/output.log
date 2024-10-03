@@ -1,0 +1,32 @@
+13:06 $ ./runOffline.sh
+Local repository: | /data/user/rovere/store/mc/Phase2Spring24DIGIRECOMiniAOD/TT_TuneCP5_14TeV-powheg-pythia8/GEN-SIM-DIGI-RAW-MINIAOD/PU200_AllTP_140X_mcRun4_realistic_v4-v1/2560000|                                               
+Discovered files: file: /data/user/rovere/store/mc/Phase2Spring24DIGIRECOMiniAOD/TT_TuneCP5_14TeV-powheg-pythia8/GEN-SIM-DIGI-RAW-MINIAOD/PU200_AllTP_140X_mcRun4_realistic_v4-v1/2560000/output_Phase2_L1T_Reduced.root             
+2 CPUs:
+  0: AMD EPYC 9754 128-Core Processor (128 cores, 256 threads)
+  1: AMD EPYC 9754 128-Core Processor (128 cores, 256 threads)
+
+3 visible NVIDIA GPUs:
+  0: NVIDIA L4
+  1: NVIDIA L4
+  2: NVIDIA L4
+
+Benchmarking only I/O
+Warming up
+
+Running 3 times over 400 events with 8 jobs, each with 64 threads, 64 streams, and 1 GPUs
+  4410.3 ±   2.3 ev/s (300 events, 76.7% overlap),   4407.3 ±   3.1 ev/s (⩾ 200 events, overlap-only)
+  4348.6 ±   2.6 ev/s (300 events, 94.8% overlap),   4345.8 ±   3.4 ev/s (⩾ 250 events, overlap-only)
+  4514.5 ±   2.1 ev/s (300 events, 0.0% overlap)
+ --------------------
+  4348.6 ev/s (based on a single measurement)
+
+Benchmarking Phase2_RAW2DIGI_RECO_FullDump_TTbar200PU_SkimFromSpring24.py
+Warming up
+
+Running 3 times over 400 events with 8 jobs, each with 64 threads, 64 streams, and 1 GPUs
+     6.5 ±   0.0 ev/s (300 events, 92.1% overlap),      6.3 ±   0.0 ev/s (⩾ 200 events, overlap-only)
+     6.4 ±   0.0 ev/s (300 events, 93.7% overlap),      6.2 ±   0.0 ev/s (⩾ 200 events, overlap-only)
+     6.5 ±   0.0 ev/s (300 events, 93.4% overlap),      6.3 ±   0.0 ev/s (⩾ 225 events, overlap-only)
+ --------------------
+     6.4 ±   0.1 ev/s,      6.3 ±   0.1 ev/s (⩾ 200 events, overlap-only)
+
