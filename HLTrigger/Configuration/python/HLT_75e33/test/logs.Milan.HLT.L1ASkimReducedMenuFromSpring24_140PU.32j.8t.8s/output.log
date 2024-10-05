@@ -1,0 +1,29 @@
+09:45 $ ./runHLTTiming.sh
+2 CPUs:
+  0: AMD EPYC 7763 64-Core Processor (64 cores, 128 threads)
+  1: AMD EPYC 7763 64-Core Processor (64 cores, 128 threads)
+
+2 visible NVIDIA GPUs:
+  0: NVIDIA L4
+  1: NVIDIA L4
+
+Benchmarking only I/O
+Warming up
+
+Running 3 times over 1000 events with 32 jobs, each with 8 threads, 8 streams, and 1 GPUs
+ 19110.3 ±   8.2 ev/s (900 events, 0.0% overlap)
+ 19158.4 ±   6.2 ev/s (900 events, 0.0% overlap)
+ 19412.1 ±   4.3 ev/s (900 events, 0.0% overlap)
+ --------------------
+ 19110.3 ev/s (single measurement with the highest overlap)
+
+Benchmarking Phase2_L1P2GT_HLT_L1ASkimReducedMenu_140PU.py
+Warming up
+
+Running 3 times over 1000 events with 32 jobs, each with 8 threads, 8 streams, and 1 GPUs
+    57.8 ±   0.1 ev/s (900 events, 97.9% overlap),     57.5 ±   0.1 ev/s (⩾ 825 events, overlap-only)
+    57.6 ±   0.1 ev/s (900 events, 98.5% overlap),     57.3 ±   0.1 ev/s (⩾ 825 events, overlap-only)
+    57.8 ±   0.1 ev/s (900 events, 97.8% overlap),     57.5 ±   0.1 ev/s (⩾ 800 events, overlap-only)
+ --------------------
+    57.7 ±   0.1 ev/s,     57.4 ±   0.1 ev/s (⩾ 800 events, overlap-only)
+
