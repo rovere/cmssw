@@ -1,0 +1,30 @@
+19:31 $ ./runOffline.sh
+2 CPUs:
+  0: AMD EPYC 7763 64-Core Processor (64 cores, 128 threads)
+  1: AMD EPYC 7763 64-Core Processor (64 cores, 128 threads)
+
+2 visible NVIDIA GPUs:
+  0: NVIDIA L4
+  1: NVIDIA L4
+
+Benchmarking only I/O
+Warming up
+
+Running 3 times over 400 events with 2 jobs, each with 64 threads, 64 streams, and 1 GPUs
+  1065.3 ±   2.5 ev/s (300 events, 98.7% overlap),   1065.8 ±   2.7 ev/s (⩾ 275 events, overlap-only)
+  1016.3 ±   4.4 ev/s (300 events, 97.9% overlap),   1013.0 ±   4.8 ev/s (⩾ 275 events, overlap-only)
+  1072.9 ±   5.1 ev/s (300 events, 96.9% overlap),   1076.0 ±   4.8 ev/s (⩾ 275 events, overlap-only)
+ --------------------
+  1051.5 ±  30.7 ev/s,   1051.6 ±  33.8 ev/s (⩾ 275 events, overlap-only)
+
+
+Benchmarking Phase2_RAW2DIGI_RECO_FullDump_L1ASkim140PU.py
+Warming up
+
+Running 3 times over 400 events with 2 jobs, each with 64 threads, 64 streams, and 1 GPUs
+     2.5 ±   0.0 ev/s (300 events, 98.7% overlap),      2.5 ±   0.1 ev/s (⩾ 275 events, overlap-only)
+     2.6 ±   0.0 ev/s (300 events, 92.9% overlap),      2.6 ±   0.1 ev/s (⩾ 275 events, overlap-only)
+     2.6 ±   0.0 ev/s (300 events, 96.3% overlap),      2.6 ±   0.1 ev/s (⩾ 275 events, overlap-only)
+ --------------------
+     2.6 ±   0.0 ev/s,      2.5 ±   0.0 ev/s (⩾ 275 events, overlap-only)
+

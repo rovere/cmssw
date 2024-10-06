@@ -2,7 +2,7 @@ import psutil
 import time
 
 # Configuration parameters
-THRESHOLD_MB = 64000  # Memory usage threshold in MB
+THRESHOLD_MB = 62700  # Memory usage threshold in MB for 4x64x64 Offline jobs on Milan
 CHECK_INTERVAL = 10  # Check interval in seconds
 
 def get_processes_by_name(process_name):
