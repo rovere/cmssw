@@ -1,0 +1,109 @@
+16:39 $ ./runHLTTiming.sh
+#! /bin/bash
+
+# Get the absolute path of the script
+SCRIPT_PATH=$(realpath "$0")
+
+# Print the source of the script
+cat $SCRIPT_PATH
+
+# Exit the script immediately if any command fails
+set -e
+
+# Enable pipefail to propagate the exit status of the entire pipeline
+set -o pipefail
+
+###MR FOLDER_FILES="/data/user/${USER}/"
+###MR DATASET="/RelValTTbar_14TeV/CMSSW_14_1_0_pre6-PU_141X_mcRun4_realistic_v1_STD_2026D110_PU-v3/GEN-SIM-DIGI-RAW"
+###MR FILES=( $(dasgoclient -query="file dataset=${DATASET}" --limit=-1 | sort | head -4) )
+###MR
+###MR for f in ${FILES[@]}; do
+###MR   # Create full MYPATH if it does not exist
+###MR   MYPATH=$(dirname ${f})
+###MR   if [ ! -d "${FOLDER_FILES}${MYPATH}" ]; then
+###MR     echo "mkdir -p ${FOLDER_FILES}${MYPATH}"
+###MR     mkdir -p ${FOLDER_FILES}${MYPATH}
+###MR   fi
+###MR   if [ -e "/eos/cms/${f}" ]; then
+###MR     if [ ! -e "${FOLDER_FILES}${f}" ]; then
+###MR       echo "cp /eos/cms/$f ${FOLDER_FILES}${MYPATH}"
+###MR       cp /eos/cms/$f ${FOLDER_FILES}${MYPATH}
+###MR     fi
+###MR   fi
+###MR done
+###MR
+###MR LOCALPATH=${FOLDER_FILES}$(dirname ${FILES[0]})
+###MR echo "Local repository: |${LOCALPATH}|"
+###MR LOCALFILES=$(ls -1 ${LOCALPATH})
+###MR ALL_FILES=""
+###MR for f in ${LOCALFILES[@]}; do
+###MR   ALL_FILES+="file:${LOCALPATH}/${f},"
+###MR done
+###MR # Remove the last character
+###MR ALL_FILES="${ALL_FILES%?}"
+###MR echo "Discovered files: $ALL_FILES"
+###MR
+###MR cmsDriver.py Phase2 -s L1P2GT,HLT:75e33_timing --processName=HLTX \
+###MR   --conditions auto:phase2_realistic_T33 --geometry Extended2026D110 \
+###MR   --era Phase2C17I13M9 \
+###MR   --customise SLHCUpgradeSimulations/Configuration/aging.customise_aging_1000 \
+###MR   --eventcontent FEVTDEBUGHLT \
+###MR   --filein=${ALL_FILES} \
+###MR   --mc --nThreads 4 --inputCommands='keep *, drop *_hlt*_*_HLT, drop triggerTriggerFilterObjectWithRefs_l1t*_*_HLT' \
+###MR   -n 1000 --no_exec --output={}
+
+
+###MR   13:06 $ nvidia-smi topo -m
+###MR           GPU0    GPU1    NIC0    NIC1    CPU Affinity    NUMA Affinity   GPU NUMA ID
+###MR   GPU0     X      SYS     SYS     SYS     32-47,160-175   2               N/A
+###MR   GPU1    SYS      X      SYS     SYS     64-79,192-207   4               N/A
+###MR   NIC0    SYS     SYS      X      PIX
+###MR   NIC1    SYS     SYS     PIX      X
+
+
+
+if [ -e 'Phase2_L1P2GT_HLT_L1ASkimReducedMenu_200PU.py' ]; then
+  if [ ! -d 'patatrack-scripts' ]; then
+    git clone https://github.com/cms-patatrack/patatrack-scripts --depth 1
+  fi
+  patatrack-scripts/benchmark -j 4 -t 8 -s 8 -e 500 --run-io-benchmark \
+    -k Phase2Timing_resources.json --event-skip 100 --event-resolution 25 \
+    --slot n=2:m=2:nv= \
+    --slot n=2:m=2:nv= -- Phase2_L1P2GT_HLT_L1ASkimReducedMenu_200PU.py
+  mergeResourcesJson.py logs/step*/pid*/Phase2Timing_resources.json > Phase2Timing_resources.json
+  if [ -e "$(dirname $0)/augmentResources.py" ]; then
+    python3 $(dirname $0)/augmentResources.py
+  fi
+fi
+2 CPUs:
+  0: AMD EPYC 7763 64-Core Processor (64 cores, 128 threads)
+  1: AMD EPYC 7763 64-Core Processor (64 cores, 128 threads)
+
+2 visible NVIDIA CUDA GPUs:
+  0: Tesla T4
+  1: Tesla T4
+
+No visible AMD ROCm GPUs
+
+Benchmarking only I/O
+Warming up
+
+Running 3 times over 500 events with 4 jobs, each with 8 threads, 8 streams, and 1 GPUs
+  1702.3 ±   2.5 ev/s (400 events, 94.7% overlap),   1702.1 ±   2.9 ev/s (⩾ 350 events, overlap-only)
+  1710.4 ±   2.5 ev/s (400 events, 93.1% overlap),   1715.1 ±   2.7 ev/s (⩾ 325 events, overlap-only)
+  1614.8 ±   3.0 ev/s (400 events, 96.7% overlap),   1612.1 ±   3.0 ev/s (⩾ 350 events, overlap-only)
+ --------------------
+  1675.8 ±  53.0 ev/s,   1676.4 ±  56.1 ev/s (⩾ 325 events, overlap-only)
+
+
+Benchmarking Phase2_L1P2GT_HLT_L1ASkimReducedMenu_200PU.py
+Warming up
+
+Running 3 times over 500 events with 4 jobs, each with 8 threads, 8 streams, and 1 GPUs
+     5.6 ±   0.0 ev/s (400 events, 99.1% overlap),      5.6 ±   0.0 ev/s (⩾ 350 events, overlap-only)
+     5.6 ±   0.0 ev/s (400 events, 99.4% overlap),      5.6 ±   0.0 ev/s (⩾ 350 events, overlap-only)
+     5.6 ±   0.0 ev/s (400 events, 99.2% overlap),      5.5 ±   0.0 ev/s (⩾ 350 events, overlap-only)
+ --------------------
+     5.6 ±   0.0 ev/s,      5.6 ±   0.0 ev/s (⩾ 350 events, overlap-only)
+
+
