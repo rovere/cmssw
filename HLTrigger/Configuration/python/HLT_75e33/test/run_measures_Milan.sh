@@ -87,8 +87,8 @@ run_ofp2() {
     patatrack-scripts/benchmark -j ${jobs} -t ${threads} -s ${streams} -e ${events} --run-io-benchmark \
       -k Phase2TimingOffline_resources.json --event-skip 100 --event-resolution 25 --wait 30 \
       --logdir ${logdir} \
-      --slot n=0,1:m=0,1:nv= \
-      --slot n=2,3:m=2,3:nv=  -- ${cfg} | tee ${logdir}/output.log
+      --slot n=0,1:nv= \
+      --slot n=2,3:nv=  -- ${cfg} | tee ${logdir}/output.log
 
     mergeResourcesJson.py ${logdir}/step*/pid*/Phase2TimingOffline_resources.json > Phase2TimingOffline_resources.json
     cp -p Phase2TimingOffline_resources.json ${logdir}
