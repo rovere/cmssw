@@ -1,0 +1,32 @@
+2 CPUs:
+  0: AMD EPYC 9754 128-Core Processor (128 cores, 256 threads)
+  1: AMD EPYC 9754 128-Core Processor (128 cores, 256 threads)
+
+4 visible NVIDIA CUDA GPUs:
+  0: NVIDIA L4
+  1: NVIDIA L4
+  2: NVIDIA L4
+  3: NVIDIA L4
+
+No visible AMD ROCm GPUs
+
+Benchmarking only I/O
+Warming up
+
+Running 3 times over 1000 events with 64 jobs, each with 8 threads, 8 streams, and 1 GPUs
+ 40078.9 ±   6.7 ev/s (900 events, 0.0% overlap)
+ 41216.6 ±   4.7 ev/s (900 events, 0.0% overlap)
+ 40799.2 ±   8.2 ev/s (900 events, 0.0% overlap)
+ --------------------
+ 40078.9 ev/s (single measurement with the highest overlap)
+
+Benchmarking Phase2_L1P2GT_HLT_l1a140.py
+Warming up
+
+Running 3 times over 1000 events with 64 jobs, each with 8 threads, 8 streams, and 1 GPUs
+   151.3 ±   0.1 ev/s (900 events, 98.2% overlap),    150.7 ±   0.1 ev/s (⩾ 825 events, overlap-only)
+   151.4 ±   0.1 ev/s (900 events, 98.6% overlap),    150.9 ±   0.1 ev/s (⩾ 825 events, overlap-only)
+   151.2 ±   0.1 ev/s (900 events, 98.5% overlap),    150.6 ±   0.1 ev/s (⩾ 825 events, overlap-only)
+ --------------------
+   151.3 ±   0.1 ev/s,    150.7 ±   0.1 ev/s (⩾ 825 events, overlap-only)
+
