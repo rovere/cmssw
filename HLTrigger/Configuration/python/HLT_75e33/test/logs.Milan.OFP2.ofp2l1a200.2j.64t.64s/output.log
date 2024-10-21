@@ -1,0 +1,31 @@
+2 CPUs:
+  0: AMD EPYC 7763 64-Core Processor (64 cores, 128 threads)
+  1: AMD EPYC 7763 64-Core Processor (64 cores, 128 threads)
+
+2 visible NVIDIA CUDA GPUs:
+  0: Tesla T4
+  1: Tesla T4
+
+No visible AMD ROCm GPUs
+
+Benchmarking only I/O
+Warming up
+
+Running 3 times over 1000 events with 2 jobs, each with 64 threads, 64 streams, and 1 GPUs
+   672.0 ±   1.5 ev/s (825 events, 99.8% overlap),    671.5 ±   1.5 ev/s (⩾ 775 events, overlap-only)
+   689.0 ±   1.8 ev/s (825 events, 97.3% overlap),    688.1 ±   1.8 ev/s (⩾ 775 events, overlap-only)
+   727.0 ±   2.1 ev/s (825 events, 99.1% overlap),    726.3 ±   2.1 ev/s (⩾ 775 events, overlap-only)
+ --------------------
+   696.0 ±  28.1 ev/s,    695.3 ±  28.1 ev/s (⩾ 775 events, overlap-only)
+
+
+Benchmarking Phase2_RAW2DIGI_RECO_ofp2l1a200.py
+Warming up
+
+Running 3 times over 1000 events with 2 jobs, each with 64 threads, 64 streams, and 1 GPUs
+     1.7 ±   0.0 ev/s (825 events, 99.3% overlap),      1.7 ±   0.0 ev/s (⩾ 800 events, overlap-only)
+     1.7 ±   0.0 ev/s (825 events, 98.5% overlap),      1.7 ±   0.0 ev/s (⩾ 775 events, overlap-only)
+     1.7 ±   0.0 ev/s (825 events, 99.2% overlap),      1.7 ±   0.0 ev/s (⩾ 775 events, overlap-only)
+ --------------------
+     1.7 ±   0.0 ev/s,      1.7 ±   0.0 ev/s (⩾ 775 events, overlap-only)
+

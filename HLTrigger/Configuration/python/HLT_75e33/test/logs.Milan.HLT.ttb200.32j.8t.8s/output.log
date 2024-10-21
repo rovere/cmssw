@@ -1,0 +1,30 @@
+2 CPUs:
+  0: AMD EPYC 7763 64-Core Processor (64 cores, 128 threads)
+  1: AMD EPYC 7763 64-Core Processor (64 cores, 128 threads)
+
+2 visible NVIDIA CUDA GPUs:
+  0: Tesla T4
+  1: Tesla T4
+
+No visible AMD ROCm GPUs
+
+Benchmarking only I/O
+Warming up
+
+Running 3 times over 1000 events with 32 jobs, each with 8 threads, 8 streams, and 1 GPUs
+ 17143.9 ±   6.3 ev/s (400 events, 0.0% overlap)
+ 17398.1 ±   7.4 ev/s (400 events, 0.0% overlap)
+ 17303.8 ±   5.0 ev/s (400 events, 0.0% overlap)
+ --------------------
+ 17143.9 ev/s (single measurement with the highest overlap)
+
+Benchmarking Phase2_L1P2GT_HLT_ttb200.py
+Warming up
+
+Running 3 times over 1000 events with 32 jobs, each with 8 threads, 8 streams, and 1 GPUs
+    30.7 ±   0.0 ev/s (400 events, 96.0% overlap),     30.8 ±   0.0 ev/s (⩾ 350 events, overlap-only)
+    30.7 ±   0.0 ev/s (400 events, 95.7% overlap),     30.8 ±   0.0 ev/s (⩾ 350 events, overlap-only)
+    30.5 ±   0.0 ev/s (400 events, 98.4% overlap),     30.7 ±   0.0 ev/s (⩾ 350 events, overlap-only)
+ --------------------
+    30.6 ±   0.1 ev/s,     30.8 ±   0.1 ev/s (⩾ 350 events, overlap-only)
+
