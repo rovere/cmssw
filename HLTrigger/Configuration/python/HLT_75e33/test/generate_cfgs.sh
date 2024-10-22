@@ -6,7 +6,7 @@ function die { echo $1: status $2; exit $2; }
 # Check if a configuration name is provided as a command-line argument
 if [ -z "$1" ]; then
     echo "Usage: $0 <config_name>"
-    echo "config_name: l1a140, l1a200, ttb200, ofp2l1a140, ofp2l1a200, or ofp2ttb200."
+    echo "config_name: l1a140, l1a200, ttb200, ofp2l1a140, ofp2l1a200, ofp2ttb200 or ofr3ephhlt."
     exit 1
 fi
 
@@ -59,6 +59,31 @@ generate_ofp2_cfg() {
     --dump_python || die 'failed to produce a valid configuration...' $?
 }
 
+
+generate_ofr3_cfg() {
+  local input_file=$1
+  local suffix=$2
+  echo "Generating ${suffix} configuration"
+
+  COMMON_CUSTOM='process.options.numberOfConcurrentLuminosityBlocks = cms.untracked.uint32(64); process.options.numberOfConcurrentRuns = cms.untracked.uint32(64); process.options.wantSummary=True;'
+
+  echo "Adding the following customisations: ${COMMON_CUSTOM}"
+
+  cmsDriver.py Run3 -s RAW2DIGI,RECO --processName=OFFR3 \
+    --conditions 141X_dataRun3_Prompt_v3 --geometry DB:Extended \
+    --era Run3_2024 \
+    --data \
+    --scenario pp \
+    --eventcontent RECO \
+    --filein=file:$input_file \
+    --nThreads 4 --inputCommands='keep *, drop *_hlt*_*_HLT, drop triggerTriggerFilterObjectWithRefs_l1t*_*_HLT' \
+    -n 1 --no_exec \
+    --python_filename Run3_RAW2DIGI_RECO_${suffix}.py \
+    --customise_commands="${COMMON_CUSTOM}" \
+    --customise HLTrigger/Configuration/HLT_75e33/test/customize_genericConsumerOffline.customize_genericConsumerRun3Offline \
+    --dump_python || die 'failed to produce a valid configuration...' $?
+}
+
 # Generate the specified configuration based on the command-line argument
 case $config_name in
     l1a140)
@@ -79,8 +104,11 @@ case $config_name in
     ofp2ttb200)
       generate_ofp2_cfg /data/user/rovere/store/mc/Phase2Spring24DIGIRECOMiniAOD/TT_TuneCP5_14TeV-powheg-pythia8/GEN-SIM-DIGI-RAW-MINIAOD/PU200_AllTP_140X_mcRun4_realistic_v4-v1/2560000/output_Phase2_L1T_Reduced.root $config_name
         ;;
+    ofr3ephhlt)
+      generate_ofr3_cfg /store/data/Run2024I/EphemeralHLTPhysics0/RAW/v1/000/386/811/00000/b9e46e49-f3e1-4e8b-b860-5a9a09c3035c.root $config_name
+        ;;
     *)
-        echo "Invalid configuration name. Please choose l1a140, l1a200, ttb200, ofp2l1a140, ofp2l1a200 or ofp2ttb200."
+        echo "Invalid configuration name. Please choose l1a140, l1a200, ttb200, ofp2l1a140, ofp2l1a200, ofp2ttb200 or ofr3ephhlt."
         ;;
 esac
 
