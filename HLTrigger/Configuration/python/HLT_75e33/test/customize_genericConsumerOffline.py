@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 import re
 
-def customize_genericConsumerOffline(process):
+def customize_genericConsumerOffline(process, isRun3=False):
   genericConsumerCfg = [k.replace('keep ', '') for k in process.RECOoutput.outputCommands if re.match('^keep.*', k)]
 
   process.genericConsumerRECOOutput = cms.EDAnalyzer("GenericConsumer",
@@ -10,6 +10,9 @@ def customize_genericConsumerOffline(process):
           )
 
   process.RECOoutput_step = cms.EndPath(process.genericConsumerRECOOutput)
+
+  # Select JSON file based on isRun3 flag
+  jsonFileName = 'Run3TimingOffline_resources.json' if isRun3 else 'Phase2TimingOffline_resources.json'
 
   # Add the FastTimerService
   process.FastTimerService = cms.Service("FastTimerService",
@@ -34,7 +37,7 @@ def customize_genericConsumerOffline(process):
     enableDQMbyPath = cms.untracked.bool(False),
     enableDQMbyProcesses = cms.untracked.bool(False),
     highlightModules = cms.untracked.VPSet(),
-    jsonFileName = cms.untracked.string('Phase2TimingOffline_resources.json'),
+    jsonFileName = cms.untracked.string(jsonFileName),  # Use the selected JSON filename
     printEventSummary = cms.untracked.bool(False),
     printJobSummary = cms.untracked.bool(True),
     printRunSummary = cms.untracked.bool(False),
@@ -47,3 +50,5 @@ def customize_genericConsumerOffline(process):
 
   return(process)
 
+def customize_genericConsumerRun3Offline(process):
+  return customize_genericConsumerOffline(process, isRun3=True)
