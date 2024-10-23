@@ -105,7 +105,7 @@ case $config_name in
       generate_ofp2_cfg /data/user/rovere/store/mc/Phase2Spring24DIGIRECOMiniAOD/TT_TuneCP5_14TeV-powheg-pythia8/GEN-SIM-DIGI-RAW-MINIAOD/PU200_AllTP_140X_mcRun4_realistic_v4-v1/2560000/output_Phase2_L1T_Reduced.root $config_name
         ;;
     ofr3ephhlt)
-      generate_ofr3_cfg /store/data/Run2024I/EphemeralHLTPhysics0/RAW/v1/000/386/811/00000/b9e46e49-f3e1-4e8b-b860-5a9a09c3035c.root $config_name
+      generate_ofr3_cfg /data/user/musich/store/data/b9e46e49-f3e1-4e8b-b860-5a9a09c3035c.root $config_name
         ;;
     *)
         echo "Invalid configuration name. Please choose l1a140, l1a200, ttb200, ofp2l1a140, ofp2l1a200, ofp2ttb200 or ofr3ephhlt."
