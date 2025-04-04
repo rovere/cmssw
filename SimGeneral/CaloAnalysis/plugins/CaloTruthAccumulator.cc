@@ -1,4 +1,4 @@
-#define DEBUG false
+#define DEBUG true
 
 #if DEBUG
 #pragma GCC diagnostic pop
@@ -142,6 +142,7 @@ private:
   // geometry type (0 pre-TDR; 1 TDR)
   int geometryType_;
   bool doHGCAL;
+  bool recoverBrokenHistory_;
 };
 
 /* Graph utility functions */
@@ -239,7 +240,8 @@ CaloTruthAccumulator::CaloTruthAccumulator(const edm::ParameterSet &config,
       maxPseudoRapidity_(config.getParameter<double>("MaxPseudoRapidity")),
       premixStage1_(config.getParameter<bool>("premixStage1")),
       geometryType_(-1),
-      doHGCAL(config.getParameter<bool>("doHGCAL")) {
+      doHGCAL(config.getParameter<bool>("doHGCAL")),
+      recoverBrokenHistory_(config.getParameter<bool>("recoverBrokenHistory")) {
   producesCollector.produces<SimClusterCollection>("MergedCaloTruth");
   producesCollector.produces<CaloParticleCollection>("MergedCaloTruth");
   if (premixStage1_) {
@@ -421,14 +423,23 @@ void CaloTruthAccumulator::accumulateEvent(const T &event,
   auto const &tracks = *hSimTracks;
   auto const &vertices = *hSimVertices;
   std::unordered_map<int, int> trackid_to_track_index;
+  std::vector<std::vector<int>> vertex_to_trackIds(vertices.size());
   DecayChain decay;
   int idx = 0;
 
+  if (recoverBrokenHistory_)
+    IfLogDebug(DEBUG, messageCategoryGraph_) << "RECOVER BROKEN HISTORY IS ACTIVE" << std::endl;
   IfLogDebug(DEBUG, messageCategory_) << " TRACKS" << std::endl;
   for (auto const &t : tracks) {
     IfLogDebug(DEBUG, messageCategory_) << " " << idx << "\t" << t.trackId() << "\t" << t << std::endl;
     trackid_to_track_index[t.trackId()] = idx;
     idx++;
+    if (recoverBrokenHistory_) {
+      // Check if this vertex is orphan and has to be recovered.
+      if (!t.isPrimary() && vertices[t.vertIndex()].parentIndex() == -1) {
+        vertex_to_trackIds[t.vertIndex()].push_back(t.trackId());
+      }
+    }
   }
 
   std::unordered_map<uint32_t, float> vertex_time_map;
@@ -462,33 +473,78 @@ void CaloTruthAccumulator::accumulateEvent(const T &event,
      number of simulated vertices. The vector's index is the vertexId
      itself, the associated value is the vertexId of the vertex on which
      this should collapse.
+
+  Adds a new option: `recoverBrokenHistory_`.
+
+  When enabled, this option attempts to recover the history of vertices that:
+  - Have no associated parent `SimTrack`.
+  - Do not originate from primary particles.
+
+  Without proper handling, these "orphan" vertices can lead to the creation of
+  separate `SimClusters` that are not associated with any `CaloParticles`.
+  This breaks the intended design and integrity of the `CaloParticles`–`SimClusters`
+  relationship.
+
+  The recovery mechanism works by assigning each orphan vertex to the primary
+  `SimTrack` associated with the `SimTracks` connected to that orphan vertex.
+  This recovered association is stored within each `SimTrack`, "preserving" the
+  consistency of the simulation history.
+
   */
   idx = 0;
   std::vector<int> used_sim_tracks(tracks.size(), 0);
   std::vector<int> collapsed_vertices(vertices.size(), 0);
   IfLogDebug(DEBUG, messageCategory_) << " VERTICES" << std::endl;
   for (auto const &v : vertices) {
-    IfLogDebug(DEBUG, messageCategory_) << " " << idx++ << "\t" << v << std::endl;
-    if (v.parentIndex() != -1) {
-      auto trk_idx = trackid_to_track_index[v.parentIndex()];
-      auto origin_vtx = tracks[trk_idx].vertIndex();
-      if (used_sim_tracks[trk_idx]) {
-        // collapse the vertex into the original first vertex we saw associated
+    IfLogDebug(DEBUG, messageCategoryGraph_) << " " << idx++ << "\t" << v << std::endl;
+
+    auto processAndAddEdge = [&](int track_idx, bool isRecovery = false) {
+      auto origin_vtx = tracks[track_idx].vertIndex();
+
+      if (used_sim_tracks[track_idx]) {
+        // Avoid double counting.
+        // Collapse the vertex into the original first vertex we saw associated
         // to this track. Omit adding the edge in order to avoid double
         // counting of the very same particles  and its associated hits.
-        collapsed_vertices[v.vertexId()] = used_sim_tracks[trk_idx];
-        continue;
+        collapsed_vertices[v.vertexId()] = used_sim_tracks[track_idx];
+        return;
       }
-      // Perform the actual vertex collapsing, if needed.
+
       if (collapsed_vertices[origin_vtx])
         origin_vtx = collapsed_vertices[origin_vtx];
-      add_edge(origin_vtx,
-               v.vertexId(),
-               EdgeProperty(&tracks[trk_idx], simTrackDetIdEnergyMap[v.parentIndex()].size(), 0),
-               decay);
-      used_sim_tracks[trk_idx] = v.vertexId();
+
+      const auto &track = tracks[track_idx];
+      const auto trackId = track.trackId();
+      const auto &energyMap = simTrackDetIdEnergyMap[trackId];
+
+      add_edge(origin_vtx, v.vertexId(), EdgeProperty(&track, energyMap.size(), 0), decay);
+
+      IfLogDebug(DEBUG, messageCategoryGraph_)
+          << (isRecovery ? "RECOVERY " : "") << "Adding edge between " << origin_vtx << " -> " << v.vertexId() << " ["
+          << trackId << "]" << std::endl;
+
+      used_sim_tracks[track_idx] = v.vertexId();
+    };
+
+    // Main parent track handling
+    if (v.parentIndex() != -1) {
+      auto trk_idx = trackid_to_track_index[v.parentIndex()];
+      processAndAddEdge(trk_idx);
+    }
+
+    // Optional recovery logic to reassign orphan vertices to the "proper" mother.
+    if (recoverBrokenHistory_ && !vertex_to_trackIds[v.vertexId()].empty()) {
+      // Any track would do the job, just pick the first one, that is always
+      // guaranteed to be present inside this branch.
+      auto t = vertex_to_trackIds[v.vertexId()][0];
+      int trk_idx = trackid_to_track_index[t];
+      const auto &this_track = tracks[trk_idx];
+
+      int mother_trk_idx = trackid_to_track_index[this_track.getPrimaryID()];
+      processAndAddEdge(mother_trk_idx, true);
     }
   }
+
   // Build the motherParticle property to each vertex
   auto const &vertexMothersProp = get(vertex_name, decay);
   // Now recover the particles that did not decay. Append them with an index
@@ -496,25 +552,48 @@ void CaloTruthAccumulator::accumulateEvent(const T &event,
   int offset = vertices.size();
   for (size_t i = 0; i < tracks.size(); ++i) {
     if (!used_sim_tracks[i]) {
+      IfLogDebug(DEBUG, messageCategoryGraph_)
+          << "Adding back primary particle " << tracks[i].trackId() << " " << tracks[i] << std::endl;
       auto origin_vtx = tracks[i].vertIndex();
       // Perform the actual vertex collapsing, if needed.
       if (collapsed_vertices[origin_vtx])
         origin_vtx = collapsed_vertices[origin_vtx];
       add_edge(
           origin_vtx, offset, EdgeProperty(&tracks[i], simTrackDetIdEnergyMap[tracks[i].trackId()].size(), 0), decay);
+      IfLogDebug(DEBUG, messageCategoryGraph_)
+          << "Adding edge between " << origin_vtx << " -> " << offset << "[" << tracks[i].trackId() << "]" << std::endl;
       // The properties for "fake" vertices associated to stable particles have
       // to be set inside this loop, since they do not belong to the vertices
       // collection and would be skipped by that loop (coming next)
       put(vertexMothersProp, offset, VertexProperty(&tracks[i], 0));
+      IfLogDebug(DEBUG, messageCategoryGraph_) << "STX Put vertex property "
+                                               << " " << offset << " " << tracks[i].trackId() << std::endl;
       offset++;
     }
   }
+
   for (auto const &v : vertices) {
     if (v.parentIndex() != -1) {
       // Skip collapsed_vertices
       if (collapsed_vertices[v.vertexId()])
         continue;
       put(vertexMothersProp, v.vertexId(), VertexProperty(&tracks[trackid_to_track_index[v.parentIndex()]], 0));
+      IfLogDebug(DEBUG, messageCategoryGraph_)
+          << "VTX Put vertex property "
+          << " " << v.vertexId() << " " << tracks[trackid_to_track_index[v.parentIndex()]] << std::endl;
+    }
+    // Add properties to the orphan vertices
+    if (recoverBrokenHistory_ and vertex_to_trackIds[v.vertexId()].size() > 0) {
+      // Skip collapsed_vertices
+      if (collapsed_vertices[v.vertexId()])
+        continue;
+      auto const &t = vertex_to_trackIds[v.vertexId()][0];
+      auto const &this_track = tracks[trackid_to_track_index[t]];
+      auto const mother_primary_trackid = trackid_to_track_index[this_track.getPrimaryID()];
+      auto const &mother_primary_track = tracks[mother_primary_trackid];
+      put(vertexMothersProp, v.vertexId(), VertexProperty(&mother_primary_track, 0));
+      IfLogDebug(DEBUG, messageCategoryGraph_) << "VTX Put vertex property "
+                                               << " " << v.vertexId() << " " << mother_primary_track << std::endl;
     }
   }
   SimHitsAccumulator_dfs_visitor vis;
