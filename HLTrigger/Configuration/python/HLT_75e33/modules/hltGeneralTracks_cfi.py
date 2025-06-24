@@ -85,3 +85,7 @@ _hltGeneralTracksLSTSeeding = hltGeneralTracks.clone(
                                                           TrackProducers = ["hltInitialStepTracks"],
                                                           selectedTrackQuals = ["hltInitialStepTracks"])
 (singleIterPatatrack & trackingLST & seedingLST).toReplaceWith(hltGeneralTracks, _hltGeneralTracksSingleIterPatatrack)
+
+from Configuration.ProcessModifiers.ngtScouting_cff import ngtScouting
+from ..modules.hltPhase2PixelTracks_cfi import *
+ngtScouting.toReplaceWith(hltGeneralTracks, hltPhase2PixelTracks)

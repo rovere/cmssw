@@ -22,6 +22,9 @@ HLTTrackingSequence = cms.Sequence(HLTItLocalRecoSequence+
 from Configuration.ProcessModifiers.singleIterPatatrack_cff import singleIterPatatrack
 singleIterPatatrack.toReplaceWith(HLTTrackingSequence, HLTTrackingSequence.copyAndExclude([HLTHighPtTripletStepSequence]))
 
+from Configuration.ProcessModifiers.ngtScouting_cff import ngtScouting
+ngtScouting.toReplaceWith(HLTTrackingSequence, HLTTrackingSequence.copyAndExclude([HLTInitialStepSequence,HLTHighPtTripletStepSequence]))
+
 from Configuration.ProcessModifiers.phase2_hlt_vertexTrimming_cff import phase2_hlt_vertexTrimming
 _HLTTrackingSequenceTrimming = HLTTrackingSequence.copy()
 _HLTTrackingSequenceTrimming.insert(_HLTTrackingSequenceTrimming.index(hltPhase2PixelVertices)+1, hltPhase2TrimmedPixelVertices)
