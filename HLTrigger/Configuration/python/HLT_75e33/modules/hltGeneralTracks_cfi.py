@@ -88,4 +88,15 @@ _hltGeneralTracksLSTSeeding = hltGeneralTracks.clone(
 
 from Configuration.ProcessModifiers.ngtScouting_cff import ngtScouting
 from ..modules.hltPhase2PixelTracks_cfi import *
-ngtScouting.toReplaceWith(hltGeneralTracks, hltPhase2PixelTracks)
+_hltGeneralTracksNGTScouting = hltGeneralTracks.clone(
+            TrackProducers = ["hltPhase2PixelTracks", "hltInitialStepTracksT5TCLST"],
+            hasSelector = [0,0],
+            indivShareFrac = [0.1,0.1],
+            selectedTrackQuals = ["hltPhase2PixelTracks", "hltInitialStepTracksT5TCLST"],
+            setsToMerge = [cms.PSet(
+               pQual = cms.bool(True),
+               tLists = cms.vint32(0,1,)
+            )]
+    )
+
+ngtScouting.toReplaceWith(hltGeneralTracks, _hltGeneralTracksNGTScouting)

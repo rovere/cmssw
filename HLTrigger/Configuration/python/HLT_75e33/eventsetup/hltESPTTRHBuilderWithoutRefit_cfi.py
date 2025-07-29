@@ -11,4 +11,5 @@ def _addProcessTTRHBuilderWithoutRefit(process):
     )
 
 from Configuration.ProcessModifiers.trackingLST_cff import trackingLST
-modifyConfigurationForTrackingLSTTTRHBuilderWithoutRefit_ = trackingLST.makeProcessModifier(_addProcessTTRHBuilderWithoutRefit)
+from Configuration.ProcessModifiers.ngtScouting_cff import ngtScouting
+modifyConfigurationForTrackingLSTTTRHBuilderWithoutRefit_ = (trackingLST | ngtScouting).makeProcessModifier(_addProcessTTRHBuilderWithoutRefit)

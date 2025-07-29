@@ -9,4 +9,5 @@ def _addProcessModulesDevLST(process):
     )
 
 from Configuration.ProcessModifiers.trackingLST_cff import trackingLST
-modifyConfigurationForTrackingLSTModulesDevLST_ = trackingLST.makeProcessModifier(_addProcessModulesDevLST)
+from Configuration.ProcessModifiers.ngtScouting_cff import ngtScouting
+modifyConfigurationForTrackingLSTModulesDevLST_ = (trackingLST | ngtScouting).makeProcessModifier(_addProcessModulesDevLST)
