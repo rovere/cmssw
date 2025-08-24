@@ -236,18 +236,21 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // applying combinatoric cleaning such as fishbone at this stage is too expensive
     //
 
-    const auto nthTot = 64;
-    const auto stride = 4;
+    const auto nthTot = 256;
+    const auto stride =   8;
     auto blockSize = nthTot / stride;
     auto numberOfBlocks = cms::alpakatools::divide_up_by(3 * maxDoublets / 4, blockSize);
     const auto rescale = numberOfBlocks / 65536;
     blockSize *= (rescale + 1);
     numberOfBlocks = cms::alpakatools::divide_up_by(3 * maxDoublets / 4, blockSize);
     assert(numberOfBlocks < 65536);
-    assert(blockSize > 0 && 0 == blockSize % 16);
+    assert(blockSize > 0 && 0 == blockSize % 32);
     const Vec2D blks{numberOfBlocks, 1u};
     const Vec2D thrs{blockSize, stride};
     const auto kernelConnectWorkDiv = cms::alpakatools::make_workdiv<Acc2D>(blks, thrs);
+    
+    std::cout << "Tot Threads:      " << numberOfBlocks*blockSize*stride << std::endl;
+    std::cout << "Tot Threads on Y: " << numberOfBlocks*blockSize << std::endl;
 
     alpaka::exec<Acc2D>(queue,
                         kernelConnectWorkDiv,

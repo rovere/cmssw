@@ -370,20 +370,25 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caHitNtupletGeneratorKernels {
         auto &thisCell = cells[cellIndex];
         auto innerHitId = thisCell.inner_hit_id() - hh.offsetBPIX2();
 
-        if (int(innerHitId) < 0)
+        if (int(innerHitId) < 0) {
+          printf("Skipping inner cell:%d\n", cellIndex);
           continue;
+        }
 
         auto const *__restrict__ outerHitCells = outerHitHisto->begin(innerHitId);
         auto const numberOfPossibleNeighbors = outerHitHisto->size(innerHitId);
 
-#ifdef CA_DEBUG
-        printf("numberOfPossibleFromHisto;%d;%d;%d;%d;%d\n",
-               *nCells,
-               innerHitId,
-               cellIndex,
-               thisCell.innerLayer(),
-               numberOfPossibleNeighbors);
-#endif
+//#ifdef CA_DEBUG
+//        if ( cellIndex%10 == 0 ) {
+//          printf("numberOfPossibleFromHisto;%d;%d;%d;%d;%d;%d\n",
+//                 *nCells,
+//                 innerHitId,
+//                 cellIndex,
+//                 thisCell.innerLayer(),
+//                 thisCell.outerLayer(),
+//                 numberOfPossibleNeighbors);
+//        }
+//#endif
         auto ri = thisCell.inner_r(hh);
         auto zi = thisCell.inner_z(hh);
         auto ro = thisCell.outer_r(hh);
@@ -398,6 +403,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caHitNtupletGeneratorKernels {
           auto z1 = oc.inner_z(hh);
           auto dcaCut = ll[oc.innerLayer()].caDCACut();
           bool aligned = Cell::areAlignedRZ(r1, z1, ri, zi, ro, zo, params.ptmin_, thetaCut);
+          printf("numberOfPossibleFromHisto;%d;%d;%d;%d;%d;%d;%d;%d\n",
+                 *nCells,
+                 innerHitId,
+                 cellIndex,
+                 otherCell,
+                 j,
+                 thisCell.innerLayer(),
+                 thisCell.outerLayer(),
+                 numberOfPossibleNeighbors);
           if (aligned && thisCell.dcaCut(hh, oc, dcaCut, params.hardCurvCut_)) {
             auto t_ind = alpaka::atomicAdd(acc, nTrips, 1u, alpaka::hierarchy::Blocks{});
 #ifdef CA_DEBUG
@@ -420,9 +434,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caHitNtupletGeneratorKernels {
 #endif
 
             if (t_ind >= maxTriplets) {
-#ifdef CA_WARNINGS
+//#ifdef CA_WARNINGS
               printf("Warning!!!! Too many cell->cell (triplets) associations (limit = %d)!\n", cn.metadata().size());
-#endif
+//#endif
               alpaka::atomicSub(acc, nTrips, 1u, alpaka::hierarchy::Blocks{});
               break;
             }
