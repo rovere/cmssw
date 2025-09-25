@@ -106,129 +106,82 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder {
     alpaka::syncBlockThreads(acc);
 
     // count neighbours
-    if (0) {
-      const auto errmax2 = errmax * errmax;
-      for (auto i : cms::alpakatools::uniform_elements(acc, nt)) {
-        if (ezt2[i] > errmax2) {
-          printf("Rejected Track %d at z %f has zError %f vs errmax %f and %d nn\n", i, zt[i], sqrt(ezt2[i])*10000., errmax*10000., nn[i]);
-          continue;
-        }
-        cms::alpakatools::forEachInBins(acc, hist, izt[i], 1, [&](uint32_t j) {
-          if (i == j)
-            return;
-          if (ezt2[j] > errmax2)
-            return;
-          auto dist = alpaka::math::abs(acc, zt[i] - zt[j]);
-          if (dist > eps)
-            return;
-          if (dist * dist > chi2max * (ezt2[i] + ezt2[j]))
-            return;
-          nn[i]++;
-          printf("Track %d at z %f has zError %f with other at z %f zError %f(%d) and %d nn\n", i, zt[i], ezt2[i], zt[j], ezt2[j], (ezt2[j]>errmax2), nn[i]);
-        });
-        printf("Final Track %d at z %f has zError %f and %d nn\n", i, zt[i], ezt2[i], nn[i]);
+    const float s = 5.;
+    const float vmin = 0.035/2.;  // in cm, smallest compatibility region in Z
+    const float vmax = 0.055/2.;  // in cm, largest compatibility region in Z
+    const float R = 12.;          // in cm, outside use largest
+    const auto errmax2 = errmax * errmax;
+
+    for (auto i : cms::alpakatools::uniform_elements(acc, nt)) {
+      float epsz = 0.;        
+      // Outside the domain, clamp to vmax
+      if (zt[i] > R || zt[i] < -R) {
+        epsz = vmax;
+      } else {
+        float inv2s2 = 0.5 / (s * s);
+        float denom  = 1. - std::exp(-(R * R) * inv2s2);
+        float num = 1. - std::exp(-(zt[i] * zt[i]) * inv2s2);
+        epsz =  vmin + (vmax - vmin) * (num / denom);
       }
-    }
-
-    if (1) {
-      const float s = 5.;
-      const float vmin = 0.040/2.;  // in cm, smallest compatibility region in Z
-      const float vmax = 0.045/2.;  // in cm, largest compatibility region in Z
-      const float R = 12.;          // in cm, outside use largest
-      const auto errmax2 = errmax * errmax;
-
-      for (auto i : cms::alpakatools::uniform_elements(acc, nt)) {
-        float epsz = 0.;        
-        // Outside the domain, clamp to vmax
-        if (zt[i] > R || zt[i] < -R) {
-          epsz = vmax;
-        } else {
-          float inv2s2 = 0.5 / (s * s);
-          float denom  = 1. - std::exp(-(R * R) * inv2s2);
-          float num = 1. - std::exp(-(zt[i] * zt[i]) * inv2s2);
-          epsz =  vmin + (vmax - vmin) * (num / denom);
-        }
+      if constexpr(verbose)
         printf("At z %f using epsz %f\n", zt[i], epsz*10000);
 
-        if (ezt2[i] > errmax2) {
+      if (ezt2[i] > errmax2) {
+        if constexpr (verbose)
           printf("Rejected Track %d at z %f has zError %f vs errmax %f and %d nn\n", i, zt[i], sqrt(ezt2[i])*10000., errmax*10000., nn[i]);
-          continue;
-        }
-        cms::alpakatools::forEachInBins(acc, hist, izt[i], 1, [&](uint32_t j) {
-          if (i == j)
-            return;
-          auto dist = alpaka::math::abs(acc, zt[i] - zt[j]);
-          if (dist > epsz)
-            return;
-          nn[i]++;
-          printf("Track %d at z %f has zError %f with other at z %f zError %f(%d) and %d nn\n", i, zt[i], ezt2[i], zt[j], ezt2[j], (ezt2[j]>errmax2), nn[i]);
-        });
-        printf("Final Track %d at z %f has zError %f and %d nn\n", i, zt[i], ezt2[i], nn[i]);
+        continue;
       }
+      cms::alpakatools::forEachInBins(acc, hist, izt[i], 1, [&](uint32_t j) {
+        if (i == j)
+          return;
+        auto dist = alpaka::math::abs(acc, zt[i] - zt[j]);
+        if (dist > epsz)
+          return;
+        nn[i]++;
+        if constexpr (verbose)
+          printf("Track %d at z %f has zError %f with other at z %f zError %f(%d) and %d nn\n", i, zt[i], ezt2[i], zt[j], ezt2[j], (ezt2[j]>errmax2), nn[i]);
+      });
+      if constexpr (verbose)
+        printf("Final Track %d at z %f has zError %f and %d nn\n", i, zt[i], ezt2[i], nn[i]);
     }
     alpaka::syncBlockThreads(acc);
 
     // find closest above me .... (we ignore the possibility of two j at same distance from i)
-    if (0) {
-      for (auto i : cms::alpakatools::uniform_elements(acc, nt)) {
-        float mdist = eps;
-        cms::alpakatools::forEachInBins(acc, hist, izt[i], 1, [&](uint32_t j) {
-          if (i == j)
-            return;
-          if (nn[j] < nn[i])
-            return;
-          if (nn[j] == nn[i] && zt[j] >= zt[i])
-            return;  // if equal use natural order...
-          auto dist = alpaka::math::abs(acc, zt[i] - zt[j]);
-          if (dist > mdist)
-            return;
-          if (dist * dist > chi2max * (ezt2[i] + ezt2[j]))
-            return;  // (break natural order???)
-          mdist = dist;
-          iv[i] = j;  // assign to cluster (better be unique??)
-          printf("Track %d at z %f with density %d is linked to track %d at z %f with density %d\n", i, zt[i], nn[i], j, zt[j], nn[j]);
-        });
+    for (auto i : cms::alpakatools::uniform_elements(acc, nt)) {
+      float epsz = 0.;        
+      // Outside the domain, clamp to vmax
+      if (zt[i] > R || zt[i] < -R) {
+        epsz = vmax;
+      } else {
+        float inv2s2 = 0.5 / (s * s);
+        float denom  = 1. - std::exp(-(R * R) * inv2s2);
+        float num = 1. - std::exp(-(zt[i] * zt[i]) * inv2s2);
+        epsz =  vmin + (vmax - vmin) * (num / denom);
       }
-    }
-    if (1) {
-      const float s = 5.;
-      const float vmin = 0.040/2.;  // in cm, smallest compatibility region in Z
-      const float vmax = 0.045/2.;  // in cm, largest compatibility region in Z
-      const float R = 12.;          // in cm, outside use largest
-      for (auto i : cms::alpakatools::uniform_elements(acc, nt)) {
-        float epsz = 0.;        
-        // Outside the domain, clamp to vmax
-        if (zt[i] > R || zt[i] < -R) {
-          epsz = vmax;
-        } else {
-          float inv2s2 = 0.5 / (s * s);
-          float denom  = 1. - std::exp(-(R * R) * inv2s2);
-          float num = 1. - std::exp(-(zt[i] * zt[i]) * inv2s2);
-          epsz =  vmin + (vmax - vmin) * (num / denom);
-        }
+      if constexpr(verbose)
         printf("At z %f using epsz %f\n", zt[i], epsz*10000);
-        float mdist = epsz;
-        cms::alpakatools::forEachInBins(acc, hist, izt[i], 1, [&](uint32_t j) {
-          if (i == j)
-            return;
-          if (nn[i] == 0)
-            return;  // If I'm alone, leave me alone
-          if (nn[j] < nn[i])
-            return;
-          if (nn[j] == nn[i] && zt[j] >= zt[i])
-            return;  // if equal use natural order...
-          auto dist = alpaka::math::abs(acc, zt[i] - zt[j]);
-          if (dist > mdist)
-            return;
-//          if (dist * dist > chi2max * (ezt2[i] + ezt2[j]))
-//            return;  // (break natural order???)
-          mdist = dist;
-          iv[i] = j;  // assign to cluster (better be unique??)
+      float mdist = epsz;
+      cms::alpakatools::forEachInBins(acc, hist, izt[i], 1, [&](uint32_t j) {
+        if (i == j)
+          return;
+        if (nn[i] == 0 && ezt2[i] > 0.025*0.025)
+          return;  // If I'm alone and not sure where to belong, leave me alone
+        if (nn[j] < nn[i])
+          return;
+        if (nn[j] == nn[i] && zt[j] >= zt[i])
+          return;  // if equal use natural order...
+        auto dist = alpaka::math::abs(acc, zt[i] - zt[j]);
+        if (dist > mdist)
+          return;
+        if (dist * dist > chi2max * (ezt2[i] + ezt2[j]))
+          return;  // (break natural order???)
+        mdist = dist;
+        iv[i] = j;  // assign to cluster (better be unique??)
+        if constexpr(verbose)
           printf("Track %d at z %f with density %d is linked to track %d at z %f with density %d\n", i, zt[i], nn[i], j, zt[j], nn[j]);
-        });
-      }
+      });
     }
-    alpaka::syncBlockThreads(acc);
+  alpaka::syncBlockThreads(acc);
 
 #ifdef GPU_DEBUG
     //  mini verification
@@ -293,7 +246,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder {
         if (nn[i] >= minT) {
           auto old = alpaka::atomicInc(acc, &foundClusters, 0xffffffff, alpaka::hierarchy::Threads{});
           iv[i] = -(old + 1);
-          printf("Track %d with density %d promoted to seed %d\n", i, nn[i], iv[i]);
+          if constexpr(verbose)
+            printf("Track %d with density %d promoted to seed %d\n", i, nn[i], iv[i]);
         } else {  // noise
           iv[i] = -9998;
         }
