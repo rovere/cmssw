@@ -24,7 +24,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     constexpr float maxChi2ForFinalFit = 5000.f;
 
     // split vertices with a chi2/NDoF greater than this
-    constexpr float maxChi2ForSplit = 9.f;
+    constexpr float maxChi2ForSplit = 4.f;
 
     template <typename TrackerTraits>
     class LoadTracks {
@@ -186,17 +186,17 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         if (useDensity_) {
         alpaka::exec<Acc1D>(
           queue, finderSorterWorkDiv, ClusterTracksByDensityKernel{}, data, trkdata, ws, minT, eps, errmax, chi2max);
-      } else if (useDensityClue_) {
-        alpaka::exec<Acc1D>(
-          queue, finderSorterWorkDiv, ClusterTracksByDensityClueKernel{}, data, trkdata, ws, minT, eps, errmax, chi2max);
-      } else if (useDBSCAN_) {
-        alpaka::exec<Acc1D>(
-          queue, finderSorterWorkDiv, ClusterTracksDBSCAN{}, data, trkdata, ws, minT, eps, errmax, chi2max);
-      } else if (useIterative_) {
-        alpaka::exec<Acc1D>(
-          queue, finderSorterWorkDiv, ClusterTracksIterative{}, data, trkdata, ws, minT, eps, errmax, chi2max);
-      }
-      alpaka::exec<Acc1D>(queue, finderSorterWorkDiv, FitVerticesKernel{}, data, trkdata, ws, maxChi2ForFirstFit);
+        } else if (useDensityClue_) {
+          alpaka::exec<Acc1D>(
+            queue, finderSorterWorkDiv, ClusterTracksByDensityClueKernel{}, data, trkdata, ws, minT, eps, errmax, chi2max);
+        } else if (useDBSCAN_) {
+          alpaka::exec<Acc1D>(
+            queue, finderSorterWorkDiv, ClusterTracksDBSCAN{}, data, trkdata, ws, minT, eps, errmax, chi2max);
+        } else if (useIterative_) {
+          alpaka::exec<Acc1D>(
+            queue, finderSorterWorkDiv, ClusterTracksIterative{}, data, trkdata, ws, minT, eps, errmax, chi2max);
+        }
+        alpaka::exec<Acc1D>(queue, finderSorterWorkDiv, FitVerticesKernel{}, data, trkdata, ws, maxChi2ForFirstFit);
 
         // one block per vertex...
         if (doSplitting_) {
