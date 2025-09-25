@@ -80,7 +80,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // Maybe this should become a Plugin Factory
     desc.add<bool>("oneKernel", true);
     desc.add<bool>("useDensity", true);
-    desc.add<bool>("useDensityClue", true);
+    desc.add<bool>("useDensityClue", false);
     desc.add<bool>("useDBSCAN", false);
     desc.add<bool>("useIterative", false);
     desc.add<bool>("doSplitting", true);
