@@ -19,12 +19,6 @@
 namespace ALPAKA_ACCELERATOR_NAMESPACE {
   namespace vertexFinder {
     using namespace cms::alpakatools;
-    // reject outlier tracks that contribute more than this to the chi2 of the vertex fit
-    constexpr float maxChi2ForFirstFit = 50.f;
-    constexpr float maxChi2ForFinalFit = 5000.f;
-
-    // split vertices with a chi2/NDoF greater than this
-    constexpr float maxChi2ForSplit = 4.f;
 
     template <typename TrackerTraits>
     class LoadTracks {
@@ -87,7 +81,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                     int minT,      // min number of neighbours to be "seed"
                                     float eps,     // max absolute distance to cluster
                                     float errmax,  // max error to be "seed"
-                                    float chi2max  // max normalized distance to cluster,
+                                    float chi2max,  // max normalized distance to cluster,
+                                    float maxChi2ForFirstFit,
+                                    float maxChi2ForFinalFit,
+                                    float maxChi2ForSplit
       ) const {
         clusterTracksByDensity(acc, data, trkdata, ws, minT, eps, errmax, chi2max);
         alpaka::syncBlockThreads(acc);
@@ -169,40 +166,43 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                               trkdata,
                               ws,
                               doSplitting_,
-                              minT,
-                              eps,
-                              errmax,
-                              chi2max);
+                              minT_,
+                              eps_,
+                              errmax_,
+                              chi2max_,
+                              maxChi2ForFirstFit_,
+                              maxChi2ForFinalFit_,
+                              maxChi2ForSplit_);
 #else
         alpaka::exec<Acc1D>(
-            queue, finderSorterWorkDiv, VertexFinderOneKernel{}, data, trkdata, ws, minT, eps, errmax, chi2max);
+            queue, finderSorterWorkDiv, VertexFinderOneKernel{}, data, trkdata, ws, minT_, eps_, errmax_, chi2max_);
 
         // one block per vertex...
         if (doSplitting_)
-          alpaka::exec<Acc1D>(queue, splitterFitterWorkDiv, SplitVerticesKernel{}, data, trkdata, ws, maxChi2ForSplit);
+          alpaka::exec<Acc1D>(queue, splitterFitterWorkDiv, SplitVerticesKernel{}, data, trkdata, ws, maxChi2ForSplit_);
         alpaka::exec<Acc1D>(queue, finderSorterWorkDiv{}, data, ws);
 #endif
       } else {  // five kernels
         if (useDensity_) {
         alpaka::exec<Acc1D>(
-          queue, finderSorterWorkDiv, ClusterTracksByDensityKernel{}, data, trkdata, ws, minT, eps, errmax, chi2max);
+          queue, finderSorterWorkDiv, ClusterTracksByDensityKernel{}, data, trkdata, ws, minT_, eps_, errmax_, chi2max_);
         } else if (useDensityClue_) {
           alpaka::exec<Acc1D>(
-            queue, finderSorterWorkDiv, ClusterTracksByDensityClueKernel{}, data, trkdata, ws, minT, eps, errmax, chi2max);
+            queue, finderSorterWorkDiv, ClusterTracksByDensityClueKernel{}, data, trkdata, ws, minT_, eps_, errmax_, chi2max_);
         } else if (useDBSCAN_) {
           alpaka::exec<Acc1D>(
-            queue, finderSorterWorkDiv, ClusterTracksDBSCAN{}, data, trkdata, ws, minT, eps, errmax, chi2max);
+            queue, finderSorterWorkDiv, ClusterTracksDBSCAN{}, data, trkdata, ws, minT_, eps_, errmax_, chi2max_);
         } else if (useIterative_) {
           alpaka::exec<Acc1D>(
-            queue, finderSorterWorkDiv, ClusterTracksIterative{}, data, trkdata, ws, minT, eps, errmax, chi2max);
+            queue, finderSorterWorkDiv, ClusterTracksIterative{}, data, trkdata, ws, minT_, eps_, errmax_, chi2max_);
         }
-        alpaka::exec<Acc1D>(queue, finderSorterWorkDiv, FitVerticesKernel{}, data, trkdata, ws, maxChi2ForFirstFit);
+        alpaka::exec<Acc1D>(queue, finderSorterWorkDiv, FitVerticesKernel{}, data, trkdata, ws, maxChi2ForFirstFit_);
 
         // one block per vertex...
         if (doSplitting_) {
-          alpaka::exec<Acc1D>(queue, splitterFitterWorkDiv, SplitVerticesKernel{}, data, trkdata, ws, maxChi2ForSplit);
+          alpaka::exec<Acc1D>(queue, splitterFitterWorkDiv, SplitVerticesKernel{}, data, trkdata, ws, maxChi2ForSplit_);
 
-          alpaka::exec<Acc1D>(queue, finderSorterWorkDiv, FitVerticesKernel{}, data, trkdata, ws, maxChi2ForFinalFit);
+          alpaka::exec<Acc1D>(queue, finderSorterWorkDiv, FitVerticesKernel{}, data, trkdata, ws, maxChi2ForFinalFit_);
         }
         alpaka::exec<Acc1D>(queue, finderSorterWorkDiv, SortByPt2Kernel{}, data, trkdata, ws);
       }

@@ -44,18 +44,24 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder {
              int iminT,      // min number of neighbours to be "core"
              float ieps,     // max absolute distance to cluster
              float ierrmax,  // max error to be "seed"
-             float ichi2max  // max normalized distance to cluster
+             float ichi2max,  // max normalized distance to cluster
+             float maxChi2ForFirstFit, // Reject outlier tracks that contribute more than this to the chi2 of the initial vertex fit
+             float maxChi2ForFinalFit, // Reject outlier tracks that contribute more than this to the chi2 of the final vertex fit
+             float maxChi2ForSplit     // Split vertices with a chi2/NDoF greater than this threshold
              )
-        : oneKernel_(oneKernel && !(useDBSCAN || useIterative)),
+        : oneKernel_(oneKernel && !(useDBSCAN || useIterative || useDensityClue)),
           useDensity_(useDensity),
           useDensityClue_(useDensityClue),
           useDBSCAN_(useDBSCAN),
           useIterative_(useIterative),
           doSplitting_(doSplitting),
-          minT(iminT),
-          eps(ieps),
-          errmax(ierrmax),
-          chi2max(ichi2max) {}
+          minT_(iminT),
+          eps_(ieps),
+          errmax_(ierrmax),
+          chi2max_(ichi2max),
+          maxChi2ForFirstFit_(maxChi2ForFirstFit),
+          maxChi2ForFinalFit_(maxChi2ForFinalFit),
+          maxChi2ForSplit_(maxChi2ForSplit) {}
 
     ~Producer() = default;
 
@@ -70,10 +76,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder {
     const bool useIterative_;   // use iterative clusterizer
     const bool doSplitting_;    //run vertex splitting
 
-    int minT;       // min number of neighbours to be "core"
-    float eps;      // max absolute distance to cluster
-    float errmax;   // max error to be "seed"
-    float chi2max;  // max normalized distance to cluster
+    const int minT_;       // min number of neighbours to be "core"
+    const float eps_;      // max absolute distance to cluster
+    const float errmax_;   // max error to be "seed"
+    const float chi2max_;  // max normalized distance to cluster
+
+    // Vertex splitting and fitting parameters
+    const float maxChi2ForFirstFit_;
+    const float maxChi2ForFinalFit_;
+    const float maxChi2ForSplit_;
+
   };
 
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder

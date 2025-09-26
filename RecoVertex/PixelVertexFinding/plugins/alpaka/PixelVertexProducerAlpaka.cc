@@ -65,7 +65,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
               conf.getParameter<int>("minT"),
               conf.getParameter<double>("eps"),
               conf.getParameter<double>("errmax"),
-              conf.getParameter<double>("chi2max")),
+              conf.getParameter<double>("chi2max"),
+              conf.getParameter<double>("maxChi2ForFirstFit"),
+              conf.getParameter<double>("maxChi2ForFinalFit"),
+              conf.getParameter<double>("maxChi2ForSplit")),
         maxVertices_(conf.getParameter<int>("maxVertices")),
         ptMin_(conf.getParameter<double>("PtMin")),  // 0.5 GeV
         ptMax_(conf.getParameter<double>("PtMax")),  // 75. Onsumes
@@ -89,6 +92,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     desc.add<double>("eps", 0.07);     // max absolute distance to cluster
     desc.add<double>("errmax", 0.01);  // max error to be "seed"
     desc.add<double>("chi2max", 9.);   // max normalized distance to cluster
+    
+    // Configuration parameters related to vertex clustering and splitting
+
+    desc.add<double>("maxChi2ForFirstFit", 50)->setComment("Reject outlier tracks that contribute more than this to the chi2 of the initial vertex fit");
+    desc.add<double>("maxChi2ForFinalFit", 5000)->setComment("Reject outlier tracks that contribute more than this to the chi2 of the final vertex fit");
+    desc.add<double>("maxChi2ForSplit", 9.)->setComment("Split vertices with a chi2/NDoF greater than this threshold");
 
     desc.add<int>("maxVertices", 256);
     desc.add<double>("PtMin", 0.5);
