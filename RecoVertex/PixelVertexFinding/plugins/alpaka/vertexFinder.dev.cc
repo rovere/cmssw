@@ -188,7 +188,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           queue, finderSorterWorkDiv, ClusterTracksByDensityKernel{}, data, trkdata, ws, minT_, eps_, errmax_, chi2max_);
         } else if (useDensityClue_) {
           alpaka::exec<Acc1D>(
-            queue, finderSorterWorkDiv, ClusterTracksByDensityClueKernel{}, data, trkdata, ws, minT_, eps_, errmax_, chi2max_);
+            queue, finderSorterWorkDiv, ClusterTracksByDensityClueKernel{}, data, trkdata, ws, 
+                        minT_, eps_, errmax_, chi2max_, errmaxFollower_, vmin_, vmax_, localDensityR_, sigmaV_);
         } else if (useDBSCAN_) {
           alpaka::exec<Acc1D>(
             queue, finderSorterWorkDiv, ClusterTracksDBSCAN{}, data, trkdata, ws, minT_, eps_, errmax_, chi2max_);

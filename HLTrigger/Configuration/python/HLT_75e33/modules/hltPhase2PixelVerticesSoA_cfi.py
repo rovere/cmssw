@@ -13,4 +13,7 @@ hltPhase2PixelVerticesSoA = _PixelVertexProducerAlpakaPhase2_alpaka(
     useDensity = cms.bool(False),
     useDensityClue = cms.bool(True),
     useIterative = cms.bool(False),
+    maxChi2ForFirstFit = cms.double(50.),
+    maxChi2ForFinalFit = cms.double(5000.),
+    maxChi2ForSplit = cms.double(4.)
 )

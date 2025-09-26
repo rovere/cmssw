@@ -66,6 +66,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
               conf.getParameter<double>("eps"),
               conf.getParameter<double>("errmax"),
               conf.getParameter<double>("chi2max"),
+              conf.getParameter<double>("errmaxFollower"),
+              conf.getParameter<double>("vmin"),
+              conf.getParameter<double>("vmax"),
+              conf.getParameter<double>("localDensityR"),
+              conf.getParameter<double>("sigmaV"),
               conf.getParameter<double>("maxChi2ForFirstFit"),
               conf.getParameter<double>("maxChi2ForFinalFit"),
               conf.getParameter<double>("maxChi2ForSplit")),
@@ -92,6 +97,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     desc.add<double>("eps", 0.07);     // max absolute distance to cluster
     desc.add<double>("errmax", 0.01);  // max error to be "seed"
     desc.add<double>("chi2max", 9.);   // max normalized distance to cluster
+    desc.add<double>("errmaxFollower", 0.025)->setComment("Max error to be considered as a follower of a vertex seed");
+    desc.add<double>("vmin", 0.0175)->setComment("Smallest compatibility region in Z for local density calculations");
+    desc.add<double>("vmax", 0.0275)->setComment("Largest compatibility region in Z for local density calculations");
+    desc.add<double>("localDensityR", 12.)->setComment("Outside these region, absolute in Z, use vmax");
+    desc.add<double>("sigmaV", 5.)->setComment("Sigma of the guassian kernel from vmin to vmax");
     
     // Configuration parameters related to vertex clustering and splitting
 

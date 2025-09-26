@@ -30,7 +30,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder {
                                                              int minT,      // min number of neighbours to be "seed"
                                                              float eps,     // max absolute distance to cluster
                                                              float errmax,  // max error to be "seed"
-                                                             float chi2max  // max normalized distance to cluster
+                                                             float chi2max, // max normalized distance to cluster
+                                                             float errmaxFollower, // max error to be a follower of a vertex seed
+                                                             float vmin,    // Smallest compatibility region in Z for local density calculations
+                                                             float vmax,    // Largest compatibility region in Z for local density calculations
+                                                             float localDensityR, // Limit outside of which use vmax
+                                                             float sigmaV   // Sigma of the gaussian kernel from vmin to vmax
   ) {
     // workaround for #47808
     debug::do_not_optimise(ws);
@@ -106,20 +111,17 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder {
     alpaka::syncBlockThreads(acc);
 
     // count neighbours
-    const float s = 5.;
-    const float vmin = 0.035/2.;  // in cm, smallest compatibility region in Z
-    const float vmax = 0.055/2.;  // in cm, largest compatibility region in Z
-    const float R = 12.;          // in cm, outside use largest
     const auto errmax2 = errmax * errmax;
+    const auto errmaxFollower2 = errmaxFollower * errmaxFollower;
 
     for (auto i : cms::alpakatools::uniform_elements(acc, nt)) {
       float epsz = 0.;        
       // Outside the domain, clamp to vmax
-      if (zt[i] > R || zt[i] < -R) {
+      if (zt[i] > localDensityR || zt[i] < -localDensityR) {
         epsz = vmax;
       } else {
-        float inv2s2 = 0.5 / (s * s);
-        float denom  = 1. - std::exp(-(R * R) * inv2s2);
+        float inv2s2 = 0.5 / (sigmaV * sigmaV);
+        float denom  = 1. - std::exp(-(localDensityR * localDensityR) * inv2s2);
         float num = 1. - std::exp(-(zt[i] * zt[i]) * inv2s2);
         epsz =  vmin + (vmax - vmin) * (num / denom);
       }
@@ -150,11 +152,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder {
     for (auto i : cms::alpakatools::uniform_elements(acc, nt)) {
       float epsz = 0.;        
       // Outside the domain, clamp to vmax
-      if (zt[i] > R || zt[i] < -R) {
+      if (zt[i] > localDensityR || zt[i] < -localDensityR) {
         epsz = vmax;
       } else {
-        float inv2s2 = 0.5 / (s * s);
-        float denom  = 1. - std::exp(-(R * R) * inv2s2);
+        float inv2s2 = 0.5 / (sigmaV * sigmaV);
+        float denom  = 1. - std::exp(-(localDensityR * localDensityR) * inv2s2);
         float num = 1. - std::exp(-(zt[i] * zt[i]) * inv2s2);
         epsz =  vmin + (vmax - vmin) * (num / denom);
       }
@@ -164,7 +166,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder {
       cms::alpakatools::forEachInBins(acc, hist, izt[i], 1, [&](uint32_t j) {
         if (i == j)
           return;
-        if (nn[i] == 0 && ezt2[i] > 0.025*0.025)
+        if (nn[i] == 0 && ezt2[i] > errmaxFollower2)
           return;  // If I'm alone and not sure where to belong, leave me alone
         if (nn[j] < nn[i])
           return;
@@ -289,9 +291,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder {
                                   int minT,      // min number of neighbours to be "seed"
                                   float eps,     // max absolute distance to cluster
                                   float errmax,  // max error to be "seed"
-                                  float chi2max  // max normalized distance to cluster
+                                  float chi2max, // max normalized distance to cluster
+                                  float errmaxFollower, // max error to be a follower of a vertex seed
+                                  float vmin,    // Smallest compatibility region in Z for local density calculations
+                                  float vmax,    // Largest compatibility region in Z for local density calculations
+                                  float localDensityR,  // Limit outside of which use vmax
+                                  float sigmaV   // Sigma of the gaussian kernel from vmin to vmax
     ) const {
-      clusterTracksByDensityClue(acc, data, trkdata, ws, minT, eps, errmax, chi2max);
+      clusterTracksByDensityClue(acc, data, trkdata, ws, minT, eps, errmax, chi2max, errmaxFollower, vmin, vmax, localDensityR, sigmaV);
     }
   };
 

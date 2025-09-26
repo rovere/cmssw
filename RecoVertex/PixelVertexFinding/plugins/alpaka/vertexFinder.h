@@ -45,6 +45,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder {
              float ieps,     // max absolute distance to cluster
              float ierrmax,  // max error to be "seed"
              float ichi2max,  // max normalized distance to cluster
+             float errmaxFollower,  // max error to be a follower of a vertex seed
+             float vmin,               // Smallest compatibility region in Z for local density calculations
+             float vmax,               // Largest compatibility region in Z for local density calculations
+             float localDensityR,      // Limit outside of which use vmax
+             float sigmaV,             // Sigma of the gaussian kernel from vim to vimx
              float maxChi2ForFirstFit, // Reject outlier tracks that contribute more than this to the chi2 of the initial vertex fit
              float maxChi2ForFinalFit, // Reject outlier tracks that contribute more than this to the chi2 of the final vertex fit
              float maxChi2ForSplit     // Split vertices with a chi2/NDoF greater than this threshold
@@ -59,6 +64,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder {
           eps_(ieps),
           errmax_(ierrmax),
           chi2max_(ichi2max),
+          errmaxFollower_(errmaxFollower),
+          vmin_(vmin),
+          vmax_(vmax),
+          localDensityR_(localDensityR),
+          sigmaV_(sigmaV),
           maxChi2ForFirstFit_(maxChi2ForFirstFit),
           maxChi2ForFinalFit_(maxChi2ForFinalFit),
           maxChi2ForSplit_(maxChi2ForSplit) {}
@@ -80,6 +90,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder {
     const float eps_;      // max absolute distance to cluster
     const float errmax_;   // max error to be "seed"
     const float chi2max_;  // max normalized distance to cluster
+    const float errmaxFollower_;  // max error to be a follower of a vertex seed
+    const float vmin_;            // Smallest compatibility region in Z for local density calculations
+    const float vmax_;            // Largest compatibility region in Z for local density calculations
+    const float localDensityR_;   // Limit outside of which use vmax
+    const float sigmaV_;          // Sigma of the gaussian kernel from vmin to vmax
 
     // Vertex splitting and fitting parameters
     const float maxChi2ForFirstFit_;
