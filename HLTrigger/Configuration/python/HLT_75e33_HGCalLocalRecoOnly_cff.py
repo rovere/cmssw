@@ -5,7 +5,7 @@ from .HLT_75e33_cff import fragment
 
 for p in dir(fragment):
     att = getattr(fragment, p)
-    if isinstance(att, cms.Path) and p not in ["MC_HGCalLocalRecoOnly", "HLTriggerFinalPath", "HLTAnalyzerEndpath", "FastTimerService", "ThroughputService"]:
+    if isinstance(att, cms.Path) and p not in ["MC_HGCalLocalRecoOnly", "HLTriggerFinalPath", "HLTAnalyzerEndpath"]:
         delattr(fragment, p)
     del att
 
@@ -15,3 +15,5 @@ fragment.schedule = cms.Schedule(*[
     fragment.HLTAnalyzerEndpath,
 ])
 
+fragment.load("HLTrigger/Configuration/HLT_75e33/services/FastTimerService_cfi")
+fragment.load("HLTrigger/Configuration/HLT_75e33/services/ThroughputService_cfi")
