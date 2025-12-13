@@ -41,6 +41,8 @@
 
 #include "storeTracks.h"
 
+//#define DEBUG_PIXEL_TRACK_PRODUCER
+
 /**
  * This class creates "legacy" reco::Track
  * objects from the output of SoA CA.
@@ -85,11 +87,13 @@ private:
   // Event Setup tokens
   const edm::ESGetToken<MagneticField, IdealMagneticFieldRecord> idealMagneticFieldToken_;
   const edm::ESGetToken<TrackerTopology, TrackerTopologyRcd> trackerTopologyToken_;
+  const edm::ESGetToken<TrackerTopology, TrackerTopologyRcd> trackerTopologyTokenRun_;
   const edm::ESGetToken<TrackerGeometry, TrackerDigiGeometryRecord> trackerGeometryTokenRun_;
 
   int32_t const minNumberOfHits_;
   pixelTrack::Quality const minQuality_;
   const bool useOTExtension_;
+  const bool useOTFullExtension_;
   const bool requireQuadsFromConsecutiveLayers_;
 };
 
@@ -101,10 +105,12 @@ PixelTrackProducerFromSoAAlpaka::PixelTrackProducerFromSoAAlpaka(const edm::Para
       pixelHMSToken_(consumes<HMSstorage>(iConfig.getParameter<edm::InputTag>("pixelRecHitLegacySrc"))),
       idealMagneticFieldToken_(esConsumes()),
       trackerTopologyToken_(esConsumes()),
+      trackerTopologyTokenRun_(esConsumes<edm::Transition::BeginRun>()),
       trackerGeometryTokenRun_(esConsumes<edm::Transition::BeginRun>()),
       minNumberOfHits_(iConfig.getParameter<int>("minNumberOfHits")),
       minQuality_(pixelTrack::qualityByName(iConfig.getParameter<std::string>("minQuality"))),
       useOTExtension_(iConfig.getParameter<bool>("useOTExtension")),
+      useOTFullExtension_(iConfig.getParameter<bool>("useOTFullExtension")),
       requireQuadsFromConsecutiveLayers_(iConfig.getParameter<bool>("requireQuadsFromConsecutiveLayers")) {
   if (minQuality_ == pixelTrack::Quality::notQuality) {
     throw cms::Exception("PixelTrackConfiguration")
@@ -123,7 +129,7 @@ PixelTrackProducerFromSoAAlpaka::PixelTrackProducerFromSoAAlpaka(const edm::Para
   produces<IndToEdm>();
 
   // if useOTExtension consume the OT RecHits
-  if (useOTExtension_) {
+  if (useOTExtension_ || useOTFullExtension_) {
     otRecHitsToken_ =
         consumes<Phase2TrackerRecHit1DCollectionNew>(iConfig.getParameter<edm::InputTag>("outerTrackerRecHitSrc"));
     otHMSToken_ = consumes<HMSstorage>(iConfig.getParameter<edm::InputTag>("outerTrackerRecHitSoAConverterSrc"));
@@ -157,8 +163,96 @@ std::shared_ptr<DetIdMaps> PixelTrackProducerFromSoAAlpaka::globalBeginRun(const
       if (isUsedOTModule) {
         // save the module index among the extension modules
         detIdMaps->detIdToOTModuleId_[detUnit->geographicalId()] = otModuleId;
+#ifdef DEBUG_PIXEL_TRACK_PRODUCER
+        std::cout << "Filling detUnit " << detUnit->geographicalId().rawId() << " at location " << otModuleId << std::endl;
+#endif
         otModuleId++;
       }
+    }
+  }
+  else if (useOTFullExtension_) {
+    // get track geometry and topology
+    auto const &trackerGeometry = &iSetup.getData(trackerGeometryTokenRun_);
+    auto const &trackerTopology = &iSetup.getData(trackerTopologyTokenRun_);
+
+    auto isOTBarrel = [&](DetId detId) { return detId.subdetId() == StripSubdetector::TOB; };
+
+    auto isPSP = [&](DetId detId) {
+      return trackerGeometry->getDetectorType(detId) == TrackerGeometry::ModuleType::Ph2PSP;
+    };
+
+    auto isPSS = [&](DetId detId) {
+      return trackerGeometry->getDetectorType(detId) == TrackerGeometry::ModuleType::Ph2PSS;
+    };
+
+    auto is2S = [&](DetId detId) {
+      // Adjust if your CMSSW uses a different name for 2S modules.
+      return trackerGeometry->getDetectorType(detId) == TrackerGeometry::ModuleType::Ph2SS;
+    };
+
+    auto isSelectedOTBarrel = [&](DetId detId) {
+      return isOTBarrel(detId) && (isPSP(detId) || isPSS(detId) || is2S(detId));
+    };
+
+    auto innerOuterFromOrientation = [&](DetId detId, const GlobalPoint& pos, const GlobalVector& nrm) {
+      const double dot = pos.x() * nrm.x() + pos.y() * nrm.y() + pos.z() * nrm.z();
+      const bool normalOut = (dot > 0.0);
+      // Which member of the stack is this?
+      const bool isLower = trackerTopology->isLower(detId);  // <-- this is the key topo query
+
+      // Map to inner(0)/outer(1)
+      // If normal points outward, lower sensor is inner and upper is outer.
+      // If normal points inward, mapping flips.
+      const int innerOuter = normalOut ? (isLower ? 0 : 1) : (isLower ? 1 : 0);
+      return innerOuter;
+    };
+
+    // loop over all modules and fill the map detIdToOTModuleId_
+    auto const &detUnits = trackerGeometry->detUnits();
+    // Collect all selected OT barrel sensors with (layer, innerOuter).
+    struct ModInfo {
+      uint32_t rawId;
+      int layer;        // real TOB layer
+      int innerOuter;   // 0 inner-facing, 1 outer-facing
+    };
+
+    std::vector<ModInfo> mods;
+    mods.reserve(detUnits.size());
+
+    for (auto &detUnit : detUnits) {
+      DetId detId(detUnit->geographicalId());
+      uint32_t rawId = detId.rawId();
+      bool isUsedOTModule = isSelectedOTBarrel(detId);
+      detIdMaps->detIdIsUsedOTModule_[detUnit->geographicalId()] = isUsedOTModule;
+      if (!isUsedOTModule) {
+        continue;
+      }
+      const int layer = trackerTopology->getOTLayerNumber(detId);
+
+      const auto& surf = detUnit->surface();
+      const GlobalPoint pos = surf.position();
+      const GlobalVector nrm = surf.normalVector();
+
+      const int innerOuter = innerOuterFromOrientation(rawId, pos, nrm);
+      mods.push_back(ModInfo{rawId, layer, innerOuter});
+    }
+    // Sort by (real layer, inner/outer) to ensure grouping:
+    //   layer L: all inner-facing first, then all outer-facing
+    std::sort(mods.begin(), mods.end(), [](ModInfo const& a, ModInfo const& b) {
+      if (a.layer != b.layer)
+        return a.layer < b.layer;
+      if (a.innerOuter != b.innerOuter)
+        return a.innerOuter < b.innerOuter;
+      return a.rawId < b.rawId;
+    });
+
+    uint32_t otModuleId = 0;
+    for (size_t i = 0; i < mods.size(); ++i) {
+      detIdMaps->detIdToOTModuleId_[mods[i].rawId] = otModuleId;
+#ifdef DEBUG_PIXEL_TRACK_PRODUCER
+      std::cout << "Filling detUnit " << mods[i].rawId << " at location " << otModuleId << std::endl;
+#endif
+      otModuleId++;
     }
   }
 
@@ -175,6 +269,7 @@ void PixelTrackProducerFromSoAAlpaka::fillDescriptions(edm::ConfigurationDescrip
   desc.add<int>("minNumberOfHits", 0);
   desc.add<std::string>("minQuality", "loose");
   desc.add<bool>("useOTExtension", false);
+  desc.add<bool>("useOTFullExtension", false);
 
   // this option for removing tracks with exactly 4 hits is a temporary solution to reduce the fake rate in Phase-2
   // and is to be replaced by a smarter inclusive track selection in the CA directly
@@ -231,7 +326,7 @@ void PixelTrackProducerFromSoAAlpaka::produce(edm::StreamID streamID,
   // get OT RecHits if needed
   size_t nOTHits = 0;
   const Phase2TrackerRecHit1DCollectionNew *otRecHitsDSV = nullptr;
-  if (useOTExtension_) {
+  if (useOTExtension_ || useOTFullExtension_) {
     otRecHitsDSV = &iEvent.get(otRecHitsToken_);
     nOTHits = otRecHitsDSV->dataSize();
   }
@@ -254,11 +349,14 @@ void PixelTrackProducerFromSoAAlpaka::produce(edm::StreamID streamID,
     auto const idx = pixelHitsModuleStart[detI] + clus.pixelCluster().originalId();
 
     assert(nullptr == hitmap[idx]);
+#ifdef DEBUG_PIXEL_TRACK_PRODUCER
+    std::cout << "Filling IT hitmap at " << idx << " with detI " << detI << std::endl;
+#endif
     hitmap[idx] = &pixelHit;
   }
 
   // if OT RecHits are used in PixelTracks, fill the hitmap also with those
-  if (useOTExtension_) {
+  if (useOTExtension_ || useOTFullExtension_) {
     // The RecHits in the SoA are ordered according to the detUnit->index()
     // of the respective OT module. For this reason, we need the map from the
     // detId to the moduleId among all used OT modules. This otModuleId corresponds
@@ -279,6 +377,9 @@ void PixelTrackProducerFromSoAAlpaka::produce(edm::StreamID streamID,
 
         // loop over the RecHits of the module and fill the hitmap
         for (int idx = otHitsModuleStart[otModuleId]; auto const &recHit : detSet) {
+#ifdef DEBUG_PIXEL_TRACK_PRODUCER
+          std::cout << "Filling OT hitmap at " << idx << " with detId " << detId << " with otModuleId " << otModuleId << " " << otHitsModuleStart[otModuleId] << std::endl;
+#endif
           assert(nullptr == hitmap[idx]);
           hitmap[idx] = &recHit;
           idx++;

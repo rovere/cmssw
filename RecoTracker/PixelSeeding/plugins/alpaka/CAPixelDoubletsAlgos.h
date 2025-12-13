@@ -67,6 +67,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
     return moduleIsOuterLadderPhase2(moduleId);
   }
 
+  template <>
+  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool moduleIsOuterLadder<pixelTopology::Phase2OTFull>(int const moduleId) {
+    return moduleIsOuterLadderPhase2(moduleId);
+  }
+
+
   template <typename TrackerTraits, typename TAcc>
   ALPAKA_FN_ACC ALPAKA_FN_INLINE bool zSizeCut(
       const TAcc& acc, HitsConstView hh, ::reco::CALayersSoAConstView ll, AlgoParams const& params, int i, int o) {
@@ -300,11 +306,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
         auto ro = hh[j].rGlobal();
         auto dr = ro - ri;
 #ifdef DOUBLETS_DEBUG
-        printf("dr: %4.3f, %4.3f, %4.3f --> %d\n", ri, ro, dr, (dr > cc.maxDR()[pairLayerId]));
-        printf("zi: %4.3f, zo: %4.3f, std::abs((zi * ro - ri * zo)): %4.3f --> %d\n",
+        printf("dr: %4.3f, %4.3f, %4.3f vs %4.3f --> %d\n", ri, ro, dr, cc.maxDR()[pairLayerId], (dr > cc.maxDR()[pairLayerId]));
+        printf("zi: %4.3f, zo: %4.3f, std::abs((zi * ro - ri * zo)): %4.3f vs %4.3f--> %d\n",
                zi,
                zo,
                std::abs((zi * ro - ri * zo)),
+               params.cellZ0Cut_ * dr,
                (std::abs((zi * ro - ri * zo)) > params.cellZ0Cut_ * dr));
 #endif
         return dr > cc.maxDR()[pairLayerId] || dr < 0 || std::abs((zi * ro - ri * zo)) > params.cellZ0Cut_ * dr;
@@ -321,8 +328,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
              pairLayerId,
              cc.phiCuts()[pairLayerId],
              cc.maxDR()[pairLayerId],
-             cc.maxInnerZ()[pairLayerId],
-             cc.minInnerZ()[pairLayerId]);
+             cc.maxInner()[pairLayerId],
+             cc.minInner()[pairLayerId]);
 #endif
 
       auto khh = kh;

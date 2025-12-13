@@ -390,6 +390,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   template class HelixFit<pixelTopology::Phase1>;
   template class HelixFit<pixelTopology::Phase2>;
   template class HelixFit<pixelTopology::Phase2OT>;
+  template class HelixFit<pixelTopology::Phase2OTFull>;
   template class HelixFit<pixelTopology::HIonPhase1>;
 
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE

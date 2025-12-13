@@ -237,19 +237,20 @@ namespace phase2PixelTopology {
   // The layer pairs are ordered in such a way that the OT extended pairs are at the end of the arrays. So one can get the non-extended config by
   // chopping off the last elements.
   // The actual implementation of the splitting in these two configs is done below by having two separate structs in the pixelTopology namespace:
-  //   - pixelTopology::Phase2    -> no OT extension
-  //   - pixelTopology::Phase2OT  -> with OT extension
+  //   - pixelTopology::Phase2        -> no OT extension
+  //   - pixelTopology::Phase2OT      -> with OT extension
+  //   - pixelTopology::Phase2OTFull  -> with Full OT extension
 
   constexpr uint32_t nLayersPix = 28;                      // pixel layers
-  constexpr uint32_t nLayersOT = 3;                        // considered OT layers
+  constexpr uint32_t nLayersOT = 12;                        // considered OT layers
   constexpr uint32_t nLayersTot = nLayersPix + nLayersOT;  // total number of layers for extended CA
 
   constexpr int nPairsPix = 57;                    // pixel only layer pairs
-  constexpr int nPairsOT = 16;                     // layer pairs with OT layers
+  constexpr int nPairsOT = 25;                     // layer pairs with OT layers
   constexpr int nPairsTot = nPairsPix + nPairsOT;  // total number of layer pairs for extended CA
 
   constexpr uint16_t nModulesPix = 4000;                      // pixel modules
-  constexpr uint16_t nModulesOT = 2872;                       // considered OT modules
+  constexpr uint16_t nModulesOT = 14576;                       // considered OT modules
   constexpr uint16_t nModulesTot = nModulesPix + nModulesOT;  // total number of modules for extended CA
 
   constexpr int nStartingPairs = 24;  // number of layer pairs to start Ntuplet-building from
@@ -271,27 +272,30 @@ namespace phase2PixelTopology {
       2,  28, 2,  28, 2,  28, 3,  28,          // barrel to OT (61)
       4,  28, 5,  28, 6,  28, 7,  28, 8,  28,  // forward endcap to OT (66)
       16, 28, 17, 28, 18, 28, 19, 28, 20, 28,  // backward endcap to OT (71)
-      28, 29, 29, 30                           // OT to OT (73)
+      28, 29, 29, 30, 30, 31, 31, 32, 32, 33,
+      33, 34, 34, 35, 35, 36, 36, 37, 37, 38,
+      38, 39                                   // OT to OT (73)
   };
 
   HOST_DEVICE_CONSTANT uint8_t startingPairs[nStartingPairs] = {0,  1,  2,  3,  4,  5,  6,  8,  10, 12, 15, 17,
                                                                 19, 21, 23, 25, 27, 36, 38, 40, 42, 44, 46, 48};
 
   HOST_DEVICE_CONSTANT int16_t phicuts[nPairsTot]{
-      350,  600,  450,  522,  450,  522,       // BPIX1
-      400,  650,  500,  730,  500,  730,       // BPIX2
-      350,  400,  400,                         // BPIX3
-      300,  522,  300,  522,  250,  522, 250,  // forward endcap
-      522,  250,  522,  300,  522,  240, 650,  // forward endcap
-      300,  200,  220,  250,  250,  250, 250,  // forward endcap
-      300,  522,  300,  522,  250,  522, 250,  // backward endcap
-      522,  250,  522,  300,  522,  240, 650,  // backward endcap
-      300,  200,  220,  250,  250,  250, 250,  // backward endcap
+      350,  600,  450,  522,  450,  522,       // BPIX1 6
+      400,  650,  500,  730,  500,  730,       // BPIX2 6
+      350,  400,  400,                         // BPIX3 3
+      300,  522,  300,  522,  250,  522, 250,  // forward endcap 7
+      522,  250,  522,  300,  522,  240, 650,  // forward endcap 7
+      300,  200,  220,  250,  250,  250, 250,  // forward endcap 7
+      300,  522,  300,  522,  250,  522, 250,  // backward endcap 7
+      522,  250,  522,  300,  522,  240, 650,  // backward endcap 7
+      300,  200,  220,  250,  250,  250, 250,  // backward endcap 7
 
-      1200, 1200, 1200, 1000,        // barrel to OT
-      1000, 1000, 1000, 1000, 850,   // forward endcap to OT
-      1000, 1000, 1000, 1000, 1000,  // backward endcap to OT
-      1100, 1250                     // OT to OT
+      1200, 1200, 1200, 1000,        // barrel to OT 4
+      1000, 1000, 1000, 1000, 850,   // forward endcap to OT 5
+      1000, 1000, 1000, 1000, 1000,  // backward endcap to OT 5
+      1100, 1250, 1250, 1250, 1250,  // OT to OT 5
+      1250, 1250, 1250, 1250, 1250,  1250 // OT to OT 6
   };
 
   HOST_DEVICE_CONSTANT float minInner[nPairsTot] = {
@@ -308,7 +312,8 @@ namespace phase2PixelTopology {
       -10,   -20,  10,     -20,     // barrel to O
       11,    11,   11,     11,  0,  // forward end
       11,    11,   11,     11,  0,  // backward en
-      -1200, -1200                  // OT to OT
+      1250, 1250, 1250, 1250, 1250,   // OT to OT 5
+      1250, 1250, 1250, 1250, 1250, 1250   // OT to OT 5
   };
 
   HOST_DEVICE_CONSTANT float maxInner[nPairsTot] = {
@@ -325,7 +330,8 @@ namespace phase2PixelTopology {
       10,    -10,   20,    20,            // barrel to OT
       10000, 10000, 10000, 10000, 10000,  // forward endcap to OT
       10000, 10000, 10000, 10000, 10000,  // backward endcap to OT
-      1200,  1200                         // OT to OT
+      1200,  1200, 1200, 1200, 1200,      // OT to OT
+      1200,  1200, 1200, 1200, 1200, 1200 // OT to OT
   };
 
   HOST_DEVICE_CONSTANT float minOuter[nPairsTot] = {
@@ -342,7 +348,8 @@ namespace phase2PixelTopology {
       -30,    -50,    25,  -45,           // barrel to OT
       30,     40,     55,  70,   80,      // forward endcap to OT
       -57,    -70,    -95, -110, -10000,  // backward endcap to OT
-      -10000, -10000                      // OT to OT
+      -10000, -10000, -10000, -10000, -10000,     // OT to OT
+      -10000, -10000, -10000, -10000, -10000, -10000     // OT to OT
   };
 
   HOST_DEVICE_CONSTANT float maxOuter[nPairsTot] = {
@@ -359,7 +366,8 @@ namespace phase2PixelTopology {
       30,    -25,   50,    45,            // barrel to OT
       57,    80,    95,    110,   10000,  // forward endcap to OT
       -30,   -40,   -55,   -70,   -80,    // backward endcap to OT
-      10000, 10000                        // OT to OT
+      10000, 10000, 10000, 10000, 10000,    // OT to OT
+      10000, 10000, 10000, 10000, 10000, 10000   // OT to OT
   };
 
   HOST_DEVICE_CONSTANT float maxDR[nPairsTot] = {
@@ -376,7 +384,8 @@ namespace phase2PixelTopology {
       10000.0, 10000.0, 10000.0, 10000.0,        // barrel to OT
       16.0,    16.0,    16.0,    16.0,    14.0,  // forward endcap to OT
       16.0,    16.0,    16.0,    16.0,    14.0,  // backward endcap to OT
-      10000.0, 10000.0                           // OT to OT
+      10000.0, 10000.0, 10000.0, 10000.0, 10000.0,  // OT to OT
+      10000.0, 10000.0, 10000.0, 10000.0, 10000.0, 10000.0  // OT to OT
   };
 
   HOST_DEVICE_CONSTANT float minDZ[nPairsTot] = {
@@ -393,7 +402,8 @@ namespace phase2PixelTopology {
       -15.0,  -35.0,  10.0,   -22.0,          // barrel to OT
       5.0,    -10.0,  5.0,    15.0,   25.0,   // forward endcap to OT
       -32.5,  -50.0,  -50.0,  -70.0,  -70.0,  // backward endcap to OT
-      -50.0,  -40.0                           // OT to OT
+      -50.0,  -40.0, -50.0, -50.0, -50.0,     // OT to OT
+      -50.0,  -40.0, -50.0, -50.0, -50.0, -50.0     // OT to OT
   };
 
   HOST_DEVICE_CONSTANT float maxDZ[nPairsTot] = {
@@ -410,7 +420,8 @@ namespace phase2PixelTopology {
       15.0,  -10.0, 35.0,  22.0,          // barrel to OT
       32.5,  50.0,  50.0,  70.0,  70.0,   // forward endcap to OT
       -5.0,  -10.0, -5.0,  -15.0, -25.0,  // backward endcap to OT
-      50.0,  40.0                         // OT to OT
+      50.0,  40.0, 50.0, 50.0, 50.0,      // OT to OT
+      50.0,  40.0, 50.0, 50.0, 50.0, 50.0      // OT to OT
   };
 
   HOST_DEVICE_CONSTANT float ptCuts[nPairsTot] = {
@@ -427,21 +438,21 @@ namespace phase2PixelTopology {
       2.00, 0.85, 0.85, 0.85,        // barrel to OT
       0.85, 0.85, 0.85, 0.85, 0.85,  // forward endcap to OT
       0.85, 0.85, 0.85, 0.85, 0.85,  // backward endcap to OT
-      0.85, 0.85                     // OT to OT
+      0.85, 0.85, 0.85, 0.85, 0.85, 0.85 // OT to OT
   };
 
   HOST_DEVICE_CONSTANT float dcaCuts[nLayersTot] = {
       0.15,  //BPix1
       0.25, 0.20, 0.20, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
       0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,  // Pixel layers
-      0.10, 0.10, 0.10                                                               // OT layers
+      0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10         // OT layers
   };
 
   HOST_DEVICE_CONSTANT float thetaCuts[nLayersTot] = {
       0.002, 0.002, 0.002, 0.002,  // BPix
       0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003,
       0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003,  // Pixel layers
-      0.003, 0.003, 0.003                                                                  // OT layers
+      0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003   // OT layers
   };
 
   // -------------------------------------------------------------------------------------------------------
@@ -643,6 +654,23 @@ namespace pixelTopology {
     static constexpr int nPairsForQuadruplets = nPairs;
     static constexpr uint32_t numberOfLayers = phase2PixelTopology::nLayersTot;    // pixel layers  + OT barrel layers
     static constexpr uint16_t numberOfModules = phase2PixelTopology::nModulesTot;  // pixel modules + OT barrel modules
+
+    static constexpr uint32_t maxNumberOfTuples = 2 * 60 * 1024;
+    // this is well above thanks to maxNumberOfTuples
+    static constexpr uint32_t maxHitsForContainers = avgHitsPerTrack * maxNumberOfTuples;
+    static constexpr uint32_t maxNumberOfDoublets = 12 * 512 * 1024;
+    static constexpr uint32_t maxNumOfActiveDoublets = maxNumberOfDoublets / 8;
+    static constexpr uint32_t maxNumberOfQuadruplets = maxNumberOfTuples;
+    static constexpr float avgCellsPerHit = 17.;
+    static constexpr float avgCellsPerCell = 0.5;
+    static constexpr float avgTracksPerCell = 0.09;
+  };
+
+  struct Phase2OTFull : public Phase2 {
+    static constexpr int nPairs = phase2PixelTopology::nPairsTot;
+    static constexpr int nPairsForQuadruplets = nPairs;
+    static constexpr uint32_t numberOfLayers = phase2PixelTopology::nLayersPix + 12;       // pixel layers  + OT barrel layers
+    static constexpr uint16_t numberOfModules = phase2PixelTopology::nModulesPix + 18576;  // pixel modules + OT barrel modules
 
     static constexpr uint32_t maxNumberOfTuples = 2 * 60 * 1024;
     // this is well above thanks to maxNumberOfTuples

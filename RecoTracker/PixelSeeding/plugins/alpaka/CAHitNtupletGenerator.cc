@@ -381,6 +381,24 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             "Zip).");
   }
 
+  template <>
+  void CAHitNtupletGenerator<pixelTopology::Phase2OTFull>::fillPSetDescription(edm::ParameterSetDescription& desc) {
+    fillDescriptionsCommon<pixelTopology::Phase2OTFull>(desc);
+
+    edm::ParameterSetDescription trackQualityCuts;
+    trackQualityCuts.add<double>("maxChi2", 5.)->setComment("Max normalized chi2 for tracks with 6 or more hits");
+    trackQualityCuts.add<double>("maxChi2TripletsOrQuadruplets", 1.)
+        ->setComment("Max normalized chi2 for tracks with 4 or less hits");
+    trackQualityCuts.add<double>("maxChi2Quintuplets", 3.)->setComment("Max normalized chi2 for tracks with 5 hits");
+    trackQualityCuts.add<double>("minPt", 0.9)->setComment("Min pT in GeV");
+    trackQualityCuts.add<double>("maxTip", 0.3)->setComment("Max |Tip| in cm");
+    trackQualityCuts.add<double>("maxZip", 12.)->setComment("Max |Zip|, in cm");
+    desc.add<edm::ParameterSetDescription>("trackQualityCuts", trackQualityCuts)
+        ->setComment(
+            "Quality cuts based on the results of the track fit:\n  - apply cuts based on the fit results (pT, Tip, "
+            "Zip).");
+  }
+
   template <typename TrackerTraits>
   reco::TracksSoACollection CAHitNtupletGenerator<TrackerTraits>::makeTuplesAsync(HitsOnDevice const& hits_d,
                                                                                   CAGeometryOnDevice const& geometry_d,
@@ -449,5 +467,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   template class CAHitNtupletGenerator<pixelTopology::Phase1>;
   template class CAHitNtupletGenerator<pixelTopology::Phase2>;
   template class CAHitNtupletGenerator<pixelTopology::Phase2OT>;
+  template class CAHitNtupletGenerator<pixelTopology::Phase2OTFull>;
   template class CAHitNtupletGenerator<pixelTopology::HIonPhase1>;
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE

@@ -23,8 +23,11 @@ namespace pixelClustering {
   constexpr uint16_t clusterThresholdPhase2OtherLayers = 4000;
 
   constexpr uint32_t maxNumDigis = 3 * 256 * 1024;  // @PU=200 µ=530k σ=50k this is >4σ away
-  constexpr uint16_t maxNumModules = 4000 + 2872;   // This is an upper limit taking into account D110 has 4000 modules
-                                                    // plus 3 layers of OT for CA Extension
+//  constexpr uint16_t maxNumModules = 4000 + 2872;   // This is an upper limit taking into account D110 has 4000 modules
+//                                                    // plus 3 layers of OT for CA Extension
+
+  constexpr uint16_t maxNumModules = 4000 + 14576;   // This is an upper limit taking into account D110 has 4000 modules
+                                                     // plus all layers of OT for CA ExtensionFull
 
   constexpr int32_t maxNumClustersPerModules = maxHitsInModule();
   constexpr uint16_t invalidModuleId = std::numeric_limits<uint16_t>::max() - 1;

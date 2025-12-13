@@ -189,6 +189,51 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         return GeomDetEnumerators::isBarrel(subDetector);
       };
 
+      auto isOTBarrel = [&](DetId detId) { return detId.subdetId() == StripSubdetector::TOB; };
+
+      auto isPSP = [&](const TrackerGeometry& tg, DetId detId) {
+        return tg.getDetectorType(detId) == TrackerGeometry::ModuleType::Ph2PSP;
+      };
+
+      auto isPSS = [&](const TrackerGeometry& tg, DetId detId) {
+        return tg.getDetectorType(detId) == TrackerGeometry::ModuleType::Ph2PSS;
+      };
+
+      auto is2S = [&](const TrackerGeometry& tg, DetId detId) {
+        // Adjust if your CMSSW uses a different name for 2S modules.
+        return tg.getDetectorType(detId) == TrackerGeometry::ModuleType::Ph2SS;
+      };
+
+      auto isSelectedOTBarrel = [&](const TrackerGeometry& tg, DetId detId) {
+        return isOTBarrel(detId) && (isPSP(tg, detId) || isPSS(tg, detId) || is2S(tg, detId));
+      };
+
+      // Robust inner/outer classification for tilted sensors:
+      // Use sign of normal x position (position from origin).
+      // If negative, the plane normal points toward the beamline => "inner-facing".
+      auto innerOuterFromOrientation = [&](const TrackerTopology & tTopo, DetId detId, const GlobalPoint& pos, const GlobalVector& nrm) {
+        const double dot = pos.x() * nrm.x() + pos.y() * nrm.y() + pos.z() * nrm.z();
+        const bool normalOut = (dot > 0.0);
+        // Which member of the stack is this?
+        const bool isLower = tTopo.isLower(detId);  // <-- this is the key topo query
+
+        // Map to inner(0)/outer(1)
+        // If normal points outward, lower sensor is inner and upper is outer.
+        // If normal points inward, mapping flips.
+        const int innerOuter = normalOut ? (isLower ? 0 : 1) : (isLower ? 1 : 0);
+        return innerOuter;
+      };
+
+      // Collect all selected OT barrel sensors with (layer, innerOuter).
+      struct ModInfo {
+        uint32_t rawId;
+        int layer;        // real TOB layer
+        int innerOuter;   // 0 inner-facing, 1 outer-facing
+      };
+
+      std::vector<ModInfo> mods;
+      mods.reserve(trackerGeometry.detUnits().size());
+
       // loop over all detector modules and build the CA layers
       int counter = 0;
       for (auto& det : dets) {
@@ -250,7 +295,61 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             }
           }
         }
+        // if we are using the CA extension for Phase-2,
+        // we also have to collect the modules from the considered OT layers
+        if constexpr (std::is_same_v<pixelTopology::Phase2OTFull, TrackerTraits>) {
+          // TO BE IMPLEMENTED
+
+          auto const& detUnits = det->components();
+          for (auto const& detUnit : detUnits) {
+            DetId detId(detUnit->geographicalId());
+            uint32_t rawId = detId.rawId();
+
+            if (!isSelectedOTBarrel(trackerGeometry, detId)) {
+              continue;
+            }
+            moduleToindexInDets.push_back(counter);
+
+            const int layer = trackerTopology.getOTLayerNumber(detId);
+
+            const auto& surf = detUnit->surface();
+            const GlobalPoint pos = surf.position();
+            const GlobalVector nrm = surf.normalVector();
+
+            const int innerOuter = innerOuterFromOrientation(trackerTopology, rawId, pos, nrm);
+
+            mods.push_back(ModInfo{rawId, layer, innerOuter});
+          }
+        }
         counter++;
+      }
+      // if we are using the CA extension for Phase-2,
+      // we also have to collect the modules from the considered OT layers
+      if constexpr (std::is_same_v<pixelTopology::Phase2OTFull, TrackerTraits>) {
+        // Sort by (real layer, inner/outer) to ensure grouping:
+        //   layer L: all inner-facing first, then all outer-facing
+        std::sort(mods.begin(), mods.end(), [](ModInfo const& a, ModInfo const& b) {
+          if (a.layer != b.layer)
+            return a.layer < b.layer;
+          if (a.innerOuter != b.innerOuter)
+            return a.innerOuter < b.innerOuter;
+          return a.rawId < b.rawId;
+        });
+        int prevL = -1, prevIO = -1;
+        for (size_t i = 0; i < mods.size(); ++i) {
+          if (mods[i].layer != prevL || mods[i].innerOuter != prevIO) {
+            layerIsBarrel[layerCount] = isBarrel(mods[i].rawId);
+            layerStarts[layerCount++] = n_modules;
+#ifdef GPU_DEBUG
+            std::cout << "Group starts at offset " << i << " : layer=" << mods[i].layer
+              << " innerOuter=" << mods[i].innerOuter << " (0=inner,1=outer)\n";
+            std::cout << "Layer " << layerCount << " starts at " << layerStarts[layerCount-1] << std::endl;
+#endif
+            prevL = mods[i].layer;
+            prevIO = mods[i].innerOuter;
+          }
+          n_modules++;
+        }
       }
 
 #ifdef GPU_DEBUG
@@ -400,6 +499,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   using CAHitNtupletAlpakaHIonPhase1 = CAHitNtupletAlpaka<pixelTopology::HIonPhase1>;
   using CAHitNtupletAlpakaPhase2 = CAHitNtupletAlpaka<pixelTopology::Phase2>;
   using CAHitNtupletAlpakaPhase2OT = CAHitNtupletAlpaka<pixelTopology::Phase2OT>;
+  using CAHitNtupletAlpakaPhase2OTFull = CAHitNtupletAlpaka<pixelTopology::Phase2OTFull>;
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
@@ -408,3 +508,4 @@ DEFINE_FWK_ALPAKA_MODULE(CAHitNtupletAlpakaPhase1);
 DEFINE_FWK_ALPAKA_MODULE(CAHitNtupletAlpakaHIonPhase1);
 DEFINE_FWK_ALPAKA_MODULE(CAHitNtupletAlpakaPhase2);
 DEFINE_FWK_ALPAKA_MODULE(CAHitNtupletAlpakaPhase2OT);
+DEFINE_FWK_ALPAKA_MODULE(CAHitNtupletAlpakaPhase2OTFull);

@@ -217,7 +217,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             hit.clusterSizeY() = -1;
             hit.detectorIndex() = modulesInPixel_ + offset;
             LogDebug("Phase2OTRecHitsSoAConverter")
-                << "Local (x, y) with (xx, yy) --> (" << recHit.localPosition().x() << ", "
+                << "Filled OT hit idx=" << idx << " detIndex=" << hit.detectorIndex() << " rawId=" << recHit.geographicalId().rawId()
+                << " Local (x, y) with (xx, yy) --> (" << recHit.localPosition().x() << ", "
                 << recHit.localPosition().y() << ") with (" << recHit.localPositionError().xx() << ", "
                 << recHit.localPositionError().yy() << ")" << '\n'
                 << "Global           (x, y, z) --> (" << globalPosition.x() << ", " << globalPosition.y() << ", "
