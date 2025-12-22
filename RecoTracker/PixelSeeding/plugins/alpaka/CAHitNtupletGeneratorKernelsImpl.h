@@ -1,10 +1,10 @@
 #ifndef RecoTracker_PixelSeeding_plugins_alpaka_CAHitNtupletGeneratorKernelsImpl_h
 #define RecoTracker_PixelSeeding_plugins_alpaka_CAHitNtupletGeneratorKernelsImpl_h
 
-// #define GPU_DEBUG
-// #define NTUPLE_DEBUG
-// #define CA_DEBUG
-// #define CA_WARNINGS
+#define GPU_DEBUG
+#define NTUPLE_DEBUG
+#define CA_DEBUG
+#define CA_WARNINGS
 
 // C++ includes
 #include <cmath>
@@ -377,7 +377,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caHitNtupletGeneratorKernels {
         auto const numberOfPossibleNeighbors = outerHitHisto->size(innerHitId);
 
 #ifdef CA_DEBUG
-        printf("numberOfPossibleFromHisto;%d;%d;%d;%d;%d\n",
+        printf("numberOfPossibleFromHisto totCells: %d innerHitId: %d cellIndex: %d innerL: %d numNeighbors: %d\n",
                *nCells,
                innerHitId,
                cellIndex,
@@ -397,22 +397,32 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caHitNtupletGeneratorKernels {
           auto r1 = oc.inner_r(hh);
           auto z1 = oc.inner_z(hh);
           auto dcaCut = ll[oc.innerLayer()].caDCACut();
-          bool aligned = Cell::areAlignedRZ(r1, z1, ri, zi, ro, zo, params.ptmin_, thetaCut);
+          // If the middle layer is stacked, skip the areAligned check
+          bool aligned = ll[thisCell.innerLayer()].isStacked();
+#ifdef CA_DEBUG
+          printf("Layer %d isStacked %d dcaCut: %d\n",
+                 thisCell.innerLayer(),
+                 aligned,
+                 thisCell.dcaCut(hh, oc, dcaCut, params.hardCurvCut_));
+#endif
+          if (!aligned)
+            aligned = Cell::areAlignedRZ(r1, z1, ri, zi, ro, zo, params.ptmin_, thetaCut);
           if (aligned && thisCell.dcaCut(hh, oc, dcaCut, params.hardCurvCut_)) {
             auto t_ind = alpaka::atomicAdd(acc, nTrips, 1u, alpaka::hierarchy::Blocks{});
 #ifdef CA_DEBUG
-            printf("Triplet no. %d %.5f %.5f (%d %d) - %d %d -> (%d, %d, %d, %d) \n",
+            printf("Triplet no. %d %.5f %.5f %d (%d %d) - %d %d -> (%d, %d, %d, %d) \n",
                    t_ind,
                    thetaCut,
                    dcaCut,
+                   ll[thisCell.innerLayer()].isStacked(),
                    thisCell.layerPairId(),
                    oc.layerPairId(),
                    otherCell,
                    cellIndex,
-                   thisCell.inner_hit_id(),
-                   thisCell.outer_hit_id(),
                    oc.inner_hit_id(),
-                   oc.outer_hit_id());
+                   oc.outer_hit_id(),
+                   thisCell.inner_hit_id(),
+                   thisCell.outer_hit_id());
 #endif
 
 #ifdef CA_DEBUG
@@ -450,7 +460,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caHitNtupletGeneratorKernels {
                                   HitToCell *outerHitHisto) const {
       for (auto cellIndex : cms::alpakatools::uniform_elements(acc, *nCells)) {
 #ifdef DOUBLETS_DEBUG
-        printf("outerHitHisto;%d;%d\n", cellIndex, cells[cellIndex].outer_hit_id());
+        printf("outerHitHisto cellIndex: %d outerHitId: %d\n", cellIndex, cells[cellIndex].outer_hit_id());
 #endif
         outerHitHisto->fill(acc, cells[cellIndex].outer_hit_id() - offsetBPIX2, cellIndex);
       }

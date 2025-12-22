@@ -1,5 +1,5 @@
 // #define GPU_DEBUG
-// #define DUMP_GPU_TK_TUPLES
+#define DUMP_GPU_TK_TUPLES
 
 #include <array>
 #include <cassert>
@@ -38,7 +38,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // Common Params
     template <typename TrackerTraits>
     void fillDescriptionsCommon(edm::ParameterSetDescription& desc) {
-      desc.add<double>("cellZ0Cut", TrackerTraits::cellZ0Cut)->setComment("Z0 cut for cells");
 
       //// Pixel Cluster Cuts (@cell level)
       desc.add<double>("dzdrFact", TrackerTraits::dzdrFact);
@@ -70,6 +69,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
               "caThetaCuts",
               std::vector<double>(TrackerTraits::thetaCuts, TrackerTraits::thetaCuts + TrackerTraits::numberOfLayers))
           ->setComment("Cut on origin radius. One per layer, the layer being the innermost one for a triplet.");
+      geometryParams
+          .add<std::vector<int32_t>>(
+              "isStacked",
+              std::vector<int32_t>(TrackerTraits::isStacked, TrackerTraits::isStacked + TrackerTraits::numberOfLayers))
+          ->setComment("Identify stacked sensor. Those are the outermost sensors of either PS or 2S sensors in OT.");
       geometryParams
           .add<std::vector<unsigned int>>(
               "startingPairs",
@@ -128,6 +132,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
               "maxDZ",
               std::vector<double>(TrackerTraits::maxDZ, TrackerTraits::maxDZ + TrackerTraits::nPairsForQuadruplets))
           ->setComment("Cuts in maximum dz between hits for cells");
+      geometryParams
+          .add<std::vector<double>>(
+              "cellZ0Cuts",
+              std::vector<double>(TrackerTraits::cellZ0Cuts, TrackerTraits::cellZ0Cuts + TrackerTraits::nPairsForQuadruplets))
+          ->setComment("Z0 cut for cells on each layer pair. A negative value disable the cut.");
+
 
       desc.add<edm::ParameterSetDescription>("geometry", geometryParams)
           ->setComment("Layer-dependent cuts and settings of the CA");
@@ -198,7 +208,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           (uint16_t)cfg.getParameter<unsigned int>("minHitsForSharingCut"),
           (float)cfg.getParameter<double>("ptmin"),
           (float)cfg.getParameter<double>("hardCurvCut"),
-          (float)cfg.getParameter<double>("cellZ0Cut"),
 
           // Pixel Cluster Cut Params
           (float)cfg.getParameter<double>("dzdrFact"),

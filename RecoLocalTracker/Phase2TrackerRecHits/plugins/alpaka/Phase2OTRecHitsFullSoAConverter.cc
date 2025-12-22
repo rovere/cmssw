@@ -200,7 +200,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       const GlobalVector nrm = surf.normalVector();
 
       const int innerOuter = innerOuterFromOrientation(tTopo, rawId, pos, nrm);
-
+#ifdef HITS_DEBUG
+      std::cout << "RawId " << rawId << " is at " << pos
+        << " with normal " << nrm << " r " << (pos.perp())
+        << " Inner(0)/Outer(1) " << innerOuter << " PSP/PSS/SS "
+        << isPSP(trackerGeometry, rawId) << "/" << isPSS(trackerGeometry, rawId)
+        << "/" << is2S(trackerGeometry, rawId) << std::endl;
+#endif
       detIdToRealLayer_[rawId] = static_cast<uint16_t>(layer);
       detIdToInnerOuter_[rawId] = static_cast<uint8_t>(innerOuter);
 
@@ -221,8 +227,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     for (size_t i = 0; i < mods.size(); ++i) {
       orderedModules_.push_back(mods[i].detUnitIndex);
       moduleIndexToOffset_[mods[i].detUnitIndex] = static_cast<int>(i);
-      LogDebug("Phase2OTRecHitsFullSoAConverter") << "After Sorting " << mods[i].detUnitIndex << " " << orderedModules_.size()
-        << " on layer " << mods[i].layer << " innerOuter " << mods[i].innerOuter <<'\n';
+      LogDebug("Phase2OTRecHitsFullSoAConverter")
+        << "After Sorting " << mods[i].detUnitIndex << " " << orderedModules_.size()
+        << " on layer " << mods[i].layer << " rawId " << mods[i].rawId << " innerOuter " << mods[i].innerOuter <<'\n';
     }
 
     LogDebug("Phase2OTRecHitsFullSoAConverter")

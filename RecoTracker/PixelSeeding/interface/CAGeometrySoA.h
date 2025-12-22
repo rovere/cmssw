@@ -33,6 +33,7 @@ namespace reco {
                       SOA_COLUMN(uint32_t, layerStarts),
                       SOA_COLUMN(float, caThetaCut),
                       SOA_COLUMN(float, caDCACut),
+                      SOA_COLUMN(int32_t, isStacked),
                       SOA_COLUMN(bool, isBarrel))
 
   GENERATE_SOA_LAYOUT(CAGraphLayout,
@@ -46,6 +47,7 @@ namespace reco {
                       SOA_COLUMN(float, maxDZ),
                       SOA_COLUMN(float, minDZ),
                       SOA_COLUMN(float, maxDR),
+                      SOA_COLUMN(float, cellZ0Cuts),
                       SOA_COLUMN(float, ptCuts))
 
   using CALayersSoA = CALayersLayout<>;

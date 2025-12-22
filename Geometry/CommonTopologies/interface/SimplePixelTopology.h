@@ -199,11 +199,16 @@ namespace phase1PixelTopology {
       0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
   HOST_DEVICE_CONSTANT float maxDR[nPairs] = {
       20., 9., 9., 20., 7., 7., 5., 5., 20., 6., 6., 5., 5., 20., 20., 9., 9., 9., 9.};
+  HOST_DEVICE_CONSTANT float cellZ0Cuts[nPairs] = {
+      12.5,12.5,12.5,12.5,12.5,12.5,12.5,12.5,12.5,12.5,12.5,12.5,12.5,12.5,12.5,12.5,12.5,12.5,12.5 };
 
   HOST_DEVICE_CONSTANT float dcaCuts[numberOfLayers] = {0.15, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25};
 
   HOST_DEVICE_CONSTANT float thetaCuts[numberOfLayers] = {
       0.002, 0.002, 0.002, 0.002, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003};
+
+  HOST_DEVICE_CONSTANT int32_t isStacked[numberOfLayers] = {
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
   // -------------------------------------------------------------------------------------------------------
   // Deprecated arrays only used in the CUDA version (values have no meaning in alpaka):
@@ -424,6 +429,23 @@ namespace phase2PixelTopology {
       50.0,  40.0, 50.0, 50.0, 50.0, 50.0      // OT to OT
   };
 
+  HOST_DEVICE_CONSTANT float cellZ0Cuts[nPairsTot] = {
+      12.5, 12.5, 12.5, 12.5, 12.5, 12.5,
+      12.5, 12.5, 12.5, 12.5, 12.5, 12.5,
+      12.5, 12.5, 12.5,
+      12.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5,
+      12.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5,
+      12.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5,
+      12.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5,
+      12.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5,
+      12.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5,
+      12.5, 12.5, 12.5, 12.5,
+      12.5, 12.5, 12.5, 12.5, 12.5,
+      12.5, 12.5, 12.5, 12.5, 12.5,
+      12.5, 12.5, 12.5, 12.5, 12.5,
+      12.5, 12.5, 12.5, 12.5, 12.5, 12.5
+  };
+
   HOST_DEVICE_CONSTANT float ptCuts[nPairsTot] = {
       0.85, 0.85, 0.85, 0.85, 0.85, 0.85,        // BPIX1
       0.85, 0.85, 0.85, 0.85, 0.85, 0.85,        // BPIX2
@@ -454,6 +476,12 @@ namespace phase2PixelTopology {
       0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003,  // Pixel layers
       0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003   // OT layers
   };
+
+  HOST_DEVICE_CONSTANT int32_t isStacked[nLayersTot] = {
+      0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1};
 
   // -------------------------------------------------------------------------------------------------------
   // Deprecated arrays only used in the CUDA version (values have no meaning in alpaka or anywhere else):
@@ -516,6 +544,9 @@ namespace phase1HIonPixelTopology {
 
   HOST_DEVICE_CONSTANT float thetaCuts[phase1PixelTopology::numberOfLayers] = {
       0.001, 0.001, 0.001, 0.001, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002};
+
+  HOST_DEVICE_CONSTANT int32_t isStacked[phase1PixelTopology::numberOfLayers] = {
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 }  // namespace phase1HIonPixelTopology
 
@@ -624,8 +655,8 @@ namespace pixelTopology {
     static constexpr int maxDYsize12 = 12;
     static constexpr int maxDYsize = 10;
     static constexpr int maxDYPred = 24;
-    static constexpr float cellZ0Cut = 12.5;
     // vector parameters (doublet building)
+    static constexpr float const *cellZ0Cuts = phase2PixelTopology::cellZ0Cuts;
     static constexpr float const *minInner = phase2PixelTopology::minInner;
     static constexpr float const *maxInner = phase2PixelTopology::maxInner;
     static constexpr float const *minOuter = phase2PixelTopology::minOuter;
@@ -642,6 +673,7 @@ namespace pixelTopology {
     // vector parameters (doublet linking)
     static constexpr float const *thetaCuts = phase2PixelTopology::thetaCuts;
     static constexpr float const *dcaCuts = phase2PixelTopology::dcaCuts;
+    static constexpr int32_t const *isStacked = phase2PixelTopology::isStacked;
     // Deprecated arrays only used in the CUDA version
     static constexpr float const *minz = phase2PixelTopology::minz;
     static constexpr float const *maxz = phase2PixelTopology::maxz;
@@ -818,8 +850,8 @@ namespace pixelTopology {
     static constexpr int maxDYsize12 = 28;
     static constexpr int maxDYsize = 20;
     static constexpr int maxDYPred = 20;
-    static constexpr float cellZ0Cut = 12.5;
     // vector parameters (doublet building)
+    static constexpr float const *cellZ0Cuts = phase1PixelTopology::cellZ0Cuts;
     static constexpr float const *minInner = phase1PixelTopology::minInner;
     static constexpr float const *maxInner = phase1PixelTopology::maxInner;
     static constexpr float const *minOuter = phase1PixelTopology::minOuter;
@@ -836,6 +868,7 @@ namespace pixelTopology {
     // vector parameters (doublet linking)
     static constexpr float const *thetaCuts = phase1PixelTopology::thetaCuts;
     static constexpr float const *dcaCuts = phase1PixelTopology::dcaCuts;
+    static constexpr int32_t const *isStacked = phase1PixelTopology::isStacked;
     // Deprecated arrays only used in the CUDA version
     static constexpr float const *minz = phase1PixelTopology::minz;
     static constexpr float const *maxz = phase1PixelTopology::maxz;
@@ -873,6 +906,7 @@ namespace pixelTopology {
     static constexpr int16_t const *phicuts = phase1PixelTopology::phicuts;
     static constexpr float const *thetaCuts = phase1PixelTopology::thetaCuts;
     static constexpr float const *dcaCuts = phase1PixelTopology::dcaCuts;
+    static constexpr int32_t const *isStacked = phase1PixelTopology::isStacked;
   };
 
   template <typename T>

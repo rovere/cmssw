@@ -22,9 +22,9 @@
 #include "CAStructures.h"
 #include "CAHitNtupletGeneratorKernels.h"
 
-// #define GPU_DEBUG
-// #define DOUBLETS_DEBUG
-// #define CA_WARNINGS
+#define GPU_DEBUG
+#define DOUBLETS_DEBUG
+#define CA_WARNINGS
 
 namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
   using namespace cms::alpakatools;
@@ -191,18 +191,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
     auto& innerLayerCumulativeSize = alpaka::declareSharedVar<uint32_t[TrackerTraits::nPairs], __COUNTER__>(acc);
     auto& ntot = alpaka::declareSharedVar<uint32_t, __COUNTER__>(acc);
 
-#ifdef DOUBLETS_DEBUG
+#if 0
     if (cms::alpakatools::once_per_grid(acc))
       printf(
-          "maxNumDoublets = %d  cc.metadata().size() = %d ll.metadata().size() = %d cellZ0Cut_ = %.2f cellPtCut_ = "
-          "%.2f doClusterCut = %d doZ0Cut = %d  doPtCut = %d doZSizeCut = %d\n",
+          "maxNumDoublets = %d  cc.metadata().size() = %d ll.metadata().size() = %d cellPtCut_ = "
+          "%.2f doClusterCut = %d doPtCut = %d doZSizeCut = %d\n",
           maxNumOfDoublets,
           cc.metadata().size(),
           ll.metadata().size(),
-          params.cellZ0Cut_,
           params.cellPtCut_,
           doClusterCut,
-          params.cellZ0Cut_ > 0,
           params.cellPtCut_ > 0,
           doZSizeCut);
 #endif
@@ -241,7 +239,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
       ALPAKA_ASSERT_ACC(i >= offsets[inner]);
       ALPAKA_ASSERT_ACC(i < offsets[inner + 1]);
 #ifdef DOUBLETS_DEBUG
-      printf("pairLayerId = %d i = %d inner = %d outer = %d offsets[inner] = %d offsets[inner + 1] = %d\n",
+      printf("pairLayerId = %d i = %d innerLayer = %d outerLayer = %d offsets[innerL] = %d offsets[innerL + 1] = %d\n",
              pairLayerId,
              i,
              inner,
@@ -311,10 +309,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
                zi,
                zo,
                std::abs((zi * ro - ri * zo)),
-               params.cellZ0Cut_ * dr,
-               (std::abs((zi * ro - ri * zo)) > params.cellZ0Cut_ * dr));
+               cc.cellZ0Cuts()[pairLayerId] * dr,
+               (std::abs((zi * ro - ri * zo)) > cc.cellZ0Cuts()[pairLayerId] * dr));
 #endif
-        return dr > cc.maxDR()[pairLayerId] || dr < 0 || std::abs((zi * ro - ri * zo)) > params.cellZ0Cut_ * dr;
+        return dr > cc.maxDR()[pairLayerId] || dr < 0 || std::abs((zi * ro - ri * zo)) > cc.cellZ0Cuts()[pairLayerId] * dr;
       };
 
       auto iphicut = cc.phiCuts()[pairLayerId];
@@ -324,7 +322,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
       auto incr = [](auto& k) { return k = (k + 1) % PhiHisto::nbins(); };
 
 #ifdef GPU_DEBUG
-      printf("pairLayerId %d %d %.2f %.2f %.2f \n",
+      printf("Cuts on pairLayerId %d %d %.2f %.2f %.2f \n",
              pairLayerId,
              cc.phiCuts()[pairLayerId],
              cc.maxDR()[pairLayerId],
@@ -393,7 +391,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
             continue;
           }
 
-          if (params.cellZ0Cut_ > 0. && z0cutoff(oi)) {
+          if (cc.cellZ0Cuts()[pairLayerId] > 0. && z0cutoff(oi)) {
 #ifdef DOUBLETS_DEBUG
             printf("Killed here 5\n");
 #endif
@@ -440,7 +438,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
           outerHitHisto->count(acc, oi - hh.offsetBPIX2());
           cells[ind].init(hh, pairLayerId, inner, outer, i, oi);
 #ifdef DOUBLETS_DEBUG
-          printf("doublet: %d layerPair: %d inner: %d outer: %d i: %d oi: %d\n", ind, pairLayerId, inner, outer, i, oi);
+          printf("Found doublet: %d layerPair: %d innerL: %d outerL: %d i: %d oi: %d\n", ind, pairLayerId, inner, outer, i, oi);
 #endif
         }
       }

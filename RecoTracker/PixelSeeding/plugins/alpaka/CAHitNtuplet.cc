@@ -46,6 +46,7 @@ namespace reco {
     CAGeometryParams(edm::ParameterSet const& iConfig)
         : caThetaCuts_(iConfig.getParameter<std::vector<double>>("caThetaCuts")),
           caDCACuts_(iConfig.getParameter<std::vector<double>>("caDCACuts")),
+          isStacked_(iConfig.getParameter<std::vector<int32_t>>("isStacked")),
           pairGraph_(iConfig.getParameter<std::vector<unsigned int>>("pairGraph")),
           startingPairs_(iConfig.getParameter<std::vector<unsigned int>>("startingPairs")),
           phiCuts_(iConfig.getParameter<std::vector<int>>("phiCuts")),
@@ -56,7 +57,8 @@ namespace reco {
           maxOuter_(iConfig.getParameter<std::vector<double>>("maxOuter")),
           maxDZ_(iConfig.getParameter<std::vector<double>>("maxDZ")),
           minDZ_(iConfig.getParameter<std::vector<double>>("minDZ")),
-          maxDR_(iConfig.getParameter<std::vector<double>>("maxDR")) {
+          maxDR_(iConfig.getParameter<std::vector<double>>("maxDR")),
+          cellZ0Cuts_(iConfig.getParameter<std::vector<double>>("cellZ0Cuts")) {
       startNoBPix1_ = false;
       for (const unsigned int& i : startingPairs_) {
         if (pairGraph_[2 * i] > 0) {
@@ -69,6 +71,7 @@ namespace reco {
     // Layers params
     const std::vector<double> caThetaCuts_;
     const std::vector<double> caDCACuts_;
+    const std::vector<int32_t> isStacked_;
     const std::vector<int> isBarrel_;
 
     // Cells params
@@ -83,6 +86,7 @@ namespace reco {
     const std::vector<double> maxDZ_;
     const std::vector<double> minDZ_;
     const std::vector<double> maxDR_;
+    const std::vector<double> cellZ0Cuts_;
 
     bool startNoBPix1_;
 
@@ -135,12 +139,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       assert(iCache->maxDR_.size() == iCache->minDZ_.size());
       assert(iCache->maxDR_.size() == iCache->phiCuts_.size());
       assert(iCache->maxDR_.size() == iCache->ptCuts_.size());
+      assert(iCache->maxDR_.size() == iCache->cellZ0Cuts_.size());
 
       assert(iCache->caThetaCuts_.size() == iCache->caDCACuts_.size());
+      assert(iCache->caThetaCuts_.size() == iCache->isStacked_.size());
 
       int n_layers = iCache->caThetaCuts_.size();
       int n_pairs = iCache->pairGraph_.size() / 2;
       int n_modules = 0;
+      int n_pixel_modules = 0;
 
 #ifdef GPU_DEBUG
       std::cout << "No. Layers to be used = " << n_layers << std::endl;
@@ -153,7 +160,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       auto const& trackerGeometry = iSetup.getData(iCache->tokenGeometry_);
       auto const& trackerTopology = iSetup.getData(iCache->tokenTopology_);
-      auto const& dets = trackerGeometry.dets();
+      auto const& dets = trackerGeometry.detUnits();
 
 #ifdef GPU_DEBUG
       auto subSystem = 0;
@@ -226,11 +233,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       // Collect all selected OT barrel sensors with (layer, innerOuter).
       struct ModInfo {
+        int detUnitIndex;
         uint32_t rawId;
         int layer;        // real TOB layer
         int innerOuter;   // 0 inner-facing, 1 outer-facing
       };
 
+      std::unordered_map<int, int> moduleIndexToOffset_;  // detUnit index -> offset in SoA 
       std::vector<ModInfo> mods;
       mods.reserve(trackerGeometry.detUnits().size());
 
@@ -248,7 +257,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         auto subId = detid.subdetId();
         if (subSystemName != trackerGeometry.geomDetSubDetector(subId)) {
           subSystemName = trackerGeometry.geomDetSubDetector(subId);
-          std::cout << " ===================== Subsystem: " << subSystemName << std::endl;
+          std::cout << " ===================== Subsystem: " << subSystemName << " on layer " << layer << std::endl;
         }
 #endif
 
@@ -257,7 +266,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           if (layer != oldLayer) {
 #ifdef GPU_DEBUG
             std::cout << "Pixel LayerStart: CA layer " << layerCount << " at subdetector layer " << layer
-                      << " starts at module " << n_modules << " and is " << (isBarrel(detid) ? "barrel" : "not barrel")
+                      << " starts at module/counter " << n_modules << "/" << counter << " and is " << (isBarrel(detid) ? "barrel" : "not barrel")
                       << std::endl;
 #endif
             layerIsBarrel[layerCount] = isBarrel(detid);
@@ -268,61 +277,52 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           }
           moduleToindexInDets.push_back(counter);
           n_modules++;
+          n_pixel_modules++;
         }
 
         // if we are using the CA extension for Phase-2,
         // we also have to collect the modules from the considered OT layers
         if constexpr (std::is_same_v<pixelTopology::Phase2OT, TrackerTraits>) {
-          auto const& detUnits = det->components();
-          for (auto& detUnit : detUnits) {
-            DetId unitDetId(detUnit->geographicalId());
-            // Modules of the considered OT layers
-            if (isPinPSinOTBarrel(unitDetId)) {
-              if (layer != oldLayer) {
+          // Modules of the considered OT layers
+          if (isPinPSinOTBarrel(detid)) {
+            if (layer != oldLayer) {
 #ifdef GPU_DEBUG
-                std::cout << "OT LayerStart: CA layer " << layerCount << " at subdetector layer " << layer
-                          << " starts at module " << n_modules << " and is "
-                          << (isBarrel(detid) ? "barrel" : "not barrel") << std::endl;
+              std::cout << "OT LayerStart: CA layer " << layerCount << " at subdetector layer " << layer
+                        << " starts at module " << n_modules << " and is "
+                        << (isBarrel(detid) ? "barrel" : "not barrel") << std::endl;
 #endif
-                layerIsBarrel[layerCount] = isBarrel(detid);
-                layerStarts[layerCount++] = n_modules;
-                if (layerCount >= layerStarts.size())
-                  break;
-                oldLayer = layer;
-              }
-              moduleToindexInDets.push_back(counter);
-              n_modules++;
+              layerIsBarrel[layerCount] = isBarrel(detid);
+              layerStarts[layerCount++] = n_modules;
+              if (layerCount >= layerStarts.size())
+                break;
+              oldLayer = layer;
             }
+            moduleToindexInDets.push_back(counter);
+            n_modules++;
           }
         }
         // if we are using the CA extension for Phase-2,
         // we also have to collect the modules from the considered OT layers
         if constexpr (std::is_same_v<pixelTopology::Phase2OTFull, TrackerTraits>) {
-          // TO BE IMPLEMENTED
+          uint32_t rawId = detid.rawId();
 
-          auto const& detUnits = det->components();
-          for (auto const& detUnit : detUnits) {
-            DetId detId(detUnit->geographicalId());
-            uint32_t rawId = detId.rawId();
-
-            if (!isSelectedOTBarrel(trackerGeometry, detId)) {
-              continue;
-            }
+          if (isSelectedOTBarrel(trackerGeometry, rawId)) {
             moduleToindexInDets.push_back(counter);
 
-            const int layer = trackerTopology.getOTLayerNumber(detId);
+            const int layer = trackerTopology.getOTLayerNumber(detid);
 
-            const auto& surf = detUnit->surface();
+            const auto& surf = det->surface();
             const GlobalPoint pos = surf.position();
             const GlobalVector nrm = surf.normalVector();
 
             const int innerOuter = innerOuterFromOrientation(trackerTopology, rawId, pos, nrm);
 
-            mods.push_back(ModInfo{rawId, layer, innerOuter});
+            mods.push_back(ModInfo{det->index(), rawId, layer, innerOuter});
           }
         }
         counter++;
-      }
+      } // end of loop over detUnits from trackerGeometry
+
       // if we are using the CA extension for Phase-2,
       // we also have to collect the modules from the considered OT layers
       if constexpr (std::is_same_v<pixelTopology::Phase2OTFull, TrackerTraits>) {
@@ -337,14 +337,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         });
         int prevL = -1, prevIO = -1;
         for (size_t i = 0; i < mods.size(); ++i) {
+          moduleIndexToOffset_[mods[i].detUnitIndex] = static_cast<int>(i) + n_pixel_modules;
           if (mods[i].layer != prevL || mods[i].innerOuter != prevIO) {
-            layerIsBarrel[layerCount] = isBarrel(mods[i].rawId);
-            layerStarts[layerCount++] = n_modules;
 #ifdef GPU_DEBUG
             std::cout << "Group starts at offset " << i << " : layer=" << mods[i].layer
               << " innerOuter=" << mods[i].innerOuter << " (0=inner,1=outer)\n";
-            std::cout << "Layer " << layerCount << " starts at " << layerStarts[layerCount-1] << std::endl;
+            std::cout << "Layer " << layerCount << " starts at " << n_modules << std::endl;
 #endif
+            layerIsBarrel[layerCount] = isBarrel(mods[i].rawId);
+            layerStarts[layerCount++] = n_modules;
             prevL = mods[i].layer;
             prevIO = mods[i].innerOuter;
           }
@@ -364,34 +365,74 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       auto cellSoA = product.view<::reco::CAGraphSoA>();
       auto modulesSoA = product.view<::reco::CAModulesSoA>();
 
-      for (int i = 0; i < n_modules; ++i) {
-        auto idx = moduleToindexInDets[i];
-        auto det = dets[idx];
-        auto vv = det->surface().position();
-        auto rr = Rotation(det->surface().rotation());
-        modulesSoA[i].detFrame() = Frame(vv.x(), vv.y(), vv.z(), rr);
+      // TODO the ordering of the insertion of modules should follow the modules numbering of the OT SoA and it does not
+      if constexpr (std::is_same_v<pixelTopology::Phase2OTFull, TrackerTraits>) {
+        for (int i = 0; i < n_pixel_modules; ++i) {
+          auto idx = moduleToindexInDets[i];
+          auto det = dets[idx];
+          auto vv = det->surface().position();
+          auto rr = Rotation(det->surface().rotation());
+          modulesSoA[i].detFrame() = Frame(vv.x(), vv.y(), vv.z(), rr);
 #ifdef GPU_DEBUG
-        auto const& detUnits = det->components();
-        for (auto& detUnit : detUnits) {
-          DetId unitDetId(detUnit->geographicalId());
-          if (isPinPSinOTBarrel(unitDetId)) {
-            std::cout << "Filling frame at index " << idx << " in SoA position " << i << " for det "
-                      << det->geographicalId() << " and detUnit->index: " << detUnit->index() << std::endl;
-          }
-        }
-        std::cout << "Filling frame at index " << idx << " in SoA position " << i << " for det "
-                  << det->geographicalId() << std::endl;
-        std::cout << "Position: " << vv << " with Rotation: " << det->surface().rotation() << std::endl;
-        std::cout << "Rotation in z-r plane: "
-                  << atan2(det->surface().normalVector().perp(), det->surface().normalVector().z()) * 180. / M_PI
-                  << std::endl;
+  //        auto const& detUnits = det->components();
+  //        for (auto& detUnit : detUnits) {
+  //          DetId unitDetId(detUnit->geographicalId());
+  //        }
+          std::cout << "Filling frame at index " << idx << " in SoA position " << i << " for det "
+                    << det->geographicalId() << std::endl;
+          std::cout << "Position: " << vv << " with Rotation: " << det->surface().rotation() << std::endl;
+          std::cout << "Rotation in z-r plane: "
+                    << atan2(det->surface().normalVector().perp(), det->surface().normalVector().z()) * 180. / M_PI
+                    << std::endl;
 #endif
+        }
+        for (size_t i = 0; i < mods.size(); ++i) {
+          auto idx = mods[i].detUnitIndex;
+          auto soaIdx = moduleIndexToOffset_[idx];
+          auto det = dets[idx];
+          auto vv = det->surface().position();
+          auto rr = Rotation(det->surface().rotation());
+          modulesSoA[soaIdx].detFrame() = Frame(vv.x(), vv.y(), vv.z(), rr);
+#ifdef GPU_DEBUG
+  //        auto const& detUnits = det->components();
+  //        for (auto& detUnit : detUnits) {
+  //          DetId unitDetId(detUnit->geographicalId());
+  //        }
+          std::cout << "Filling frame at index " << idx << " in SoA position " << soaIdx << " for det "
+                    << det->geographicalId() << std::endl;
+          std::cout << "Position: " << vv << " with Rotation: " << det->surface().rotation() << std::endl;
+          std::cout << "Rotation in z-r plane: "
+                    << atan2(det->surface().normalVector().perp(), det->surface().normalVector().z()) * 180. / M_PI
+                    << std::endl;
+#endif
+        }
+      } else {
+        for (int i = 0; i < n_modules; ++i) {
+          auto idx = moduleToindexInDets[i];
+          auto det = dets[idx];
+          auto vv = det->surface().position();
+          auto rr = Rotation(det->surface().rotation());
+          modulesSoA[i].detFrame() = Frame(vv.x(), vv.y(), vv.z(), rr);
+#ifdef GPU_DEBUG
+  //        auto const& detUnits = det->components();
+  //        for (auto& detUnit : detUnits) {
+  //          DetId unitDetId(detUnit->geographicalId());
+  //        }
+          std::cout << "Filling frame at index " << idx << " in SoA position " << i << " for det "
+                    << det->geographicalId() << std::endl;
+          std::cout << "Position: " << vv << " with Rotation: " << det->surface().rotation() << std::endl;
+          std::cout << "Rotation in z-r plane: "
+                    << atan2(det->surface().normalVector().perp(), det->surface().normalVector().z()) * 180. / M_PI
+                    << std::endl;
+#endif
+        }
       }
 
       for (int i = 0; i < n_layers; ++i) {
         layerSoA.layerStarts()[i] = layerStarts[i];
         layerSoA.caThetaCut()[i] = iCache->caThetaCuts_[i];
         layerSoA.caDCACut()[i] = iCache->caDCACuts_[i];
+        layerSoA.isStacked()[i] = iCache->isStacked_[i];
         layerSoA.isBarrel()[i] = layerIsBarrel[i];
       }
 
@@ -413,6 +454,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         cellSoA.maxDZ()[i] = iCache->maxDZ_[i];
         cellSoA.minDZ()[i] = iCache->minDZ_[i];
         cellSoA.maxDR()[i] = iCache->maxDR_[i];
+        cellSoA.cellZ0Cuts()[i] = iCache->cellZ0Cuts_[i];
         cellSoA.startingPair()[i] = false;
       }
 

@@ -2,11 +2,12 @@
 #define RecoTracker_PixelSeeding_plugins_alpaka_CACell_h
 
 // #define GPU_DEBUG
-// #define CA_DEBUG
+#define CA_DEBUG
 // #define CA_WARNINGS
 
 #include <cmath>
 #include <limits>
+#include <float.h>
 
 #include <alpaka/alpaka.hpp>
 
@@ -134,6 +135,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                             // radius_diff later
 
       float tan_12_13_half_mul_distance_13_squared = fabs(z1 * (ri - ro) + zi * (ro - r1) + zo * (r1 - ri));
+#ifdef CA_DEBUG
+      printf("radius_diff: %5.3f distance_13_sqaured: %5.3f ptmin: %5.3f pMin %5.3f\ntan_12_13..._squared: %5.3f\ntan_12_13_half_mul_distance_13_squared * pMin: %.*f\nthetaCut * distance_13_squared * radius_diff: %.*f\n",
+             radius_diff, distance_13_squared, ptmin, pMin, tan_12_13_half_mul_distance_13_squared, FLT_DECIMAL_DIG, (tan_12_13_half_mul_distance_13_squared * pMin), FLT_DECIMAL_DIG, (thetaCut * distance_13_squared *radius_diff));
+#endif
       return tan_12_13_half_mul_distance_13_squared * pMin <= thetaCut * distance_13_squared * radius_diff;
     }
 
@@ -151,6 +156,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       auto y3 = outer_y(hh);
 
       CircleEq<float> eq(x1, y1, x2, y2, x3, y3);
+#ifdef CA_DEBUG
+      printf("eq.dca0: %.*f eq.curvature: %.*f maxCurv: %.*f, region_tolerance: %.*f, cut1: %d, reg_tolerance*|curv|: %.*f, cut2: %d\n",
+             FLT_DECIMAL_DIG, eq.dca0(), FLT_DECIMAL_DIG, eq.curvature(), FLT_DECIMAL_DIG, maxCurv,
+             FLT_DECIMAL_DIG, region_origin_radius_plus_tolerance,
+             (std::abs(eq.curvature()) <= maxCurv),
+             FLT_DECIMAL_DIG,
+             (region_origin_radius_plus_tolerance * std::abs(eq.curvature())),
+             (std::abs(eq.dca0()) < region_origin_radius_plus_tolerance * std::abs(eq.curvature())));
+#endif
 
       if (std::abs(eq.curvature()) > maxCurv)
         return false;
