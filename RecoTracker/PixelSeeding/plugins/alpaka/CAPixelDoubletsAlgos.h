@@ -83,14 +83,23 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
     bool isOuterLadder = moduleIsOuterLadder<TrackerTraits>(mi);
     auto mes = (!innerB1) || isOuterLadder ? hh[i].clusterSizeY() : -1;
 #ifdef DOUBLETS_DEBUG
-    printf("i = %d o = %d mi = %d innerB1 = %d isOuterLadder = %d first_forward = %d first_bpix2 = %d\n",
-           i,
-           o,
-           mi,
-           innerB1,
-           isOuterLadder,
-           first_forward,
-           first_bpix2);
+    printf(
+      "Flags  "
+      "i=%4d  "
+      "o=%4d  "
+      "mi=%4d  "
+      "inB1=%1d  "
+      "outLad=%1d  "
+      "fwd=%1d  "
+      "bpix2=%1d\n",
+      i,
+      o,
+      mi,
+      innerB1,
+      isOuterLadder,
+      first_forward,
+      first_bpix2
+    );
 #endif
     if (mes < 0)
       return false;
@@ -104,20 +113,41 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
     auto innerBarrel = mi < first_forward;
     auto onlyBarrel = mo < first_forward;
 #ifdef DOUBLETS_DEBUG
-    printf("i = %d o = %d mo = %d innerB1 = %d isOuterLadder = %d \n", i, o, mo, innerBarrel, onlyBarrel);
+    printf(
+      "Flags  "
+      "i=%4d  "
+      "o=%4d  "
+      "mo=%4d  "
+      "inB1=%1d  "
+      "outLad=%1d\n",
+      i,
+      o,
+      mo,
+      innerBarrel,
+      onlyBarrel
+    );
 #endif
     if (not innerBarrel and not onlyBarrel)
       return false;
     auto dy = innerB1 ? params.maxDYsize12_ : params.maxDYsize_;
 #ifdef DOUBLETS_DEBUG
-    printf("i = %d o = %d dy = %d maxDYsize12_ = %d maxDYsize_ = %d dzdrFact_ = %.2f maxDYPred_ = %d \n",
-           i,
-           o,
-           dy,
-           params.maxDYsize12_,
-           params.maxDYsize_,
-           params.dzdrFact_,
-           params.maxDYPred_);
+    printf(
+      "Params "
+      "i=%4d  "
+      "o=%4d  "
+      "dy=%4d  "
+      "maxDY12=%4d  "
+      "maxDY=%4d  "
+      "dzdr=%6.2f  "
+      "maxDYP=%4d\n",
+      i,
+      o,
+      dy,
+      params.maxDYsize12_,
+      params.maxDYsize_,
+      params.dzdrFact_,
+      params.maxDYPred_
+    );
 #endif
     return onlyBarrel
                ? so > 0 && std::abs(so - mes) > dy
@@ -133,17 +163,26 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
     bool innerB1orB2 = mi < ll.layerStarts()[2];
 #ifdef DOUBLETS_DEBUG
     printf(
-        "i = %d mi = %d innerB1orB2 = %d innerB1 = %d innerB2 = %d minYsizeB1 = %d minYsizeB2 = %d isOuterLadder = %d "
-        "mes = %d \n",
-        i,
-        mi,
-        innerB1orB2,
-        mi < first_bpix2,
-        (mi >= first_bpix2) && (mi < first_bpix3),
-        params.minYsizeB1_,
-        params.minYsizeB2_,
-        (0 == (mi / 8) % 2),
-        (!(mi < first_bpix2)) || (0 == (mi / 8) % 2) ? hh[i].clusterSizeY() : -1);
+      "Flags "
+      "i=%4d  "
+      "mi=%4d  "
+      "B1or2=%1d  "
+      "B1=%1d  "
+      "B2=%1d  "
+      "minY1=%3d  "
+      "minY2=%3d  "
+      "outLd=%1d  "
+      "mes=%4d\n",
+      i,
+      mi,
+      innerB1orB2,
+      mi < first_bpix2,
+      (mi >= first_bpix2) && (mi < first_bpix3),
+      params.minYsizeB1_,
+      params.minYsizeB2_,
+      (0 == (mi / 8) % 2),
+      (!(mi < first_bpix2)) || (0 == (mi / 8) % 2) ? hh[i].clusterSizeY() : -1
+    );
 #endif
     if (!innerB1orB2)
       return false;
@@ -239,13 +278,21 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
       ALPAKA_ASSERT_ACC(i >= offsets[inner]);
       ALPAKA_ASSERT_ACC(i < offsets[inner + 1]);
 #ifdef DOUBLETS_DEBUG
-      printf("pairLayerId = %d i = %d innerLayer = %d outerLayer = %d offsets[innerL] = %d offsets[innerL + 1] = %d\n",
-             pairLayerId,
-             i,
-             inner,
-             outer,
-             offsets[inner],
-             offsets[inner + 1]);
+      printf(
+        "\nPair "
+        "pl=%4d  "
+        "i=%4d  "
+        "inL=%3d  "
+        "outL=%3d  "
+        "off[in]=%6d  "
+        "off[in+1]=%6d\n",
+        pairLayerId,
+        i,
+        inner,
+        outer,
+        offsets[inner],
+        offsets[inner + 1]
+      );
 #endif
       // found hit corresponding to our worker thread, now do the job
       if (hh[i].detectorIndex() > ll.layerStarts()[ll.metadata().size() - 1]) {  //TODO use cc
@@ -268,18 +315,24 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
       auto valInner = ll.isBarrel()[inner] ? zi : ri;
       if (valInner < cc.minInner()[pairLayerId] || valInner > cc.maxInner()[pairLayerId]) {
 #ifdef DOUBLETS_DEBUG
-        printf("Killed here 2 --> valInner: %f [index: %d], minInner: %f, maxInner: %f\n",
-               valInner,
-               hh[i].detectorIndex(),
-               cc.minInner()[pairLayerId],
-               cc.maxInner()[pairLayerId]);
+        printf(
+          "Kill2 "
+          "valIn=%8.3f  "
+          "idx=%6d  "
+          "minIn=%8.3f  "
+          "maxIn=%8.3f\n",
+          valInner,
+          hh[i].detectorIndex(),
+          cc.minInner()[pairLayerId],
+          cc.maxInner()[pairLayerId]
+        );
 #endif
         continue;
       }
 
 #ifdef DOUBLETS_DEBUG
       if (doClusterCut && outer > pixelTopology::last_barrel_layer)
-        printf("clustCut: %d %d \n", i, clusterCut<TrackerTraits, TAcc>(acc, hh, ll, params, i));
+        printf("clustCut: %5d %5d \n", i, clusterCut<TrackerTraits, TAcc>(acc, hh, ll, params, i));
 #endif
 
       if (doClusterCut && outer > pixelTopology::last_barrel_layer &&
@@ -304,13 +357,23 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
         auto ro = hh[j].rGlobal();
         auto dr = ro - ri;
 #ifdef DOUBLETS_DEBUG
-        printf("dr: %4.3f, %4.3f, %4.3f vs %4.3f --> %d\n", ri, ro, dr, cc.maxDR()[pairLayerId], (dr > cc.maxDR()[pairLayerId]));
-        printf("zi: %4.3f, zo: %4.3f, std::abs((zi * ro - ri * zo)): %4.3f vs %4.3f--> %d\n",
-               zi,
-               zo,
-               std::abs((zi * ro - ri * zo)),
-               cc.cellZ0Cuts()[pairLayerId] * dr,
-               (std::abs((zi * ro - ri * zo)) > cc.cellZ0Cuts()[pairLayerId] * dr));
+        printf(
+          "dr: %.*g, %.*g, %.*g vs %.*g --> %d\n",
+          FLT_DECIMAL_DIG, ri,
+          FLT_DECIMAL_DIG, ro,
+          FLT_DECIMAL_DIG, dr,
+          FLT_DECIMAL_DIG, cc.maxDR()[pairLayerId],
+          (dr > cc.maxDR()[pairLayerId])
+        );
+        
+        printf(
+          "zi: %.*g, zo: %.*g, |zi*ro - ri*zo|: %.*g vs %.*g --> %d\n",
+          FLT_DECIMAL_DIG, zi,
+          FLT_DECIMAL_DIG, zo,
+          FLT_DECIMAL_DIG, std::abs((zi * ro - ri * zo)),
+          FLT_DECIMAL_DIG, cc.cellZ0Cuts()[pairLayerId] * dr,
+          (std::abs((zi * ro - ri * zo)) > cc.cellZ0Cuts()[pairLayerId] * dr)
+        );
 #endif
         return dr > cc.maxDR()[pairLayerId] || dr < 0 || std::abs((zi * ro - ri * zo)) > cc.cellZ0Cuts()[pairLayerId] * dr;
       };
@@ -322,12 +385,18 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
       auto incr = [](auto& k) { return k = (k + 1) % PhiHisto::nbins(); };
 
 #ifdef GPU_DEBUG
-      printf("Cuts on pairLayerId %d %d %.2f %.2f %.2f \n",
-             pairLayerId,
-             cc.phiCuts()[pairLayerId],
-             cc.maxDR()[pairLayerId],
-             cc.maxInner()[pairLayerId],
-             cc.minInner()[pairLayerId]);
+      printf(
+        "Cuts pairL=%4d  phi="  "%7d"
+        "  maxDR="  "%.*g"
+        "  maxIn="  "%.*g"
+        "  minIn="  "%.*g"
+        "\n",
+        pairLayerId,
+        cc.phiCuts()[pairLayerId],
+        FLT_DECIMAL_DIG, cc.maxDR()[pairLayerId],
+        FLT_DECIMAL_DIG, cc.maxInner()[pairLayerId],
+        FLT_DECIMAL_DIG, cc.minInner()[pairLayerId]
+      );
 #endif
 
       auto khh = kh;
@@ -349,7 +418,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
           ALPAKA_ASSERT_ACC(oi >= offsets[outer]);
           ALPAKA_ASSERT_ACC(oi < offsets[outer + 1]);
 #ifdef DOUBLETS_DEBUG
-          printf("Exploring couple i: %d o: %d\n", i, oi);
+          printf("Exploring couple i: %4d o: %4d\n", i, oi);
 #endif
           auto mo = hh[oi].detectorIndex();
 
@@ -368,11 +437,17 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
           auto valOuter = ll.isBarrel()[outer] ? zo : ro;
           if (valOuter < cc.minOuter()[pairLayerId] || valOuter > cc.maxOuter()[pairLayerId]) {
 #ifdef DOUBLETS_DEBUG
-            printf("Killed here 5 --> valOuter: %f [index: %d], minOuter: %f, maxOuter: %f\n",
-                   valOuter,
-                   mo,
-                   cc.minOuter()[pairLayerId],
-                   cc.maxOuter()[pairLayerId]);
+            printf(
+              "Kill5 "
+              "valOut=%.*g  "
+              "idx=%4d  "
+              "minOut=%.*g  "
+              "maxOut=%.*g\n",
+              FLT_DECIMAL_DIG, valOuter,
+              mo,
+              FLT_DECIMAL_DIG, cc.minOuter()[pairLayerId],
+              FLT_DECIMAL_DIG, cc.maxOuter()[pairLayerId]
+            );
 #endif
             continue;
           }
@@ -382,11 +457,17 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
           // cut on signed dz
           if (dz < cc.minDZ()[pairLayerId] || dz > cc.maxDZ()[pairLayerId]) {
 #ifdef DOUBLETS_DEBUG
-            printf("Killed here 5 --> dz: %f [index: %d], minDZ: %f, maxDZ: %f\n",
-                   dz,
-                   mo,
-                   cc.minDZ()[pairLayerId],
-                   cc.maxDZ()[pairLayerId]);
+            printf(
+              "Kill5 "
+              "dz=%.*g  "
+              "idx=%4d  "
+              "minDZ=%.*g  "
+              "maxDZ=%.*g\n",
+              FLT_DECIMAL_DIG, dz,
+              mo,
+              FLT_DECIMAL_DIG, cc.minDZ()[pairLayerId],
+              FLT_DECIMAL_DIG, cc.maxDZ()[pairLayerId]
+            );
 #endif
             continue;
           }
@@ -408,7 +489,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
             continue;
           }
 #ifdef DOUBLETS_DEBUG
-          printf("zSizeCut: %d %d %d \n", i, oi, zSizeCut<TrackerTraits, TAcc>(acc, hh, ll, params, i, oi));
+          printf("zSizeCut: %4d %4d %4d \n", i, oi, zSizeCut<TrackerTraits, TAcc>(acc, hh, ll, params, i, oi));
 #endif
           if (doZSizeCut && zSizeCut<TrackerTraits, TAcc>(acc, hh, ll, params, i, oi)) {
 #ifdef DOUBLETS_DEBUG
@@ -438,7 +519,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
           outerHitHisto->count(acc, oi - hh.offsetBPIX2());
           cells[ind].init(hh, pairLayerId, inner, outer, i, oi);
 #ifdef DOUBLETS_DEBUG
-          printf("Found doublet: %d layerPair: %d innerL: %d outerL: %d i: %d oi: %d\n", ind, pairLayerId, inner, outer, i, oi);
+          printf("Found doublet: %4d layerPair: %4d innerL: %4d outerL: %4d i: %4d oi: %4d\n", ind, pairLayerId, inner, outer, i, oi);
 #endif
         }
       }

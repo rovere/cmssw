@@ -17,9 +17,9 @@
 #include "CAHitNtupletGeneratorKernels.h"
 #include "CAHitNtupletGeneratorKernelsImpl.h"
 
-// #define GPU_DEBUG
-// #define NTUPLE_DEBUG
-// #define CA_STATS
+#define GPU_DEBUG
+#define NTUPLE_DEBUG
+#define CA_STATS
 
 namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
@@ -752,6 +752,18 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       alpaka::exec<Acc1D>(queue, workDiv1D, Kernel_printCounters{}, this->counters_->data());
     }
 #ifdef GPU_DEBUG
+    alpaka::wait(queue);
+    alpaka::exec<Acc1D>(queue,
+                        workDiv1D,
+                        Kernel_print_found_ntuplets<TrackerTraits>{},
+                        hh,
+                        tracks_view,
+                        this->device_hitContainer_->data(),
+                        this->device_hitToTuple_->data(),
+                        1,
+                        1000,
+                        0);
+
     alpaka::wait(queue);
 #endif
 

@@ -17,7 +17,7 @@
 #include "CACell.h"
 #include "CAStructures.h"
 
-//#define GPU_DEBUG
+#define GPU_DEBUG
 
 namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
 
@@ -39,7 +39,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
       for (uint32_t idy : cms::alpakatools::uniform_elements_y(acc, outerHits)) {
         uint32_t size = outerHitHisto->size(idy);
 #ifdef GPU_DEBUG
-        printf("fishbone ---> outersize %d - ", idy, size);
+        printf("fishbone ---> outersize %d - %d\n", idy, size);
 #endif
         if (size < 2)
           continue;
@@ -57,7 +57,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
 #ifdef GPU_DEBUG
         for (auto idx = 0u; idx < size; idx++) {
           unsigned int otherCell = bin[idx];
-          printf("vc[0] %d idx %d vc[idx] %d otherCell %d \n", vc[0], idx, vc[idx], otherCell);
+          printf("bin[0] %d idx %d bin[idx] %d otherCell %d \n", bin[0], idx, bin[idx], otherCell);
         }
 #endif
         for (uint32_t ic : cms::alpakatools::independent_group_elements_x(acc, size)) {

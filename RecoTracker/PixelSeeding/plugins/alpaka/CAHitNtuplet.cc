@@ -1,5 +1,6 @@
 #include <alpaka/alpaka.hpp>
 
+
 #include <TFormula.h>
 #include "CommonTools/Utils/interface/FormulaEvaluator.h"
 
@@ -38,7 +39,9 @@
 #include "RecoTracker/PixelSeeding/interface/CAGeometrySoA.h"
 #include "DataFormats/SiStripDetId/interface/StripSubdetector.h"
 
-// #define GPU_DEBUG
+#include <iomanip>
+
+#define GPU_DEBUG
 
 namespace reco {
   struct CAGeometryParams {
@@ -265,9 +268,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         if (isPixel(detid)) {
           if (layer != oldLayer) {
 #ifdef GPU_DEBUG
-            std::cout << "Pixel LayerStart: CA layer " << layerCount << " at subdetector layer " << layer
-                      << " starts at module/counter " << n_modules << "/" << counter << " and is " << (isBarrel(detid) ? "barrel" : "not barrel")
-                      << std::endl;
+            std::cout
+              << "PixelLayer "
+              << "CA="     << std::setw(2) << layerCount
+              << "  subL=" << std::setw(2) << layer
+              << "  mod="  << std::setw(5) << n_modules
+              << "  cnt="  << std::setw(5) << counter
+              << "  type=" << std::left << std::setw(6)
+              << (isBarrel(detid) ? "barrel" : "endcap")
+              << std::right
+              << std::endl;
 #endif
             layerIsBarrel[layerCount] = isBarrel(detid);
             layerStarts[layerCount++] = n_modules;
@@ -287,9 +297,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           if (isPinPSinOTBarrel(detid)) {
             if (layer != oldLayer) {
 #ifdef GPU_DEBUG
-              std::cout << "OT LayerStart: CA layer " << layerCount << " at subdetector layer " << layer
-                        << " starts at module " << n_modules << " and is "
-                        << (isBarrel(detid) ? "barrel" : "not barrel") << std::endl;
+              std::cout
+                << "OTLayer   "
+                << "CA="     << std::setw(2) << layerCount
+                << "  subL=" << std::setw(2) << layer
+                << "  mod="  << std::setw(5) << n_modules
+                << "  type=" << std::left << std::setw(6)
+                << (isBarrel(detid) ? "barrel" : "endcap")
+                << std::right
+                << std::endl;
 #endif
               layerIsBarrel[layerCount] = isBarrel(detid);
               layerStarts[layerCount++] = n_modules;
@@ -340,9 +356,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           moduleIndexToOffset_[mods[i].detUnitIndex] = static_cast<int>(i) + n_pixel_modules;
           if (mods[i].layer != prevL || mods[i].innerOuter != prevIO) {
 #ifdef GPU_DEBUG
-            std::cout << "Group starts at offset " << i << " : layer=" << mods[i].layer
-              << " innerOuter=" << mods[i].innerOuter << " (0=inner,1=outer)\n";
-            std::cout << "Layer " << layerCount << " starts at " << n_modules << std::endl;
+            
+          std::cout
+            << "Group "
+            << "off="   << std::setw(5) << i
+            << "  lyr=" << std::setw(2) << mods[i].layer
+            << "  io="  << std::setw(1) << mods[i].innerOuter   // 0=inner, 1=outer
+            << "  CA="  << std::setw(2) << layerCount
+            << "  mod0="<< std::setw(5) << n_modules
+            << std::endl;
 #endif
             layerIsBarrel[layerCount] = isBarrel(mods[i].rawId);
             layerStarts[layerCount++] = n_modules;
@@ -378,12 +400,17 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   //        for (auto& detUnit : detUnits) {
   //          DetId unitDetId(detUnit->geographicalId());
   //        }
-          std::cout << "Filling frame at index " << idx << " in SoA position " << i << " for det "
-                    << det->geographicalId() << std::endl;
-          std::cout << "Position: " << vv << " with Rotation: " << det->surface().rotation() << std::endl;
-          std::cout << "Rotation in z-r plane: "
-                    << atan2(det->surface().normalVector().perp(), det->surface().normalVector().z()) * 180. / M_PI
-                    << std::endl;
+          std::cout
+            << "Frame "
+            << "idx="   << std::setw(5) << idx
+            << "  soa=" << std::setw(5) << i
+            << "  det=" << std::setw(10) << det->geographicalId()
+            << "  pos=" << std::setw(15) << vv
+            << "\nrot=" << std::setw(25) << det->surface().rotation()
+            << "\nz-rot=" << std::setw(8) << std::fixed << std::setprecision(2)
+            << atan2(det->surface().normalVector().perp(),
+                     det->surface().normalVector().z()) * 180. / M_PI
+            << std::endl;
 #endif
         }
         for (size_t i = 0; i < mods.size(); ++i) {
@@ -398,12 +425,17 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   //        for (auto& detUnit : detUnits) {
   //          DetId unitDetId(detUnit->geographicalId());
   //        }
-          std::cout << "Filling frame at index " << idx << " in SoA position " << soaIdx << " for det "
-                    << det->geographicalId() << std::endl;
-          std::cout << "Position: " << vv << " with Rotation: " << det->surface().rotation() << std::endl;
-          std::cout << "Rotation in z-r plane: "
-                    << atan2(det->surface().normalVector().perp(), det->surface().normalVector().z()) * 180. / M_PI
-                    << std::endl;
+          std::cout
+            << "Frame "
+            << "idx="   << std::setw(5) << idx
+            << "  soa=" << std::setw(5) << soaIdx
+            << "  det=" << std::setw(10) << det->geographicalId()
+            << "  pos=" << std::setw(15) << vv
+            << "\nrot=" << std::setw(25) << det->surface().rotation()
+            << "\nz-rot=" << std::setw(8) << std::fixed << std::setprecision(2)
+            << atan2(det->surface().normalVector().perp(),
+                     det->surface().normalVector().z()) * 180. / M_PI
+            << std::endl;
 #endif
         }
       } else {
@@ -418,12 +450,17 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   //        for (auto& detUnit : detUnits) {
   //          DetId unitDetId(detUnit->geographicalId());
   //        }
-          std::cout << "Filling frame at index " << idx << " in SoA position " << i << " for det "
-                    << det->geographicalId() << std::endl;
-          std::cout << "Position: " << vv << " with Rotation: " << det->surface().rotation() << std::endl;
-          std::cout << "Rotation in z-r plane: "
-                    << atan2(det->surface().normalVector().perp(), det->surface().normalVector().z()) * 180. / M_PI
-                    << std::endl;
+          std::cout
+            << "Frame "
+            << "idx="   << std::setw(5) << idx
+            << "  soa=" << std::setw(5) << i
+            << "  det=" << std::setw(10) << det->geographicalId()
+            << "  pos=" << std::setw(15) << vv
+            << "\nrot=" << std::setw(25) << det->surface().rotation()
+            << "\nz-rot=" << std::setw(8) << std::fixed << std::setprecision(2)
+            << atan2(det->surface().normalVector().perp(),
+                     det->surface().normalVector().z()) * 180. / M_PI
+            << std::endl;
 #endif
         }
       }

@@ -868,6 +868,25 @@ namespace caHitNtupletGeneratorKernels {
         continue;
       if (tracks_view[i].quality() < loose)
         continue;
+      printf("TK: %6s %3s %2s %2s %6s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s\n",
+       "id",
+       "qlt",
+       "nh",
+       "nl",
+       "q",
+       "pt",
+       "eta",
+       "phi",
+       "tip",
+       "zip",
+       "chi2",
+       "z0",
+       "z1",
+       "z2",
+       "z3",
+       "z4",
+       "z5",
+       "zLast");
       printf("TK: %d %d %d %d %f %f %f %f %f %f %f %.3f %.3f %.3f %.3f %.3f %.3f %.3f\n",
              10000 * iev + i,
              int(tracks_view[i].quality()),
