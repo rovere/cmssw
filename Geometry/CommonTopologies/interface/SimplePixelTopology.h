@@ -571,7 +571,7 @@ namespace pixelTopology {
     static constexpr uint32_t maxNumberOfDoublets = 6 * 512 * 1024;
     static constexpr uint32_t maxNumOfActiveDoublets = maxNumberOfDoublets / 8;
     static constexpr uint32_t maxNumberOfQuadruplets = maxNumberOfTuples;
-    static constexpr uint32_t maxDepth = 12;
+    static constexpr uint32_t maxDepth = 20;
     static constexpr uint32_t numberOfLayers = phase2PixelTopology::nLayersPix;
     static constexpr float avgCellsPerHit = 12.;
     static constexpr float avgCellsPerCell = 0.151;
